@@ -1,3 +1,5 @@
+'use client';
+
 import {
   BarChart2,
   BrainCircuit,
@@ -98,24 +100,27 @@ export default function Home() {
       <section>
         <h2 className="text-2xl font-bold tracking-tight mb-4">Principais Ferramentas</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {mainFeatures.map((feature) => (
-            <Card key={feature.title} className="flex flex-col justify-between hover:border-primary transition-colors">
-              <CardHeader className="flex flex-row items-start gap-4">
-                <div className="bg-primary/10 p-3 rounded-lg">
-                  <feature.icon className="h-6 w-6 text-primary" />
+          {mainFeatures.map((feature, index) => {
+            return (
+              <Card key={feature.title} className="flex flex-col group hover:bg-card/90 transition-all">
+                <CardHeader className="flex-row gap-4 items-start">
+                    <div className="bg-primary/10 p-3 rounded-lg w-fit">
+                        <feature.icon className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-bold">{feature.title}</h3>
+                        <p className="text-sm text-muted-foreground mt-1">{feature.description}</p>
+                    </div>
+                </CardHeader>
+                <CardContent className="flex-grow" />
+                <div className="p-6 pt-0">
+                    <Button asChild className="w-full md:w-auto">
+                        <Link href={feature.href}>{feature.cta}</Link>
+                    </Button>
                 </div>
-                <div>
-                  <CardTitle>{feature.title}</CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">{feature.description}</p>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Button asChild className="w-full md:w-auto">
-                  <Link href={feature.href}>{feature.cta}</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
       </section>
     </div>
