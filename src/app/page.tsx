@@ -79,22 +79,25 @@ export default function Home() {
       </section>
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => (
-          <Card key={stat.title} className="hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <stat.icon className={`h-4 w-4 text-muted-foreground ${stat.color || ''}`} />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              {stat.href ? (
-                <Link href={stat.href} className="text-xs text-muted-foreground hover:underline">
-                  Ver detalhes
-                </Link>
-              ) : (
-                <p className="text-xs text-muted-foreground">Atualizado recentemente</p>
-              )}
-            </CardContent>
-          </Card>
+          <div key={stat.title} className="relative h-40 overflow-hidden rounded-3xl group">
+             <div className="absolute inset-0 bg-card/80"></div>
+             <div className="relative z-10 h-full flex flex-col bg-black/60 border border-white/10 p-6">
+                <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <h3 className="text-sm font-medium text-white">{stat.title}</h3>
+                  <stat.icon className={`h-4 w-4 text-gray-300 ${stat.color || ''}`} />
+                </div>
+                <div className="flex-grow flex flex-col justify-center">
+                  <div className="text-2xl font-bold text-white">{stat.value}</div>
+                  {stat.href ? (
+                    <Link href={stat.href} className="text-xs text-gray-400 hover:underline">
+                      Ver detalhes
+                    </Link>
+                  ) : (
+                    <p className="text-xs text-gray-400">Atualizado recentemente</p>
+                  )}
+                </div>
+             </div>
+          </div>
         ))}
       </section>
       <section>
