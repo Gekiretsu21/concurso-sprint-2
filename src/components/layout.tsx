@@ -35,8 +35,9 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { cn } from '@/lib/utils';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useUser } from '@/firebase';
-import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { GoogleAuthProvider, signInAnonymously, signInWithPopup, signOut } from 'firebase/auth';
 import { useFirebase } from '@/firebase/provider';
+import { useEffect } from 'react';
 
 const menuItems = [
   { href: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -82,12 +83,7 @@ function AuthButton() {
         );
     }
 
-    return (
-        <Button variant="ghost" className="w-full justify-start" onClick={handleGoogleLogin}>
-            <LogIn className="mr-2 h-4 w-4" />
-            Login com Google
-        </Button>
-    );
+    return null;
 }
 
 function MainSidebar() {
@@ -95,6 +91,15 @@ function MainSidebar() {
   const { state } = useSidebar();
   const { user } = useUser();
   const userAvatar = PlaceHolderImages.find(p => p.id === 'user-avatar');
+  const { auth } = useFirebase();
+
+  useEffect(() => {
+    if (!user) {
+      signInAnonymously(auth).catch((error) => {
+        console.error("Anonymous sign-in failed: ", error);
+      });
+    }
+  }, [auth, user]);
 
   return (
     <Sidebar collapsible="icon">
@@ -141,7 +146,7 @@ function MainSidebar() {
         <div className="flex items-center gap-3">
           <Avatar>
             <AvatarImage src={user?.photoURL ?? userAvatar?.imageUrl} data-ai-hint={userAvatar?.imageHint} />
-            <AvatarFallback>{user?.displayName?.charAt(0) ?? 'C'}</AvatarFallback>
+            <AvatarFallback>{user?.isAnonymous ? 'A' : (user?.displayName?.charAt(0) ?? 'C')}</AvatarFallback>
           </Avatar>
           <div
             className={cn(
@@ -149,7 +154,7 @@ function MainSidebar() {
               state === 'collapsed' ? 'opacity-0' : 'opacity-100'
             )}
           >
-            <p className="text-sm font-medium text-sidebar-foreground">{user?.displayName ?? 'Concurseiro'}</p>
+            <p className="text-sm font-medium text-sidebar-foreground">{user?.isAnonymous ? 'Usuário Anônimo' : (user?.displayName ?? 'Concurseiro')}</p>
             <p className="text-xs text-sidebar-foreground/70">{user ? 'Usuário' : 'Plano Pro'}</p>
           </div>
         </div>
