@@ -44,7 +44,6 @@ const menuItems = [
     href: '/management',
     icon: Settings,
     label: 'Gerenciamento',
-    target: '_blank',
   },
 ];
 
