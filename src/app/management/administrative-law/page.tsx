@@ -37,7 +37,7 @@ function formatEnunciado(text: string) {
   if (!text) return '';
   // Regex to find roman numerals (I to X) followed by a hyphen or space, at the beginning of a word.
   // This will add a line break before each item in a list.
-  return text.replace(/\b(II|III|IV|V|VI|VII|VIII|IX|X)[\s-]/g, '\n$&');
+  return text.replace(/\b(I|II|III|IV|V|VI|VII|VIII|IX|X)[\s-]/g, '\n$&');
 }
 
 export default function AdministrativeLawPage() {
