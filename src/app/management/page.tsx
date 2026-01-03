@@ -20,7 +20,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Paste } from 'lucide-react';
+import { ClipboardPaste } from 'lucide-react';
 
 export default function ManagementPage() {
   const { toast } = useToast();
@@ -55,7 +55,7 @@ export default function ManagementPage() {
           <Dialog>
             <DialogTrigger asChild>
               <Button>
-                <Paste />
+                <ClipboardPaste />
                 Importar por Texto
               </Button>
             </DialogTrigger>
