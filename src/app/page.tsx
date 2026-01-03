@@ -29,7 +29,7 @@ export default function LandingPage() {
             <Link href="/" className="flex items-center gap-2 text-xl font-bold">
               MENTORIA <Zap className="w-5 h-5 text-primary" /> ACADEMY
             </Link>
-            <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+            <nav className="hidden md:flex items-center gap-6 text-base font-medium">
               {navLinks.map(link => (
                 <Link
                   key={link.name}
