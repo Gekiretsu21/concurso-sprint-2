@@ -12,6 +12,8 @@ import {
   GraduationCap,
   Layers,
   LayoutDashboard,
+  LogIn,
+  LogOut,
   Settings,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -32,6 +34,9 @@ import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { cn } from '@/lib/utils';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { useUser } from '@/firebase';
+import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { useFirebase } from '@/firebase/provider';
 
 const menuItems = [
   { href: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -47,9 +52,48 @@ const menuItems = [
   },
 ];
 
+function AuthButton() {
+    const { auth } = useFirebase();
+    const { user } = useUser();
+
+    const handleGoogleLogin = async () => {
+        const provider = new GoogleAuthProvider();
+        try {
+            await signInWithPopup(auth, provider);
+        } catch (error) {
+            console.error("Error signing in with Google: ", error);
+        }
+    };
+
+    const handleLogout = async () => {
+        try {
+            await signOut(auth);
+        } catch (error) {
+            console.error("Error signing out: ", error);
+        }
+    };
+
+    if (user) {
+        return (
+            <Button variant="ghost" className="w-full justify-start" onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Sair
+            </Button>
+        );
+    }
+
+    return (
+        <Button variant="ghost" className="w-full justify-start" onClick={handleGoogleLogin}>
+            <LogIn className="mr-2 h-4 w-4" />
+            Login com Google
+        </Button>
+    );
+}
+
 function MainSidebar() {
   const pathname = usePathname();
   const { state } = useSidebar();
+  const { user } = useUser();
   const userAvatar = PlaceHolderImages.find(p => p.id === 'user-avatar');
 
   return (
@@ -91,10 +135,13 @@ function MainSidebar() {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
+         <div className={cn('pb-4 transition-opacity duration-200', state === 'collapsed' ? 'opacity-0' : 'opacity-100' )}>
+            <AuthButton />
+        </div>
         <div className="flex items-center gap-3">
           <Avatar>
-            {userAvatar && <AvatarImage src={userAvatar.imageUrl} data-ai-hint={userAvatar.imageHint} />}
-            <AvatarFallback>CS</AvatarFallback>
+            <AvatarImage src={user?.photoURL ?? userAvatar?.imageUrl} data-ai-hint={userAvatar?.imageHint} />
+            <AvatarFallback>{user?.displayName?.charAt(0) ?? 'C'}</AvatarFallback>
           </Avatar>
           <div
             className={cn(
@@ -102,8 +149,8 @@ function MainSidebar() {
               state === 'collapsed' ? 'opacity-0' : 'opacity-100'
             )}
           >
-            <p className="text-sm font-medium text-sidebar-foreground">Concurseiro</p>
-            <p className="text-xs text-sidebar-foreground/70">Plano Pro</p>
+            <p className="text-sm font-medium text-sidebar-foreground">{user?.displayName ?? 'Concurseiro'}</p>
+            <p className="text-xs text-sidebar-foreground/70">{user ? 'Usuário' : 'Plano Pro'}</p>
           </div>
         </div>
       </SidebarFooter>
