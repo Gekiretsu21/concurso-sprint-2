@@ -7,7 +7,6 @@ import { FirestorePermissionError } from '@/firebase/errors';
 
 export async function importQuestions(
   firestore: Firestore,
-  userId: string,
   text: string
 ): Promise<void> {
   if (!text) {
