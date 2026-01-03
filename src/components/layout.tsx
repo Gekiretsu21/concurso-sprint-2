@@ -8,11 +8,9 @@ import {
   ClipboardList,
   FileText,
   Flame,
-  Gift,
-  GraduationCap,
+  Home,
   Layers,
   LayoutDashboard,
-  LogIn,
   LogOut,
   Settings,
 } from 'lucide-react';
@@ -35,7 +33,7 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { cn } from '@/lib/utils';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useUser } from '@/firebase';
-import { GoogleAuthProvider, signInAnonymously, signInWithPopup, signOut } from 'firebase/auth';
+import { signInAnonymously, signOut } from 'firebase/auth';
 import { useFirebase } from '@/firebase/provider';
 import { useEffect, useState } from 'react';
 
@@ -56,15 +54,6 @@ const menuItems = [
 function AuthButton() {
     const { auth } = useFirebase();
     const { user } = useUser();
-
-    const handleGoogleLogin = async () => {
-        const provider = new GoogleAuthProvider();
-        try {
-            await signInWithPopup(auth, provider);
-        } catch (error) {
-            console.error("Error signing in with Google: ", error);
-        }
-    };
 
     const handleLogout = async () => {
         try {
@@ -167,9 +156,11 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 <Flame className="size-5 text-accent" />
                 <span className="font-bold text-foreground">12 dias</span>
              </div>
-             <Button variant="ghost" size="icon">
-                <Gift className="size-5" />
-                <span className="sr-only">Bônus</span>
+             <Button variant="ghost" size="icon" asChild>
+                <Link href="/">
+                    <Home className="size-5" />
+                    <span className="sr-only">Página Inicial</span>
+                </Link>
              </Button>
           </div>
         </header>
