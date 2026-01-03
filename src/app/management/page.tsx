@@ -3,7 +3,6 @@
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -45,17 +44,9 @@ export default function ManagementPage() {
       });
       return;
     }
-    if (!user) {
-      toast({
-        variant: 'destructive',
-        title: 'Não Autenticado',
-        description: 'Você precisa estar logado para importar questões.',
-      });
-      return;
-    }
     setIsImporting(true);
     try {
-      await importQuestions(firestore, user.uid, questionText);
+      await importQuestions(firestore, questionText);
       toast({
         title: 'Importação Concluída',
         description: 'As questões foram importadas com sucesso!',
@@ -84,7 +75,7 @@ export default function ManagementPage() {
           Gerencie as configurações e dados do aplicativo.
         </p>
       </header>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+      <div className="grid grid-cols-1 gap-8 items-start">
         <Card>
           <CardHeader>
             <CardTitle>Importar Questões</CardTitle>
