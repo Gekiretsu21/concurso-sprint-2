@@ -100,27 +100,27 @@ export default function Home() {
       <section>
         <h2 className="text-2xl font-bold tracking-tight mb-4">Principais Ferramentas</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {mainFeatures.map((feature, index) => {
-            return (
-              <Card key={feature.title} className="flex flex-col group hover:bg-card/90 transition-all">
-                <CardHeader className="flex-row gap-4 items-start">
+          {mainFeatures.map((feature) => (
+              <div key={feature.title} className="relative h-80 overflow-hidden rounded-3xl group">
+                <div className="absolute inset-0 bg-card/80"></div>
+                <div className="relative z-10 h-full flex flex-col bg-black/60 border border-white/10 p-8">
+                  <div className="flex-shrink-0 mb-4">
                     <div className="bg-primary/10 p-3 rounded-lg w-fit">
                         <feature.icon className="h-6 w-6 text-primary" />
                     </div>
-                    <div>
-                        <h3 className="text-xl font-bold">{feature.title}</h3>
-                        <p className="text-sm text-muted-foreground mt-1">{feature.description}</p>
-                    </div>
-                </CardHeader>
-                <CardContent className="flex-grow" />
-                <div className="p-6 pt-0">
+                  </div>
+                  <div className="flex-grow">
+                    <h3 className="text-xl font-bold text-white">{feature.title}</h3>
+                    <p className="text-sm text-gray-300 mt-1">{feature.description}</p>
+                  </div>
+                  <div className="flex-shrink-0 mt-6">
                     <Button asChild className="w-full md:w-auto">
                         <Link href={feature.href}>{feature.cta}</Link>
                     </Button>
+                  </div>
                 </div>
-              </Card>
-            );
-          })}
+              </div>
+            ))}
         </div>
       </section>
     </div>
