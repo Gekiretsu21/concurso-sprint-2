@@ -121,7 +121,7 @@ function MainSidebar() {
               >
                 <Link href={item.href} target={(item as any).target}>
                   <item.icon />
-                  <span>{item.label}</span>
+                  <span className={cn("transition-opacity duration-200", state === 'collapsed' ? 'opacity-0' : 'opacity-100')}>{item.label}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
