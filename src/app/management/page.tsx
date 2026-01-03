@@ -25,10 +25,12 @@ import { ClipboardPaste, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { importQuestions } from '@/firebase/actions';
 import { useFirebase } from '@/firebase';
+import { useUser } from '@/firebase/auth/use-user';
 
 export default function ManagementPage() {
   const { toast } = useToast();
   const { firestore } = useFirebase();
+  const { user } = useUser();
   const [questionText, setQuestionText] = useState('');
   const [isImporting, setIsImporting] = useState(false);
 
@@ -37,13 +39,21 @@ export default function ManagementPage() {
       toast({
         variant: 'destructive',
         title: 'Erro de Conexão',
-        description: 'Não foi possível conectar ao banco de dados. Verifique sua configuração do Firebase.',
+        description: 'Não foi possível conectar ao banco de dados. Tente novamente mais tarde.',
+      });
+      return;
+    }
+    if (!user) {
+      toast({
+        variant: 'destructive',
+        title: 'Não Autenticado',
+        description: 'Você precisa estar logado para importar questões.',
       });
       return;
     }
     setIsImporting(true);
     try {
-      await importQuestions(firestore, questionText);
+      await importQuestions(firestore, user.uid, questionText);
       toast({
         title: 'Importação Concluída',
         description: 'As questões foram importadas com sucesso!',
@@ -84,7 +94,7 @@ export default function ManagementPage() {
         <CardContent className="space-y-6">
           <Dialog>
             <DialogTrigger asChild>
-              <Button>
+              <Button disabled={!user}>
                 <ClipboardPaste />
                 Importar
               </Button>
@@ -115,7 +125,7 @@ export default function ManagementPage() {
                 <DialogClose asChild>
                   <Button variant="outline">Cancelar</Button>
                 </DialogClose>
-                <Button onClick={handleImport} disabled={isImporting}>
+                <Button onClick={handleImport} disabled={isImporting || !questionText}>
                   {isImporting ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : null}

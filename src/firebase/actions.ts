@@ -4,6 +4,7 @@ import { addDoc, collection, Firestore } from 'firebase/firestore';
 
 export async function importQuestions(
   firestore: Firestore,
+  userId: string,
   text: string
 ): Promise<void> {
   if (!text) {
@@ -39,6 +40,7 @@ export async function importQuestions(
       text: questionText.trim(),
       options: options.map((o) => o.trim()),
       answer: answer.trim(),
+      userId: userId, // Add the user ID to the document
     };
 
     promises.push(addDoc(questionsCollection, newQuestion));
