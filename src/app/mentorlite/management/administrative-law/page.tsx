@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import {
@@ -42,19 +42,33 @@ function formatEnunciado(text: string) {
 
 export default function AdministrativeLawPage() {
   const { firestore } = useFirebase();
+  const [isClient, setIsClient] = useState(false);
+  const [subject, setSubject] = useState('');
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const questionsQuery = useMemoFirebase(
     () =>
-      firestore
+      firestore && isClient
         ? query(collection(firestore, 'questoes'), where('Materia', '==', 'Direito Administrativo'))
         : null,
-    [firestore]
+    [firestore, isClient]
   );
-
+  
   const { data: adminQuestions, isLoading: isLoadingQuestions } =
-    useCollection<Question>(questionsQuery);
+  useCollection<Question>(questionsQuery);
   
   const alternativesKeys: (keyof Question)[] = ['a', 'b', 'c', 'd', 'e'];
+
+  useEffect(() => {
+    if (isClient) {
+      setSubject('Direito Administrativo');
+    }
+  }, [isClient]);
+
+  const isLoading = isLoadingQuestions || !isClient;
 
   return (
     <div className="flex flex-col gap-8">
@@ -67,7 +81,7 @@ export default function AdministrativeLawPage() {
         </Button>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            Questões de Direito Administrativo
+            Questões de {subject}
           </h1>
           <p className="text-muted-foreground">
             Visualize todas as questões cadastradas para esta matéria.
@@ -75,7 +89,7 @@ export default function AdministrativeLawPage() {
         </div>
       </header>
 
-      {isLoadingQuestions ? (
+      {isLoading ? (
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
@@ -86,8 +100,9 @@ export default function AdministrativeLawPage() {
               <div key={q.id} className="bg-black/60 border border-white/10 rounded-3xl shadow-lg shadow-black/30">
                 <CardHeader className="p-6">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-xl">Questão {index + 1}: {q.Assunto}</CardTitle>
-                    <div className="flex items-center gap-4">
+                    <CardTitle className="text-xl">Questão {index + 1}</CardTitle>
+                    <div className="flex items-center gap-2 text-xs">
+                        <Badge variant="secondary">{q.Assunto}</Badge>
                         <Badge variant="secondary">{q.Cargo}</Badge>
                         <Badge variant="outline">{q.Ano}</Badge>
                     </div>
