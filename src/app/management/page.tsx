@@ -120,7 +120,7 @@ export default function ManagementPage() {
               matéria/dificuldade/texto/opção1/opção2/.../resposta
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent>
             <Dialog>
               <DialogTrigger asChild>
                 <Button disabled={!user}>
