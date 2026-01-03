@@ -88,7 +88,6 @@ function AuthButton() {
 
 function MainSidebar() {
   const pathname = usePathname();
-  const { state } = useSidebar();
   const { user } = useUser();
   const userAvatar = PlaceHolderImages.find(p => p.id === 'user-avatar');
   const { auth } = useFirebase();
@@ -102,16 +101,13 @@ function MainSidebar() {
   }, [auth, user]);
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="none">
       <SidebarHeader className="flex items-center justify-between">
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <Link href="/" className="inline-flex items-center gap-2">
             <GraduationCap className="text-primary" />
           </Link>
         </div>
-        <SidebarTrigger
-          className={cn(state === 'expanded' ? 'block' : 'hidden')}
-        />
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
@@ -132,7 +128,7 @@ function MainSidebar() {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
-         <div className={cn('pb-4 transition-opacity duration-200', state === 'collapsed' ? 'opacity-0' : 'opacity-100' )}>
+         <div className='pb-4'>
             <AuthButton />
         </div>
         <div className="flex items-center gap-3">
@@ -141,10 +137,7 @@ function MainSidebar() {
             <AvatarFallback>{user?.isAnonymous ? 'A' : (user?.displayName?.charAt(0) ?? 'C')}</AvatarFallback>
           </Avatar>
           <div
-            className={cn(
-              'flex flex-col transition-opacity duration-200',
-              state === 'collapsed' ? 'opacity-0' : 'opacity-100'
-            )}
+            className='flex flex-col'
           >
             <p className="text-sm font-medium text-sidebar-foreground">{user?.isAnonymous ? 'Usuário Anônimo' : (user?.displayName ?? 'Concurseiro')}</p>
             <p className="text-xs text-sidebar-foreground/70">{user ? 'Usuário' : 'Plano Pro'}</p>
