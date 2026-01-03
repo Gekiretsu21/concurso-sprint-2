@@ -8,12 +8,11 @@ import { useUser } from './auth/use-user';
 // IMPORTANT: Replace this with your project's configuration.
 // You can get this from the Firebase console.
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "studio-6116545318-c4cd8.firebaseapp.com",
-  projectId: "studio-6116545318-c4cd8",
-  storageBucket: "studio-6116545318-c4cd8.appspot.com",
-  messagingSenderId: "1071465224393",
-  appId: "1:1071465224393:web:728d82599b5e510803f295",
+  projectId: 'studio-6116545318-c4cd8',
+  appId: '1:80306279068:web:2d75edabf8423a69c69359',
+  apiKey: 'AIzaSyDNdXvivPkEZDNWcAOAwHPY_szbtfX_OlE',
+  authDomain: 'studio-6116545318-c4cd8.firebaseapp.com',
+  messagingSenderId: '80306279068',
 };
 
 
