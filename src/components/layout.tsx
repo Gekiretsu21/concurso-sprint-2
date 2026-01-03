@@ -110,7 +110,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <MainSidebar />
       <SidebarInset>
         <header className="flex h-14 items-center gap-4 border-b bg-card px-6">
-          <SidebarTrigger />
+          <SidebarTrigger className="flex md:hidden" />
           <div className="flex-1" />
           <div className="flex items-center gap-4">
              <div className="flex items-center gap-1.5">
