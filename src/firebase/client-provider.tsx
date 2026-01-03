@@ -14,12 +14,12 @@ import { FirebaseProvider } from './provider';
 // IMPORTANT: Replace this with your project's configuration.
 // You can get this from the Firebase console.
 const firebaseConfig = {
-  apiKey: "REPLACE_WITH_YOUR_API_KEY",
-  authDomain: "REPLACE_WITH_YOUR_AUTH_DOMAIN",
-  projectId: "REPLACE_WITH_YOUR_PROJECT_ID",
-  storageBucket: "REPLACE_WITH_YOUR_STORAGE_BUCKET",
-  messagingSenderId: "REPLACE_WITH_YOUR_MESSAGING_SENDER_ID",
-  appId: "REPLACE_WITH_YOUR_APP_ID",
+  apiKey: "YOUR_API_KEY",
+  authDomain: "studio-6116545318-c4cd8.firebaseapp.com",
+  projectId: "studio-6116545318-c4cd8",
+  storageBucket: "studio-6116545318-c4cd8.appspot.com",
+  messagingSenderId: "1071465224393",
+  appId: "1:1071465224393:web:728d82599b5e510803f295",
 };
 
 /**

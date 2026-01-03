@@ -33,6 +33,14 @@ export default function ManagementPage() {
   const [isImporting, setIsImporting] = useState(false);
 
   const handleImport = async () => {
+    if (!firestore) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro de Conexão',
+        description: 'Não foi possível conectar ao banco de dados. Verifique sua configuração do Firebase.',
+      });
+      return;
+    }
     setIsImporting(true);
     try {
       await importQuestions(firestore, questionText);
