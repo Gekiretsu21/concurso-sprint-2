@@ -110,9 +110,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <MainSidebar />
       <SidebarInset>
         <header className="flex h-14 items-center gap-4 border-b bg-card px-6">
-          <div className="flex-1">
-            <SidebarTrigger className="md:hidden" />
-          </div>
+          <SidebarTrigger className="md:hidden" />
+          <SidebarTrigger className="hidden md:flex" />
+          <div className="flex-1" />
           <div className="flex items-center gap-4">
              <div className="flex items-center gap-1.5">
                 <Flame className="size-5 text-accent" />
@@ -122,7 +122,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 <Gift className="size-5" />
                 <span className="sr-only">Bônus</span>
              </Button>
-            <SidebarTrigger className="hidden md:flex" />
           </div>
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
