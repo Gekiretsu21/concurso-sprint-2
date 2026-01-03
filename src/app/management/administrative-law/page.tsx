@@ -32,6 +32,14 @@ interface Question {
   correctAnswer: string;
 }
 
+// Helper function to format the question text
+function formatEnunciado(text: string) {
+  if (!text) return '';
+  // Regex to find roman numerals (I to X) followed by a hyphen or space, at the beginning of a word.
+  // This will add a line break before each item in a list.
+  return text.replace(/\b(II|III|IV|V|VI|VII|VIII|IX|X)[\s-]/g, '\n$&');
+}
+
 export default function AdministrativeLawPage() {
   const { firestore } = useFirebase();
 
@@ -84,8 +92,8 @@ export default function AdministrativeLawPage() {
                         <Badge variant="outline">{q.Ano}</Badge>
                     </div>
                   </div>
-                  <CardDescription className="pt-4 text-base text-foreground">
-                    ({q.Assunto}) {q.Enunciado}
+                  <CardDescription className="pt-4 text-base text-foreground whitespace-pre-line">
+                    ({q.Assunto}) {formatEnunciado(q.Enunciado)}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
