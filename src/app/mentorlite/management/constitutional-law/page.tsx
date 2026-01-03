@@ -86,14 +86,14 @@ export default function ConstitutionalLawPage() {
               <div key={q.id} className="bg-black/60 border border-white/10 rounded-3xl shadow-lg shadow-black/30">
                 <CardHeader className="p-6">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-xl">Questão {index + 1}</CardTitle>
+                    <CardTitle className="text-xl">Questão {index + 1}: {q.Assunto}</CardTitle>
                     <div className="flex items-center gap-4">
                         <Badge variant="secondary">{q.Cargo}</Badge>
                         <Badge variant="outline">{q.Ano}</Badge>
                     </div>
                   </div>
                   <CardDescription className="pt-4 text-base text-foreground whitespace-pre-line">
-                    {q.Assunto}) {formatEnunciado(q.Enunciado)}
+                    {formatEnunciado(q.Enunciado)}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-6">
