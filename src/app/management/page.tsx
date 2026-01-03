@@ -75,8 +75,8 @@ export default function ManagementPage() {
           Gerencie as configurações e dados do aplicativo.
         </p>
       </header>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-        <div className="relative h-60 overflow-hidden rounded-3xl group">
+      <div className="flex flex-col items-center gap-6">
+        <div className="relative w-full max-w-4xl min-h-[240px] overflow-hidden rounded-3xl group">
             <div className="absolute inset-0 bg-card"></div>
             <div className="relative z-10 h-full flex flex-col bg-black/80 border border-white/10 p-8">
                 <CardTitle className="text-xl font-bold text-white">Importar Questões</CardTitle>
@@ -130,7 +130,7 @@ export default function ManagementPage() {
             </div>
         </div>
 
-        <div className="relative h-60 overflow-hidden rounded-3xl group">
+        <div className="relative w-full max-w-4xl min-h-[160px] overflow-hidden rounded-3xl group">
              <div className="absolute inset-0 bg-card"></div>
             <Link href="/management/administrative-law" className="relative z-10 h-full flex flex-col bg-black/80 border border-white/10 p-8">
                 <div className="flex-grow">
