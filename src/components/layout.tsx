@@ -111,7 +111,7 @@ function MainSidebar() {
       <SidebarHeader>
         <div className="flex items-center justify-center h-full">
           <Link href="/mentorlite" className={cn("font-bold text-accent text-lg transition-opacity duration-200", isMounted && state === 'collapsed' ? 'opacity-0' : 'opacity-100')}>
-            MENTOR LITE
+            Mentor Lite
           </Link>
         </div>
       </SidebarHeader>
