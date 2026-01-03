@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardPaste, ExternalLink, Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { importQuestions } from '@/firebase/actions';
 import { useFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
@@ -27,6 +27,11 @@ export default function ManagementPage() {
   const { user } = useUser();
   const [questionText, setQuestionText] = useState('');
   const [isImporting, setIsImporting] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleImport = async () => {
     if (!firestore) {
@@ -75,12 +80,19 @@ export default function ManagementPage() {
                 <h2 className="text-xl font-bold text-white">Importar Questões</h2>
                 <div className="flex-grow flex items-end justify-end">
                     <Dialog>
-                    <DialogTrigger asChild>
-                        <Button disabled={!user}>
+                    {isClient ? (
+                      <DialogTrigger asChild>
+                          <Button disabled={!user}>
+                          <ClipboardPaste />
+                          Importar
+                          </Button>
+                      </DialogTrigger>
+                    ) : (
+                      <Button disabled={true}>
                         <ClipboardPaste />
                         Importar
-                        </Button>
-                    </DialogTrigger>
+                      </Button>
+                    )}
                     <DialogContent className="sm:max-w-[625px]">
                         <DialogHeader>
                         <DialogTitle>Importar Questões por Texto</DialogTitle>
