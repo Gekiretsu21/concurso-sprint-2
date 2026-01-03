@@ -8,21 +8,30 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { UploadCloud } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { Paste } from 'lucide-react';
 
 export default function ManagementPage() {
   const { toast } = useToast();
 
   const handleImport = () => {
-    // Here you would typically handle the file upload and processing.
+    // Here you would typically handle the text processing.
     // For this example, we'll just show a success message.
     toast({
       title: 'Importação Iniciada',
       description:
-        'Seu arquivo foi enviado e as questões serão processadas em breve.',
+        'Seu texto foi enviado e as questões serão processadas em breve.',
     });
   };
 
@@ -38,29 +47,45 @@ export default function ManagementPage() {
         <CardHeader>
           <CardTitle>Importar Questões</CardTitle>
           <CardDescription>
-            Faça o upload de um arquivo (CSV, JSON) para adicionar novas
-            questões ao banco de dados.
+            Cole o texto (CSV, JSON) para adicionar novas questões ao banco de
+            dados.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="question-file">Arquivo de Questões</Label>
-            <div className="flex w-full max-w-lg items-center gap-4">
-              <Input
-                id="question-file"
-                type="file"
-                className="flex-1"
-                accept=".csv, application/json"
-              />
-              <Button onClick={handleImport}>
-                <UploadCloud />
-                Importar
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button>
+                <Paste />
+                Importar por Texto
               </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Formatos suportados: CSV e JSON.
-            </p>
-          </div>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[625px]">
+              <DialogHeader>
+                <DialogTitle>Importar Questões por Texto</DialogTitle>
+                <DialogDescription>
+                  Cole o conteúdo do seu arquivo no campo abaixo. Certifique-se
+                  de que o formato seja compatível (CSV ou JSON).
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-start gap-4">
+                  <Label htmlFor="question-text" className="text-right pt-2">
+                    Conteúdo
+                  </Label>
+                  <Textarea
+                    id="question-text"
+                    className="col-span-3 min-h-[250px]"
+                    placeholder="Cole seu texto aqui..."
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="submit" onClick={handleImport}>
+                  Importar Questões
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </CardContent>
       </Card>
     </div>
