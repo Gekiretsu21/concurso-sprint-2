@@ -95,13 +95,13 @@ service cloud.firestore {
      * @path /questoes/{questaoId}
      * @allow (get, list) Any authenticated user can read questions.
      * @allow (create) Any authenticated user can add a question.
-     * @allow (update, delete) Only the user who created the question can modify or delete it.
-     * @principle Provides public read access for shared data while protecting it with ownership-based writes.
+     * @allow (update, delete) Operations are denied for now for simplicity.
+     * @principle Provides public read access for shared data, and controlled writes.
      */
     match /questoes/{questaoId} {
       allow get, list: if isSignedIn();
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn();
+      allow update, delete: if false; // Deny updates and deletes for now
     }
   }
 }
