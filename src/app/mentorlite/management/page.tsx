@@ -148,6 +148,20 @@ export default function ManagementPage() {
                 </div>
             </Link>
         </div>
+        
+        <div className="relative w-full max-w-4xl group">
+            <Link href="/mentorlite/management/constitutional-law" className="relative z-10 h-full flex flex-col bg-black/80 border border-white/10 p-8 min-h-[160px] rounded-3xl shadow-lg shadow-black/30 transition-transform duration-300 group-hover:scale-[1.02] group-hover:border-white/20">
+                <div className="flex-grow">
+                    <h2 className="flex items-center justify-between text-xl font-bold text-white">
+                        Direito Constitucional
+                        <ExternalLink className="h-5 w-5 text-gray-300" />
+                    </h2>
+                    <p className="text-sm text-gray-300 mt-2">
+                        Clique aqui para visualizar todas as questões cadastradas para esta matéria.
+                    </p>
+                </div>
+            </Link>
+        </div>
 
       </div>
     </div>
