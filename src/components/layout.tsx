@@ -47,8 +47,8 @@ function MainSidebar() {
   const userAvatar = PlaceHolderImages.find(p => p.id === 'user-avatar');
 
   return (
-    <Sidebar>
-      <SidebarHeader>
+    <Sidebar collapsible="icon">
+      <SidebarHeader className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" asChild>
             <Link href="/">
@@ -64,6 +64,7 @@ function MainSidebar() {
             Concurso Sprint
           </h1>
         </div>
+        <SidebarTrigger className="hidden md:flex" />
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
