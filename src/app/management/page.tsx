@@ -109,7 +109,7 @@ export default function ManagementPage() {
           Gerencie as configurações e dados do aplicativo.
         </p>
       </header>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-8 items-start">
         <Card>
           <CardHeader>
             <CardTitle>Importar Questões</CardTitle>
@@ -166,52 +166,6 @@ export default function ManagementPage() {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Questões Importadas</CardTitle>
-            <CardDescription>
-              Visualize as questões existentes no banco de dados.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoadingQuestions ? (
-              <div className="flex justify-center items-center h-40">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : Object.keys(groupedQuestions).length > 0 ? (
-              <Accordion
-                type="single"
-                collapsible
-                className="w-full max-h-[500px] overflow-y-auto"
-              >
-                {Object.entries(groupedQuestions).map(([subject, qs]) => (
-                  <AccordionItem value={subject} key={subject}>
-                    <AccordionTrigger>
-                      {subject} ({qs.length})
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <ul className="space-y-4 pl-4">
-                        {qs.map((q) => (
-                          <li key={q.id} className="text-sm">
-                            <p className="font-semibold">{q.text}</p>
-                            <p className="text-muted-foreground">
-                              Resposta: {q.correctAnswer}
-                            </p>
-                          </li>
-                        ))}
-                      </ul>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            ) : (
-              <p className="text-muted-foreground text-center">
-                Nenhuma questão importada ainda.
-              </p>
-            )}
           </CardContent>
         </Card>
       </div>
