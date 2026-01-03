@@ -3,6 +3,7 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { FirebaseClientProvider } from './client-provider';
 import { FirebaseProvider, useFirebase } from './provider';
+import { useUser } from './auth/use-user';
 
 // IMPORTANT: Replace this with your project's configuration.
 // You can get this from the Firebase console.
@@ -28,4 +29,5 @@ export {
   FirebaseProvider,
   FirebaseClientProvider,
   useFirebase,
+  useUser,
 };
