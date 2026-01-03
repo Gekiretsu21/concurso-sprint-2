@@ -113,12 +113,6 @@ export default function ManagementPage() {
         <Card>
           <CardHeader>
             <CardTitle>Importar Questões</CardTitle>
-            <CardDescription>
-              Cole o texto para adicionar novas questões ao banco de dados. Use
-              &quot;/&quot; para separar os campos e &quot;;&quot; para
-              separar as questões. Formato:
-              matéria/dificuldade/texto/opção1/opção2/.../resposta
-            </CardDescription>
           </CardHeader>
           <CardContent>
             <Dialog>
@@ -171,12 +165,6 @@ export default function ManagementPage() {
         <Card>
           <CardHeader>
             <CardTitle>Direitos Administrativo</CardTitle>
-            <CardDescription>
-              Cole o texto para adicionar novas questões ao banco de dados. Use
-              &quot;/&quot; para separar os campos e &quot;;&quot; para
-              separar as questões. Formato:
-              matéria/dificuldade/texto/opção1/opção2/.../resposta
-            </CardDescription>
           </CardHeader>
           <CardContent>
             <Dialog>
