@@ -79,7 +79,7 @@ export default function ManagementPage() {
         <div className="relative w-full max-w-4xl group">
             <div className="relative z-10 h-full flex flex-col bg-black/80 border border-white/10 p-8 min-h-[120px] rounded-3xl shadow-lg shadow-black/30 transition-transform duration-300 group-hover:scale-[1.02] group-hover:border-white/20">
                 <CardTitle className="text-xl font-bold text-white">Importar Questões</CardTitle>
-                <div className="flex-grow flex items-center">
+                <div className="flex-grow flex items-end justify-end">
                     <Dialog>
                     <DialogTrigger asChild>
                         <Button disabled={!user}>
