@@ -29,7 +29,7 @@ export function SubjectCard({ subject, href }: SubjectCardProps) {
 
   return (
     <div className="relative w-full max-w-4xl group">
-      <Link href={href} className="relative z-10 h-full flex flex-col bg-black/80 border border-white/10 p-8 min-h-[160px] rounded-3xl shadow-lg shadow-black/30 transition-transform duration-300 group-hover:scale-[1.02] group-hover:border-white/20">
+      <Link href={href} className="relative z-10 h-full flex flex-col bg-black/80 border border-white/10 p-6 min-h-[120px] rounded-3xl shadow-lg shadow-black/30 transition-transform duration-300 group-hover:scale-[1.02] group-hover:border-white/20">
         <div className="flex-grow">
           <h2 className="flex items-center justify-between text-xl font-bold text-white">
             {subject}
