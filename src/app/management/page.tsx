@@ -18,21 +18,36 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardPaste } from 'lucide-react';
+import { ClipboardPaste, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { importQuestions } from './actions';
 
 export default function ManagementPage() {
   const { toast } = useToast();
+  const [questionText, setQuestionText] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
 
-  const handleImport = () => {
-    // Here you would typically handle the text processing.
-    // For this example, we'll just show a success message.
-    toast({
-      title: 'Importação Iniciada',
-      description:
-        'Seu texto foi enviado e as questões serão processadas em breve.',
-    });
+  const handleImport = async () => {
+    setIsImporting(true);
+    const result = await importQuestions(questionText);
+    setIsImporting(false);
+
+    if (result.success) {
+      toast({
+        title: 'Importação Concluída',
+        description: result.message,
+      });
+      setQuestionText('');
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Erro na Importação',
+        description: result.message,
+      });
+    }
   };
 
   return (
@@ -47,8 +62,9 @@ export default function ManagementPage() {
         <CardHeader>
           <CardTitle>Importar Questões</CardTitle>
           <CardDescription>
-            Cole o texto (CSV, JSON) para adicionar novas questões ao banco de
-            dados.
+            Cole o texto para adicionar novas questões ao banco de dados.
+            Use "/" para separar os campos e ";" para separar as questões.
+            Formato: matéria/dificuldade/texto da questão/opção1/opção2/.../resposta
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -63,8 +79,8 @@ export default function ManagementPage() {
               <DialogHeader>
                 <DialogTitle>Importar Questões por Texto</DialogTitle>
                 <DialogDescription>
-                  Cole o conteúdo do seu arquivo no campo abaixo. Certifique-se
-                  de que o formato seja compatível (CSV ou JSON).
+                  Cole o conteúdo no campo abaixo. Certifique-se
+                  de que o formato esteja correto.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
@@ -76,11 +92,19 @@ export default function ManagementPage() {
                     id="question-text"
                     className="col-span-3 min-h-[250px]"
                     placeholder="Cole seu texto aqui..."
+                    value={questionText}
+                    onChange={(e) => setQuestionText(e.target.value)}
                   />
                 </div>
               </div>
               <DialogFooter>
-                <Button type="submit" onClick={handleImport}>
+                <DialogClose asChild>
+                  <Button variant="outline">Cancelar</Button>
+                </DialogClose>
+                <Button onClick={handleImport} disabled={isImporting}>
+                  {isImporting ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : null}
                   Importar Questões
                 </Button>
               </DialogFooter>
