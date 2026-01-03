@@ -56,7 +56,7 @@ export default function ManagementPage() {
             <DialogTrigger asChild>
               <Button>
                 <ClipboardPaste />
-                Importar por Texto
+                Importar
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[625px]">
