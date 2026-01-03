@@ -101,6 +101,8 @@ export default function ManagementPage() {
     }
   };
 
+  const adminQuestions = groupedQuestions['Direito Administrativo'] || [];
+
   return (
     <div className="flex flex-col gap-8">
       <header>
@@ -166,7 +168,47 @@ export default function ManagementPage() {
           <CardHeader>
             <CardTitle>Direito Administrativo</CardTitle>
           </CardHeader>
-          <CardContent className="h-[2rem]" />
+          <CardContent>
+            {isLoadingQuestions ? (
+              <div className="flex items-center justify-center h-24">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : adminQuestions.length > 0 ? (
+              <Accordion type="single" collapsible className="w-full">
+                {adminQuestions.map((q) => (
+                  <AccordionItem value={q.id} key={q.id}>
+                    <AccordionTrigger className="text-left hover:no-underline">
+                      {q.text}
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="flex flex-col gap-2 pt-2">
+                        {q.options.map((opt: string, index: number) => (
+                          <p
+                            key={index}
+                            className={
+                              opt === q.correctAnswer
+                                ? 'text-emerald-600 font-semibold'
+                                : 'text-muted-foreground'
+                            }
+                          >
+                            {opt}
+                          </p>
+                        ))}
+                        <p className="text-sm text-foreground/80 mt-2">
+                          <span className="font-semibold">Resposta:</span>{' '}
+                          {q.correctAnswer}
+                        </p>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            ) : (
+              <p className="text-muted-foreground text-center">
+                Nenhuma questão de Direito Administrativo encontrada.
+              </p>
+            )}
+          </CardContent>
         </Card>
       </div>
     </div>
