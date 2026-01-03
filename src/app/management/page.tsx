@@ -76,8 +76,8 @@ export default function ManagementPage() {
         </p>
       </header>
       <div className="flex flex-col items-center gap-6">
-        <div className="relative w-full max-w-4xl min-h-[240px] overflow-hidden rounded-3xl group">
-            <div className="relative z-10 h-full flex flex-col bg-black/80 border border-white/10 p-8">
+        <div className="relative w-full max-w-4xl group">
+            <div className="relative z-10 h-full flex flex-col bg-black/80 border border-white/10 p-8 min-h-[240px] rounded-3xl shadow-lg shadow-black/30 transition-transform duration-300 group-hover:scale-[1.02] group-hover:border-white/20">
                 <CardTitle className="text-xl font-bold text-white">Importar Questões</CardTitle>
                 <div className="flex-grow flex items-center">
                     <Dialog>
@@ -129,8 +129,8 @@ export default function ManagementPage() {
             </div>
         </div>
 
-        <div className="relative w-full max-w-4xl min-h-[160px] overflow-hidden rounded-3xl group">
-            <Link href="/management/administrative-law" className="relative z-10 h-full flex flex-col bg-black/80 border border-white/10 p-8">
+        <div className="relative w-full max-w-4xl group">
+            <Link href="/management/administrative-law" className="relative z-10 h-full flex flex-col bg-black/80 border border-white/10 p-8 min-h-[160px] rounded-3xl shadow-lg shadow-black/30 transition-transform duration-300 group-hover:scale-[1.02] group-hover:border-white/20">
                 <div className="flex-grow">
                     <CardTitle className="flex items-center justify-between text-xl font-bold text-white">
                         Direito Administrativo
