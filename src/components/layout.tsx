@@ -40,14 +40,14 @@ import { useFirebase } from '@/firebase/provider';
 import { useEffect, useState } from 'react';
 
 const menuItems = [
-  { href: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/questions', icon: ClipboardList, label: 'Questões' },
-  { href: '/simulated-exams', icon: FileText, label: 'Simulados' },
-  { href: '/flashcards', icon: Layers, label: 'Flashcards' },
-  { href: '/analytics', icon: BarChart2, label: 'Estatísticas' },
-  { href: '/study-plan', icon: BrainCircuit, label: 'Plano de Estudo IA' },
+  { href: '/mentorlite', icon: LayoutDashboard, label: 'Dashboard' },
+  { href: '/mentorlite/questions', icon: ClipboardList, label: 'Questões' },
+  { href: '/mentorlite/simulated-exams', icon: FileText, label: 'Simulados' },
+  { href: '/mentorlite/flashcards', icon: Layers, label: 'Flashcards' },
+  { href: '/mentorlite/analytics', icon: BarChart2, label: 'Estatísticas' },
+  { href: '/mentorlite/study-plan', icon: BrainCircuit, label: 'Plano de Estudo IA' },
   {
-    href: '/management',
+    href: '/mentorlite/management',
     icon: Settings,
     label: 'Gerenciamento',
   },
@@ -110,7 +110,7 @@ function MainSidebar() {
     <Sidebar>
       <SidebarHeader>
         <div className="flex items-center justify-center h-full">
-          <Link href="/" className={cn("font-bold text-accent text-lg transition-opacity duration-200", isMounted && state === 'collapsed' ? 'opacity-0' : 'opacity-100')}>
+          <Link href="/mentorlite" className={cn("font-bold text-accent text-lg transition-opacity duration-200", isMounted && state === 'collapsed' ? 'opacity-0' : 'opacity-100')}>
             MENTOR LITE
           </Link>
         </div>
