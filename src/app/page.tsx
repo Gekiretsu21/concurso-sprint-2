@@ -11,7 +11,7 @@ export default function LandingPage() {
     { name: 'O Método', href: '#metodo' },
     { name: 'Mentores', href: '#mentores' },
     { name: 'Arsenal', href: '#arsenal' },
-    { name: '✨ Mentor IA Free', href: '/mentorlite' },
+    { name: 'Mentor Lite', href: '/mentorlite', special: true },
   ];
 
   return (
@@ -31,7 +31,15 @@ export default function LandingPage() {
             </Link>
             <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
               {navLinks.map(link => (
-                <Link key={link.name} href={link.href} className="text-muted-foreground hover:text-foreground transition-colors">
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className={
+                    link.special
+                      ? 'font-bold text-accent hover:text-accent/90 transition-colors'
+                      : 'text-muted-foreground hover:text-foreground transition-colors'
+                  }
+                >
                   {link.name}
                 </Link>
               ))}
