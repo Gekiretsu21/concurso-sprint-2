@@ -64,7 +64,6 @@ function MainSidebar() {
             Mentoria Academy
           </h1>
         </div>
-        <SidebarTrigger className="hidden md:flex" />
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
@@ -111,9 +110,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <MainSidebar />
       <SidebarInset>
         <header className="flex h-14 items-center gap-4 border-b bg-card px-6">
-          <SidebarTrigger className="md:hidden" />
           <div className="flex-1">
-            {/* Can add breadcrumbs or page title here */}
+            <SidebarTrigger className="md:hidden" />
           </div>
           <div className="flex items-center gap-4">
              <div className="flex items-center gap-1.5">
@@ -124,6 +122,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 <Gift className="size-5" />
                 <span className="sr-only">Bônus</span>
              </Button>
+            <SidebarTrigger className="hidden md:flex" />
           </div>
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
