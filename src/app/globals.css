@@ -38,7 +38,7 @@
     --chart-2: 160 80% 45%;
     --chart-3: 48 96% 59%;
 
-    --sidebar-background: 222 84% 4.9%; /* Dark blue background */
+    --sidebar-background: 222 84% 4%; /* Slightly darker background */
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 255 75% 58%; /* Purple for primary highlights */
     --sidebar-primary-foreground: 210 40% 98%;
@@ -64,7 +64,7 @@
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
+    --muted: 217.2 32.6% 17se%;
     --muted-foreground: 215 20.2% 65.1%;
 
     --accent: 48 96% 59%;
@@ -81,7 +81,7 @@
     --chart-2: 160 80% 45%;
     --chart-3: 48 96% 59%;
 
-    --sidebar-background: 222 84% 4.9%; /* Dark blue background */
+    --sidebar-background: 222 84% 4%; /* Slightly darker background */
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 255 75% 58%; /* Purple for primary highlights */
     --sidebar-primary-foreground: 210 40% 98%;
