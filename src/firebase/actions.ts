@@ -20,7 +20,7 @@ export async function importQuestions(
   for (const qStr of questionsStr) {
     if (qStr.trim() === '') continue;
 
-    // Format: Ano/Assunto/Cargo/Enunciado/Materia/a/b/c/d/e/correctAnswer
+    // Format: Materia/Ano/Assunto/Cargo/Enunciado/a/b/c/d/e/correctAnswer
     const parts = qStr.split('/');
     if (parts.length < 11) {
       console.warn('Skipping invalid question format (less than 11 parts):', qStr);
@@ -43,18 +43,17 @@ export async function importQuestions(
 
 
     const newQuestion = {
+        Materia: Materia.trim(),
         Ano: Ano.trim(),
         Assunto: Assunto.trim(),
         Cargo: Cargo.trim(),
         Enunciado: Enunciado.trim(),
-        Materia: Materia.trim(),
         a: a.trim(),
         b: b.trim(),
         c: c.trim(),
         d: d.trim(),
         e: e.trim(),
         correctAnswer: correctAnswer.trim(),
-        userId: userId,
     };
 
     // Use non-blocking write with error handling
