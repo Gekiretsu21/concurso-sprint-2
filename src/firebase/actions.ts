@@ -28,11 +28,11 @@ export async function importQuestions(
     }
 
     const [
+        Materia,
         Ano,
         Assunto,
         Cargo,
         Enunciado,
-        Materia,
         a,
         b,
         c,
