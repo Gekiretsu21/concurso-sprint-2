@@ -52,16 +52,17 @@ function MainSidebar() {
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <Link href="/" className="inline-flex items-center gap-2">
             <GraduationCap className="text-primary" />
+             <h1
+              className={cn(
+                'text-xl font-semibold text-accent transition-opacity duration-200',
+                state === 'collapsed' ? 'opacity-0' : 'opacity-100'
+              )}
+            >
+              Mentoria Academy
+            </h1>
           </Link>
-          <h1
-            className={cn(
-              'text-xl font-semibold text-accent transition-opacity duration-200 truncate',
-              state === 'collapsed' ? 'opacity-0' : 'opacity-100'
-            )}
-          >
-            Mentoria Academy
-          </h1>
         </div>
+        <SidebarTrigger className={cn(state === 'collapsed' ? 'block' : 'hidden')} />
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
