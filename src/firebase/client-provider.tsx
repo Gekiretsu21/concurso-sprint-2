@@ -1,59 +1,25 @@
 'use client';
 
-import { FirebaseApp, initializeApp } from 'firebase/app';
-import { Auth, getAuth, connectAuthEmulator } from 'firebase/auth';
-import {
-  Firestore,
-  getFirestore,
-  connectFirestoreEmulator,
-} from 'firebase/firestore';
-import { useMemo, type ReactNode } from 'react';
-import { FirebaseProvider } from './provider';
+import React, { useMemo, type ReactNode } from 'react';
+import { FirebaseProvider } from '@/firebase/provider';
+import { initializeFirebase } from '@/firebase';
 
-// The configuration object for your Firebase project.
-const firebaseConfig = {
-  projectId: 'studio-6116545318-c4cd8',
-  appId: '1:80306279068:web:2d75edabf8423a69c69359',
-  apiKey: 'AIzaSyDNdXvivPkEZDNWcAOAwHPY_szbtfX_OlE',
-  authDomain: 'studio-6116545318-c4cd8.firebaseapp.com',
-  messagingSenderId: '80306279068',
-};
-
-/**
- * Initializes a Firebase app instance, returning a memoized object with the
- * app, auth, and firestore services.
- *
- * @returns An object containing the Firebase app, auth, and firestore instances.
- */
-function useFirebaseClient() {
-  const app = useMemo(() => initializeApp(firebaseConfig), []);
-  const auth = useMemo(() => getAuth(app), [app]);
-  const firestore = useMemo(() => getFirestore(app), [app]);
-
-  // If you are running the Firebase Local Emulator Suite, you can connect
-  // to the emulators here.
-  // if (process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true') {
-  //   connectAuthEmulator(auth, 'http://localhost:9099');
-  //   connectFirestoreEmulator(firestore, 'localhost', 8080);
-  // }
-
-  return { app, auth, firestore };
+interface FirebaseClientProviderProps {
+  children: ReactNode;
 }
 
-/**
- * The client-side provider for Firebase services.
- *
- * This provider initializes the Firebase app on the client and makes the app,
- * auth, and firestore instances available to all child components through the
- * `FirebaseProvider`.
- *
- * @param children The child components to render.
- */
-export function FirebaseClientProvider({ children }: { children: ReactNode }) {
-  const { app, auth, firestore } = useFirebaseClient();
+export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
+  const firebaseServices = useMemo(() => {
+    // Initialize Firebase on the client side, once per component mount.
+    return initializeFirebase();
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   return (
-    <FirebaseProvider app={app} auth={auth} firestore={firestore}>
+    <FirebaseProvider
+      firebaseApp={firebaseServices.firebaseApp}
+      auth={firebaseServices.auth}
+      firestore={firebaseServices.firestore}
+    >
       {children}
     </FirebaseProvider>
   );
