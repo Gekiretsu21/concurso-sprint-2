@@ -23,30 +23,36 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardPaste, Loader2 } from 'lucide-react';
 import { useState } from 'react';
-import { importQuestions } from './actions';
+import { importQuestions } from '@/firebase/actions';
+import { useFirebase } from '@/firebase';
 
 export default function ManagementPage() {
   const { toast } = useToast();
+  const { firestore } = useFirebase();
   const [questionText, setQuestionText] = useState('');
   const [isImporting, setIsImporting] = useState(false);
 
   const handleImport = async () => {
     setIsImporting(true);
-    const result = await importQuestions(questionText);
-    setIsImporting(false);
-
-    if (result.success) {
+    try {
+      await importQuestions(firestore, questionText);
       toast({
         title: 'Importação Concluída',
-        description: result.message,
+        description: 'As questões foram importadas com sucesso!',
       });
       setQuestionText('');
-    } else {
-      toast({
+    } catch (error) {
+       let message = 'Ocorreu um erro ao importar as questões.';
+       if (error instanceof Error) {
+        message = error.message;
+       }
+       toast({
         variant: 'destructive',
         title: 'Erro na Importação',
-        description: result.message,
+        description: message,
       });
+    } finally {
+      setIsImporting(false);
     }
   };
 
@@ -62,9 +68,9 @@ export default function ManagementPage() {
         <CardHeader>
           <CardTitle>Importar Questões</CardTitle>
           <CardDescription>
-            Cole o texto para adicionar novas questões ao banco de dados.
-            Use "/" para separar os campos e ";" para separar as questões.
-            Formato: matéria/dificuldade/texto da questão/opção1/opção2/.../resposta
+            Cole o texto para adicionar novas questões ao banco de dados. Use "/"
+            para separar os campos e ";" para separar as questões. Formato:
+            matéria/dificuldade/texto da questão/opção1/opção2/.../resposta
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -79,8 +85,8 @@ export default function ManagementPage() {
               <DialogHeader>
                 <DialogTitle>Importar Questões por Texto</DialogTitle>
                 <DialogDescription>
-                  Cole o conteúdo no campo abaixo. Certifique-se
-                  de que o formato esteja correto.
+                  Cole o conteúdo no campo abaixo. Certifique-se de que o
+                  formato esteja correto.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
