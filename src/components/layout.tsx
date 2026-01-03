@@ -50,11 +50,9 @@ function MainSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="flex items-center justify-between">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/">
-              <GraduationCap className="text-primary" />
-            </Link>
-          </Button>
+          <SidebarTrigger>
+            <GraduationCap className="text-primary" />
+          </SidebarTrigger>
           <h1
             className={cn(
               'text-xl font-semibold text-accent transition-opacity duration-200 truncate',
