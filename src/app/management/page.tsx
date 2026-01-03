@@ -164,55 +164,9 @@ export default function ManagementPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Direitos Administrativo</CardTitle>
+            <CardTitle>Direito Administrativo</CardTitle>
           </CardHeader>
-          <CardContent>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button disabled={!user}>
-                  <ClipboardPaste />
-                  Importar
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[625px]">
-                <DialogHeader>
-                  <DialogTitle>Importar Questões por Texto</DialogTitle>
-                  <DialogDescription>
-                    Cole o conteúdo no campo abaixo. Certifique-se de que o
-                    formato esteja correto.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-start gap-4">
-                    <Label htmlFor="question-text-2" className="text-right pt-2">
-                      Conteúdo
-                    </Label>
-                    <Textarea
-                      id="question-text-2"
-                      className="col-span-3 min-h-[250px]"
-                      placeholder="Cole seu texto aqui..."
-                      value={questionText}
-                      onChange={(e) => setQuestionText(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button variant="outline">Cancelar</Button>
-                  </DialogClose>
-                  <Button
-                    onClick={handleImport}
-                    disabled={isImporting || !questionText}
-                  >
-                    {isImporting ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : null}
-                    Importar Questões
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </CardContent>
+          <CardContent className="h-[2rem]" />
         </Card>
       </div>
     </div>
