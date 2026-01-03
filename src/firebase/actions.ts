@@ -1,6 +1,9 @@
 'use client';
 
 import { addDoc, collection, Firestore } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+
 
 export async function importQuestions(
   firestore: Firestore,
@@ -14,13 +17,11 @@ export async function importQuestions(
   const questionsStr = text.trim().split(';');
   const questionsCollection = collection(firestore, 'questoes');
 
-  const promises = [];
-
   for (const qStr of questionsStr) {
     if (qStr.trim() === '') continue;
 
     const parts = qStr.split('/');
-    if (parts.length < 6) {
+    if (parts.length < 5) { // Subject, difficulty, text, at least one option, answer
       console.warn('Skipping invalid question format:', qStr);
       continue;
     }
@@ -39,12 +40,19 @@ export async function importQuestions(
       difficulty: difficulty.trim(),
       text: questionText.trim(),
       options: options.map((o) => o.trim()),
-      answer: answer.trim(),
-      userId: userId, // Add the user ID to the document
+      correctAnswer: answer.trim(), // Field name should match the schema
+      userId: userId,
     };
 
-    promises.push(addDoc(questionsCollection, newQuestion));
+    // Use non-blocking write with error handling
+    addDoc(questionsCollection, newQuestion).catch(serverError => {
+      console.error("Firestore addDoc error:", serverError);
+      const permissionError = new FirestorePermissionError({
+        path: questionsCollection.path,
+        operation: 'create',
+        requestResourceData: newQuestion,
+      });
+      errorEmitter.emit('permission-error', permissionError);
+    });
   }
-
-  await Promise.all(promises);
 }
