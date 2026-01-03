@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ExternalLink, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 
@@ -33,7 +33,6 @@ export function SubjectCard({ subject, href }: SubjectCardProps) {
         <div className="flex-grow">
           <h2 className="flex items-center justify-between text-xl font-bold text-white">
             {subject}
-            <ExternalLink className="h-5 w-5 text-gray-300" />
           </h2>
           <p className="text-sm text-gray-300 mt-2">
             Clique aqui para visualizar todas as questões cadastradas para esta matéria.
