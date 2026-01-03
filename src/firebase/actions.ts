@@ -20,28 +20,41 @@ export async function importQuestions(
   for (const qStr of questionsStr) {
     if (qStr.trim() === '') continue;
 
+    // Format: Ano/Assunto/Cargo/Enunciado/Materia/a/b/c/d/e/correctAnswer
     const parts = qStr.split('/');
-    if (parts.length < 5) { // Subject, difficulty, text, at least one option, answer
-      console.warn('Skipping invalid question format:', qStr);
+    if (parts.length < 11) {
+      console.warn('Skipping invalid question format (less than 11 parts):', qStr);
       continue;
     }
 
-    const [subject, difficulty, questionText, ...optionsAndAnswer] = parts;
-    const answer = optionsAndAnswer.pop();
-    const options = optionsAndAnswer;
+    const [
+        Ano,
+        Assunto,
+        Cargo,
+        Enunciado,
+        Materia,
+        a,
+        b,
+        c,
+        d,
+        e,
+        correctAnswer
+    ] = parts;
 
-    if (!answer || options.length === 0) {
-      console.warn('Skipping question with no answer or options:', qStr);
-      continue;
-    }
 
     const newQuestion = {
-      subject: subject.trim(),
-      difficulty: difficulty.trim(),
-      text: questionText.trim(),
-      options: options.map((o) => o.trim()),
-      correctAnswer: answer.trim(), // Field name should match the schema
-      userId: userId,
+        Ano: Ano.trim(),
+        Assunto: Assunto.trim(),
+        Cargo: Cargo.trim(),
+        Enunciado: Enunciado.trim(),
+        Materia: Materia.trim(),
+        a: a.trim(),
+        b: b.trim(),
+        c: c.trim(),
+        d: d.trim(),
+        e: e.trim(),
+        correctAnswer: correctAnswer.trim(),
+        userId: userId,
     };
 
     // Use non-blocking write with error handling

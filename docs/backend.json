@@ -41,17 +41,45 @@
           "type": "string",
           "description": "Unique identifier for the question."
         },
-        "subject": {
+        "Materia": {
           "type": "string",
-          "description": "Subject of the question (e.g., Math, History)."
+          "description": "Subject of the question (e.g., Direito Administrativo)."
         },
-        "difficulty": {
+        "Ano": {
           "type": "string",
-          "description": "Difficulty level of the question (e.g., Easy, Medium, Hard)."
+          "description": "The year the question was from."
         },
-        "text": {
+        "Assunto": {
+          "type": "string",
+          "description": "The specific topic of the question."
+        },
+        "Cargo": {
+          "type": "string",
+          "description": "The job position the question is for."
+        },
+        "Enunciado": {
           "type": "string",
           "description": "The actual question text."
+        },
+        "a": {
+          "type": "string",
+          "description": "Alternative a"
+        },
+        "b": {
+          "type": "string",
+          "description": "Alternative b"
+        },
+        "c": {
+          "type": "string",
+          "description": "Alternative c"
+        },
+        "d": {
+          "type": "string",
+          "description": "Alternative d"
+        },
+        "e": {
+          "type": "string",
+          "description": "Alternative e"
         },
         "correctAnswer": {
           "type": "string",
@@ -60,9 +88,8 @@
       },
       "required": [
         "id",
-        "subject",
-        "difficulty",
-        "text",
+        "Materia",
+        "Enunciado",
         "correctAnswer"
       ]
     },
