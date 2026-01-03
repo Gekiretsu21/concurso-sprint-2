@@ -21,18 +21,12 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardPaste, Loader2 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { ClipboardPaste, ExternalLink, Loader2 } from 'lucide-react';
+import { useState } from 'react';
 import { importQuestions } from '@/firebase/actions';
-import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
-import { collection } from 'firebase/firestore';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+import Link from 'next/link';
 
 export default function ManagementPage() {
   const { toast } = useToast();
@@ -40,25 +34,6 @@ export default function ManagementPage() {
   const { user } = useUser();
   const [questionText, setQuestionText] = useState('');
   const [isImporting, setIsImporting] = useState(false);
-
-  const questionsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'questoes') : null),
-    [firestore]
-  );
-  const { data: questions, isLoading: isLoadingQuestions } =
-    useCollection(questionsQuery);
-
-  const groupedQuestions = useMemo(() => {
-    if (!questions) return {};
-    return questions.reduce((acc, q) => {
-      const subject = q.subject || 'Outros';
-      if (!acc[subject]) {
-        acc[subject] = [];
-      }
-      acc[subject].push(q);
-      return acc;
-    }, {} as Record<string, any[]>);
-  }, [questions]);
 
   const handleImport = async () => {
     if (!firestore) {
@@ -101,8 +76,6 @@ export default function ManagementPage() {
     }
   };
 
-  const adminQuestions = groupedQuestions['Direito Administrativo'] || [];
-
   return (
     <div className="flex flex-col gap-8">
       <header>
@@ -111,7 +84,7 @@ export default function ManagementPage() {
           Gerencie as configurações e dados do aplicativo.
         </p>
       </header>
-      <div className="grid grid-cols-1 lg:grid-cols-1 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         <Card>
           <CardHeader>
             <CardTitle>Importar Questões</CardTitle>
@@ -164,51 +137,20 @@ export default function ManagementPage() {
             </Dialog>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Direito Administrativo</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoadingQuestions ? (
-              <div className="flex items-center justify-center h-24">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : adminQuestions.length > 0 ? (
-              <Accordion type="single" collapsible className="w-full">
-                {adminQuestions.map((q) => (
-                  <AccordionItem value={q.id} key={q.id}>
-                    <AccordionTrigger className="text-left hover:no-underline">
-                      {q.text}
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="flex flex-col gap-2 pt-2">
-                        {q.options.map((opt: string, index: number) => (
-                          <p
-                            key={index}
-                            className={
-                              opt === q.correctAnswer
-                                ? 'text-emerald-600 font-semibold'
-                                : 'text-muted-foreground'
-                            }
-                          >
-                            {opt}
-                          </p>
-                        ))}
-                        <p className="text-sm text-foreground/80 mt-2">
-                          <span className="font-semibold">Resposta:</span>{' '}
-                          {q.correctAnswer}
-                        </p>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            ) : (
-              <p className="text-muted-foreground text-center">
-                Nenhuma questão de Direito Administrativo encontrada.
+        <Card className="hover:border-primary transition-colors">
+          <Link href="/management/administrative-law" className="block h-full">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                Direito Administrativo
+                <ExternalLink className="h-5 w-5 text-muted-foreground" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                Clique aqui para visualizar todas as questões cadastradas para esta matéria.
               </p>
-            )}
-          </CardContent>
+            </CardContent>
+          </Link>
         </Card>
       </div>
     </div>
