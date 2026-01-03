@@ -50,9 +50,9 @@ function MainSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="flex items-center justify-between">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <SidebarTrigger>
+          <Link href="/" className="inline-flex items-center gap-2">
             <GraduationCap className="text-primary" />
-          </SidebarTrigger>
+          </Link>
           <h1
             className={cn(
               'text-xl font-semibold text-accent transition-opacity duration-200 truncate',
@@ -108,7 +108,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <MainSidebar />
       <SidebarInset>
         <header className="flex h-14 items-center gap-4 border-b bg-card px-6">
-          <SidebarTrigger className="flex md:hidden" />
+          <SidebarTrigger className="flex" />
           <div className="flex-1" />
           <div className="flex items-center gap-4">
              <div className="flex items-center gap-1.5">
