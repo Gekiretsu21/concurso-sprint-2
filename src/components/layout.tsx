@@ -37,7 +37,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useUser } from '@/firebase';
 import { GoogleAuthProvider, signInAnonymously, signInWithPopup, signOut } from 'firebase/auth';
 import { useFirebase } from '@/firebase/provider';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const menuItems = [
   { href: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -92,6 +92,11 @@ function MainSidebar() {
   const userAvatar = PlaceHolderImages.find(p => p.id === 'user-avatar');
   const { auth } = useFirebase();
   const { state } = useSidebar();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -105,7 +110,7 @@ function MainSidebar() {
     <Sidebar>
       <SidebarHeader>
         <div className="flex items-center justify-center h-full">
-          <Link href="/" className={cn("font-bold text-accent text-lg transition-opacity duration-200", state === 'collapsed' ? 'opacity-0' : 'opacity-100')}>
+          <Link href="/" className={cn("font-bold text-accent text-lg transition-opacity duration-200", isMounted && state === 'collapsed' ? 'opacity-0' : 'opacity-100')}>
             MENTOR LITE
           </Link>
         </div>
