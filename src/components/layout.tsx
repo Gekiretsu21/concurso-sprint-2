@@ -91,6 +91,7 @@ function MainSidebar() {
   const { user } = useUser();
   const userAvatar = PlaceHolderImages.find(p => p.id === 'user-avatar');
   const { auth } = useFirebase();
+  const { state } = useSidebar();
 
   useEffect(() => {
     if (!user) {
@@ -101,9 +102,9 @@ function MainSidebar() {
   }, [auth, user]);
 
   return (
-    <Sidebar collapsible="none">
-      <SidebarHeader className="flex items-center justify-between">
-        <div className="flex items-center gap-2 flex-1 min-w-0">
+    <Sidebar>
+      <SidebarHeader>
+        <div className="flex items-center gap-2">
           <Link href="/" className="inline-flex items-center gap-2">
             <GraduationCap className="text-primary" />
           </Link>
@@ -137,7 +138,7 @@ function MainSidebar() {
             <AvatarFallback>{user?.isAnonymous ? 'A' : (user?.displayName?.charAt(0) ?? 'C')}</AvatarFallback>
           </Avatar>
           <div
-            className='flex flex-col'
+            className={cn('flex flex-col transition-opacity duration-200', state === 'collapsed' ? 'opacity-0' : 'opacity-100')}
           >
             <p className="text-sm font-medium text-sidebar-foreground">{user?.isAnonymous ? 'Usuário Anônimo' : (user?.displayName ?? 'Concurseiro')}</p>
             <p className="text-xs text-sidebar-foreground/70">{user ? 'Usuário' : 'Plano Pro'}</p>
@@ -154,6 +155,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <MainSidebar />
       <SidebarInset>
         <header className="flex h-14 items-center gap-4 border-b bg-card px-6">
+          <SidebarTrigger className="block" />
           <div className="flex-1" />
           <div className="flex items-center gap-4">
              <div className="flex items-center gap-1.5">

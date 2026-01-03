@@ -168,14 +168,14 @@ const Sidebar = React.forwardRef<
     {
       side = "left",
       variant = "sidebar",
-      collapsible = "offcanvas",
+      collapsible = "icon",
       className,
       children,
       ...props
     },
     ref
   ) => {
-    const { isMobile, openMobile, setOpenMobile } = useSidebar()
+    const { open, isMobile, openMobile, setOpenMobile } = useSidebar()
 
     if (collapsible === "none") {
       return (
@@ -216,8 +216,8 @@ const Sidebar = React.forwardRef<
       <div
         ref={ref}
         className="group peer hidden md:block text-sidebar-foreground"
-        data-state='expanded'
-        data-collapsible={false}
+        data-state={open ? "expanded" : "collapsed"}
+        data-collapsible={collapsible !== "offcanvas"}
         data-variant={variant}
         data-side={side}
       >
@@ -225,14 +225,16 @@ const Sidebar = React.forwardRef<
         <div
           className={cn(
             "duration-200 relative h-svh w-[--sidebar-width] bg-transparent transition-[width] ease-linear",
+            "group-data-[state=collapsed]:w-[--sidebar-width-icon]"
           )}
         />
         <div
           className={cn(
             "duration-200 fixed inset-y-0 z-10 hidden h-svh w-[--sidebar-width] transition-[left,right,width] ease-linear md:flex",
+            "group-data-[state=collapsed]:w-[--sidebar-width-icon]",
             side === "left"
-              ? "left-0"
-              : "right-0",
+              ? "left-0 group-data-[variant=floating]:left-2 group-data-[variant=inset]:left-2"
+              : "right-0 group-data-[variant=floating]:right-2 group-data-[variant=inset]:right-2",
             className
           )}
           {...props}
@@ -314,6 +316,8 @@ const SidebarInset = React.forwardRef<
       ref={ref}
       className={cn(
         "relative flex min-h-svh flex-1 flex-col bg-background",
+        "duration-200 transition-[margin] ease-linear",
+        "md:group-data-[state=expanded]/sidebar-wrapper:ml-[--sidebar-width]",
         "peer-data-[variant=inset]:min-h-[calc(100svh-theme(spacing.4))] md:peer-data-[variant=inset]:m-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow",
         className
       )}
@@ -333,6 +337,7 @@ const SidebarInput = React.forwardRef<
       data-sidebar="input"
       className={cn(
         "h-8 w-full bg-background shadow-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+        "group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:px-0",
         className
       )}
       {...props}
