@@ -94,10 +94,10 @@ export default function ManagementPage() {
                         Importar
                       </Button>
                     )}
-                    <DialogContent className="sm:max-w-[625px]">
+                    <DialogContent className="sm:max-w-[812px] bg-gradient-to-br from-green-900/80 to-blue-900/80 border-white/20 text-white">
                         <DialogHeader>
                         <DialogTitle>Importar Questões por Texto</DialogTitle>
-                        <DialogDescription>
+                        <DialogDescription className="text-white/80">
                             Cole o conteúdo no campo abaixo. Certifique-se de que o
                             formato esteja correto.
                         </DialogDescription>
@@ -109,7 +109,7 @@ export default function ManagementPage() {
                             </Label>
                             <Textarea
                             id="question-text"
-                            className="col-span-3 min-h-[250px]"
+                            className="col-span-3 min-h-[250px] bg-black/50 border-white/20 text-white"
                             placeholder="Cole seu texto aqui..."
                             value={questionText}
                             onChange={(e) => setQuestionText(e.target.value)}
@@ -123,6 +123,7 @@ export default function ManagementPage() {
                         <Button
                             onClick={handleImport}
                             disabled={isImporting || !questionText}
+                            className="bg-black text-white hover:bg-gray-800"
                         >
                             {isImporting ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
