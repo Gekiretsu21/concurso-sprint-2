@@ -20,6 +20,7 @@ import { importQuestions } from '@/firebase/actions';
 import { useFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
 import Link from 'next/link';
+import { SubjectCard } from '@/components/SubjectCard';
 
 export default function ManagementPage() {
   const { toast } = useToast();
@@ -135,47 +136,9 @@ export default function ManagementPage() {
             </div>
         </div>
 
-        <div className="relative w-full max-w-4xl group">
-            <Link href="/mentorlite/management/administrative-law" className="relative z-10 h-full flex flex-col bg-black/80 border border-white/10 p-8 min-h-[160px] rounded-3xl shadow-lg shadow-black/30 transition-transform duration-300 group-hover:scale-[1.02] group-hover:border-white/20">
-                <div className="flex-grow">
-                    <h2 className="flex items-center justify-between text-xl font-bold text-white">
-                        Direito Administrativo
-                        <ExternalLink className="h-5 w-5 text-gray-300" />
-                    </h2>
-                    <p className="text-sm text-gray-300 mt-2">
-                        Clique aqui para visualizar todas as questões cadastradas para esta matéria.
-                    </p>
-                </div>
-            </Link>
-        </div>
-        
-        <div className="relative w-full max-w-4xl group">
-            <Link href="/mentorlite/management/constitutional-law" className="relative z-10 h-full flex flex-col bg-black/80 border border-white/10 p-8 min-h-[160px] rounded-3xl shadow-lg shadow-black/30 transition-transform duration-300 group-hover:scale-[1.02] group-hover:border-white/20">
-                <div className="flex-grow">
-                    <h2 className="flex items-center justify-between text-xl font-bold text-white">
-                        Direito Constitucional
-                        <ExternalLink className="h-5 w-5 text-gray-300" />
-                    </h2>
-                    <p className="text-sm text-gray-300 mt-2">
-                        Clique aqui para visualizar todas as questões cadastradas para esta matéria.
-                    </p>
-                </div>
-            </Link>
-        </div>
-
-        <div className="relative w-full max-w-4xl group">
-            <Link href="/mentorlite/management/penal-law" className="relative z-10 h-full flex flex-col bg-black/80 border border-white/10 p-8 min-h-[160px] rounded-3xl shadow-lg shadow-black/30 transition-transform duration-300 group-hover:scale-[1.02] group-hover:border-white/20">
-                <div className="flex-grow">
-                    <h2 className="flex items-center justify-between text-xl font-bold text-white">
-                        Direito Penal
-                        <ExternalLink className="h-5 w-5 text-gray-300" />
-                    </h2>
-                    <p className="text-sm text-gray-300 mt-2">
-                        Clique aqui para visualizar todas as questões cadastradas para esta matéria.
-                    </p>
-                </div>
-            </Link>
-        </div>
+        <SubjectCard subject='Direito Administrativo' href='/mentorlite/management/administrative-law' />
+        <SubjectCard subject='Direito Constitucional' href='/mentorlite/management/constitutional-law' />
+        <SubjectCard subject='Direito Penal' href='/mentorlite/management/penal-law' />
 
       </div>
     </div>
