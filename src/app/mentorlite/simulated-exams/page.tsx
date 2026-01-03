@@ -1,3 +1,5 @@
+'use client';
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -21,12 +23,12 @@ export default function SimulatedExamsPage() {
         <p className="text-muted-foreground">Crie um simulado para testar seus conhecimentos em condições de prova.</p>
       </header>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Configurar Novo Simulado</CardTitle>
+      <div className="bg-black/60 border border-white/10 rounded-3xl shadow-lg shadow-black/30">
+        <CardHeader className="p-6">
+          <CardTitle className="text-xl">Configurar Novo Simulado</CardTitle>
           <CardDescription>Escolha as matérias, o número de questões e a dificuldade.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label>Número de Questões</Label>
@@ -58,23 +60,23 @@ export default function SimulatedExamsPage() {
           </div>
           <div className="space-y-3">
             <Label>Matérias</Label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 rounded-lg border p-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 rounded-lg border border-white/20 p-4">
               {subjects.map((subject) => (
                 <div key={subject.id} className="flex items-center space-x-2">
                   <Checkbox id={subject.id} />
-                  <Label htmlFor={subject.id} className="font-normal cursor-pointer">{subject.label}</Label>
+                  <Label htmlFor={subject.id} className="font-normal cursor-pointer text-foreground/80 hover:text-foreground">{subject.label}</Label>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-end pt-4">
             <Button size="lg">
               Gerar Simulado
             </Button>
           </div>
         </CardContent>
-      </Card>
+      </div>
     </div>
   )
 }

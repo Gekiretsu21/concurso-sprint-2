@@ -83,10 +83,10 @@ export default function AdministrativeLawPage() {
         <div className="space-y-6">
           {adminQuestions.map((q, index) => {
             return (
-              <Card key={q.id}>
-                <CardHeader>
+              <div key={q.id} className="bg-black/60 border border-white/10 rounded-3xl shadow-lg shadow-black/30">
+                <CardHeader className="p-6">
                   <div className="flex items-center justify-between">
-                    <CardTitle>Questão {index + 1}</CardTitle>
+                    <CardTitle className="text-xl">Questão {index + 1}</CardTitle>
                     <div className="flex items-center gap-4">
                         <Badge variant="secondary">{q.Cargo}</Badge>
                         <Badge variant="outline">{q.Ano}</Badge>
@@ -96,7 +96,7 @@ export default function AdministrativeLawPage() {
                     {q.Assunto}) {formatEnunciado(q.Enunciado)}
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-6">
                   <div className="space-y-3">
                     {alternativesKeys.map((key, optIndex) => {
                        const alternativeText = q[key];
@@ -111,7 +111,7 @@ export default function AdministrativeLawPage() {
                               'flex items-start space-x-3 p-3 rounded-lg border transition-colors',
                               isCorrect
                                 ? 'bg-green-800/30 border-green-600 text-green-300'
-                                : 'bg-card'
+                                : 'bg-background/30 border-white/10'
                             )}
                           >
                             <div className="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full border bg-background font-bold text-sm">
@@ -125,12 +125,12 @@ export default function AdministrativeLawPage() {
                     })}
                   </div>
                 </CardContent>
-              </Card>
+              </div>
             )
           })}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center h-64 rounded-lg border border-dashed">
+        <div className="flex flex-col items-center justify-center h-64 rounded-3xl border border-dashed border-white/20 bg-black/60">
           <p className="text-muted-foreground">
             Nenhuma questão de Direito Administrativo encontrada.
           </p>

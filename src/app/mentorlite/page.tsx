@@ -11,7 +11,6 @@ import {
   Timer,
 } from 'lucide-react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 const mainFeatures = [
@@ -80,7 +79,7 @@ export default function Home() {
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => (
           <div key={stat.title} className="relative h-40 overflow-hidden rounded-3xl group">
-             <div className="relative z-10 h-full flex flex-col bg-black/60 border border-white/10 p-6">
+             <div className="relative z-10 h-full flex flex-col bg-black/60 border border-white/10 p-6 shadow-lg shadow-black/30 transition-transform duration-300 group-hover:scale-[1.02] group-hover:border-white/20">
                 <div className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <h3 className="text-sm font-medium text-white">{stat.title}</h3>
                   <stat.icon className={`h-4 w-4 text-gray-300 ${stat.color || ''}`} />
@@ -104,7 +103,7 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {mainFeatures.map((feature) => (
               <div key={feature.title} className="relative h-80 overflow-hidden rounded-3xl group">
-                <div className="relative z-10 h-full flex flex-col bg-black/60 border border-white/10 p-8">
+                <div className="relative z-10 h-full flex flex-col bg-black/60 border border-white/10 p-8 shadow-lg shadow-black/30 transition-transform duration-300 group-hover:scale-[1.02] group-hover:border-white/20">
                   <div className="flex-shrink-0 mb-4">
                     <div className="bg-primary/10 p-3 rounded-lg w-fit">
                         <feature.icon className="h-6 w-6 text-primary" />

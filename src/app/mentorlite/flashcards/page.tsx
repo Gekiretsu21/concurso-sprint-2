@@ -42,16 +42,12 @@ export default function FlashcardsPage() {
 
       <div className="w-full max-w-2xl" style={{ perspective: '1000px' }}>
         <div className={`flashcard-inner ${isFlipped ? 'is-flipped' : ''}`} onClick={handleFlip}>
-            <Card className="flashcard-front">
-                <CardContent className="flex items-center justify-center text-center p-6 min-h-[300px]">
-                    <p className="text-xl font-semibold">{card.front}</p>
-                </CardContent>
-            </Card>
-            <Card className="flashcard-back">
-                <CardContent className="flex items-center justify-center text-center p-6 min-h-[300px]">
-                    <p className="text-lg">{card.back}</p>
-                </CardContent>
-            </Card>
+            <div className="flashcard-front bg-black/60 border border-white/10 rounded-3xl shadow-lg shadow-black/30 flex items-center justify-center text-center p-6 min-h-[300px]">
+                <p className="text-xl font-semibold">{card.front}</p>
+            </div>
+            <div className="flashcard-back bg-black/80 border border-primary/50 rounded-3xl shadow-lg shadow-black/30 flex items-center justify-center text-center p-6 min-h-[300px]">
+                <p className="text-lg text-primary-foreground">{card.back}</p>
+            </div>
         </div>
       </div>
 

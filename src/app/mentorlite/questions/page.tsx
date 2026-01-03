@@ -51,42 +51,40 @@ export default function QuestionsPage() {
         <p className="text-muted-foreground">Filtre as questões e teste seus conhecimentos.</p>
       </header>
 
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col md:flex-row gap-4 justify-between">
-            <CardTitle>Filtros</CardTitle>
-            <div className="flex gap-4">
-              <Select>
-                <SelectTrigger className="w-full md:w-[180px]">
-                  <SelectValue placeholder="Matéria" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="portugues">Português</SelectItem>
-                  <SelectItem value="constitucional">Direito Constitucional</SelectItem>
-                  <SelectItem value="administrativo">Direito Administrativo</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select>
-                <SelectTrigger className="w-full md:w-[180px]">
-                  <SelectValue placeholder="Dificuldade" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="facil">Fácil</SelectItem>
-                  <SelectItem value="media">Média</SelectItem>
-                  <SelectItem value="dificil">Difícil</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+      <div className="bg-black/60 border border-white/10 rounded-3xl shadow-lg shadow-black/30 p-6">
+        <div className="flex flex-col md:flex-row gap-4 justify-between">
+          <h2 className="text-xl font-bold">Filtros</h2>
+          <div className="flex gap-4">
+            <Select>
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="Matéria" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="portugues">Português</SelectItem>
+                <SelectItem value="constitucional">Direito Constitucional</SelectItem>
+                <SelectItem value="administrativo">Direito Administrativo</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select>
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="Dificuldade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="facil">Fácil</SelectItem>
+                <SelectItem value="media">Média</SelectItem>
+                <SelectItem value="dificil">Difícil</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        </CardHeader>
-      </Card>
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader>
+      <div className="bg-black/60 border border-white/10 rounded-3xl shadow-lg shadow-black/30">
+        <CardHeader className="p-6">
             <CardDescription>{currentQuestion.subject} • {currentQuestion.difficulty}</CardDescription>
-            <CardTitle>{currentQuestion.text}</CardTitle>
+            <CardTitle className="text-xl">{currentQuestion.text}</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
             <RadioGroup onValueChange={setSelectedAnswer} value={selectedAnswer ?? undefined} disabled={isAnswered} className="space-y-3">
                 {currentQuestion.options.map((option, index) => {
                     const isCorrect = option === currentQuestion.answer;
@@ -94,8 +92,9 @@ export default function QuestionsPage() {
                     
                     return (
                         <div key={index} className={cn("flex items-center space-x-3 p-3 rounded-lg border transition-colors", 
-                          isAnswered && isCorrect && "bg-emerald-100 border-emerald-400 text-emerald-900",
-                          isAnswered && isSelected && !isCorrect && "bg-destructive/10 border-destructive/40 text-destructive",
+                          isAnswered && isCorrect && "bg-green-500/20 border-green-500 text-green-300",
+                          isAnswered && isSelected && !isCorrect && "bg-destructive/20 border-destructive text-destructive",
+                          "border-white/10 hover:bg-white/5"
                         )}>
                             <RadioGroupItem value={option} id={`q${currentQuestion.id}-o${index}`} />
                             <Label htmlFor={`q${currentQuestion.id}-o${index}`} className="font-normal cursor-pointer flex-1">{option}</Label>
@@ -104,14 +103,14 @@ export default function QuestionsPage() {
                 })}
             </RadioGroup>
         </CardContent>
-        <CardFooter className="justify-end gap-2">
+        <CardFooter className="justify-end gap-2 p-6">
             {isAnswered ? (
                  <Button onClick={handleNext}>Próxima</Button>
             ) : (
                 <Button onClick={handleAnswer} disabled={!selectedAnswer}>Responder</Button>
             )}
         </CardFooter>
-      </Card>
+      </div>
     </div>
   );
 }
