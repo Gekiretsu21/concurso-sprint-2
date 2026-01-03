@@ -118,15 +118,30 @@ service cloud.firestore {
      * @description Controls access to the global question bank.
      * @path /questions/{questionId}
      * @allow (get, list) Any authenticated user can read questions.
-     * @deny (create, update, delete) No client can modify the question bank.
-     * @principle Provides public read access for shared data while protecting it from client-side writes.
+     * @deny (update, delete) No client can modify the question bank unless they are the owner.
+     * @principle Provides public read access for shared data while protecting it from unauthorized client-side writes.
      */
     match /questions/{questionId} {
       allow get: if isSignedIn();
       allow list: if isSignedIn();
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow create: if isCreatingOwnSubcollectionDoc(request.auth.uid);
+      allow update: if isUpdatingOwnSubcollectionDoc(request.auth.uid);
+      allow delete: if isExistingOwner(request.auth.uid);
+    }
+    
+    /**
+     * @description Controls access to the global question bank. This is an alias for /questions.
+     * @path /questoes/{questaoId}
+     * @allow (get, list) Any authenticated user can read questions.
+     * @deny (update, delete) No client can modify the question bank unless they are the owner.
+     * @principle Provides public read access for shared data while protecting it from unauthorized client-side writes.
+     */
+    match /questoes/{questaoId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isCreatingOwnSubcollectionDoc(request.auth.uid);
+      allow update: if isUpdatingOwnSubcollectionDoc(request.auth.uid);
+      allow delete: if isExistingOwner(request.auth.uid);
     }
 
     /**
@@ -190,3 +205,5 @@ service cloud.firestore {
     }
   }
 }
+
+    
