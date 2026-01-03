@@ -4,7 +4,7 @@ import { AppLayout } from '@/components/layout';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'Concurso Sprint',
+  title: 'Mentoria Academy',
   description: 'Sua plataforma completa para preparação de concursos.',
 };
 

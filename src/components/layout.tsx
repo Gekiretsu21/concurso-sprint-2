@@ -49,7 +49,7 @@ function MainSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
           <Button variant="ghost" size="icon" asChild>
             <Link href="/">
               <GraduationCap className="text-primary" />
@@ -57,11 +57,11 @@ function MainSidebar() {
           </Button>
           <h1
             className={cn(
-              'text-xl font-semibold text-sidebar-foreground transition-opacity duration-200',
+              'text-xl font-semibold text-accent transition-opacity duration-200 truncate',
               state === 'collapsed' ? 'opacity-0' : 'opacity-100'
             )}
           >
-            Concurso Sprint
+            Mentoria Academy
           </h1>
         </div>
         <SidebarTrigger className="hidden md:flex" />
