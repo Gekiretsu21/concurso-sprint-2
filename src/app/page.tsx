@@ -17,7 +17,7 @@ export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground font-body antialiased">
       {/* Top Banner */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-center py-2 text-sm font-semibold flex items-center justify-center gap-2">
+      <div className="bg-gradient-to-r from-green-900/50 to-purple-900/50 text-white text-center py-2 text-sm font-semibold flex items-center justify-center gap-2">
         <Rocket className="w-4 h-4" />
         <span>Vagas da Segunda Turma liberadas</span>
       </div>
