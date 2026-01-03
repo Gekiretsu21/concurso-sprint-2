@@ -93,7 +93,7 @@ export default function AdministrativeLawPage() {
                     </div>
                   </div>
                   <CardDescription className="pt-4 text-base text-foreground whitespace-pre-line">
-                    ({q.Assunto}) {formatEnunciado(q.Enunciado)}
+                    {q.Assunto}) {formatEnunciado(q.Enunciado)}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
