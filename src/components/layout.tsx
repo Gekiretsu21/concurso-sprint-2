@@ -104,9 +104,9 @@ function MainSidebar() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="flex items-center gap-2">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <GraduationCap className="text-primary" />
+        <div className="flex items-center justify-center h-full">
+          <Link href="/" className="font-bold text-accent text-lg">
+            MENTOR LITE
           </Link>
         </div>
       </SidebarHeader>
