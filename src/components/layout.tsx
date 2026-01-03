@@ -12,6 +12,7 @@ import {
   GraduationCap,
   Layers,
   LayoutDashboard,
+  Settings,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import {
@@ -39,6 +40,12 @@ const menuItems = [
   { href: '/flashcards', icon: Layers, label: 'Flashcards' },
   { href: '/analytics', icon: BarChart2, label: 'Estatísticas' },
   { href: '/study-plan', icon: BrainCircuit, label: 'Plano de Estudo IA' },
+  {
+    href: '/management',
+    icon: Settings,
+    label: 'Gerenciamento',
+    target: '_blank',
+  },
 ];
 
 function MainSidebar() {
@@ -62,7 +69,9 @@ function MainSidebar() {
             </h1>
           </Link>
         </div>
-        <SidebarTrigger className={cn(state === 'collapsed' ? 'block' : 'hidden')} />
+        <SidebarTrigger
+          className={cn(state === 'expanded' ? 'block' : 'hidden')}
+        />
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
@@ -73,7 +82,7 @@ function MainSidebar() {
                 isActive={pathname === item.href}
                 tooltip={{ children: item.label }}
               >
-                <Link href={item.href}>
+                <Link href={item.href} target={(item as any).target}>
                   <item.icon />
                   <span>{item.label}</span>
                 </Link>
