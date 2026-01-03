@@ -75,74 +75,76 @@ export default function ManagementPage() {
           Gerencie as configurações e dados do aplicativo.
         </p>
       </header>
-      <div className="grid grid-cols-1 gap-8 items-start">
-        <Card>
-          <CardHeader>
-            <CardTitle>Importar Questões</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button disabled={!user}>
-                  <ClipboardPaste />
-                  Importar
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[625px]">
-                <DialogHeader>
-                  <DialogTitle>Importar Questões por Texto</DialogTitle>
-                  <DialogDescription>
-                    Cole o conteúdo no campo abaixo. Certifique-se de que o
-                    formato esteja correto.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-start gap-4">
-                    <Label htmlFor="question-text" className="text-right pt-2">
-                      Conteúdo
-                    </Label>
-                    <Textarea
-                      id="question-text"
-                      className="col-span-3 min-h-[250px]"
-                      placeholder="Cole seu texto aqui..."
-                      value={questionText}
-                      onChange={(e) => setQuestionText(e.target.value)}
-                    />
-                  </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+        <div className="relative h-60 overflow-hidden rounded-3xl group">
+            <div className="absolute inset-0 bg-card"></div>
+            <div className="relative z-10 h-full flex flex-col bg-black/80 border border-white/10 p-8">
+                <CardTitle className="text-xl font-bold text-white">Importar Questões</CardTitle>
+                <div className="flex-grow flex items-center">
+                    <Dialog>
+                    <DialogTrigger asChild>
+                        <Button disabled={!user}>
+                        <ClipboardPaste />
+                        Importar
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[625px]">
+                        <DialogHeader>
+                        <DialogTitle>Importar Questões por Texto</DialogTitle>
+                        <DialogDescription>
+                            Cole o conteúdo no campo abaixo. Certifique-se de que o
+                            formato esteja correto.
+                        </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-start gap-4">
+                            <Label htmlFor="question-text" className="text-right pt-2">
+                            Conteúdo
+                            </Label>
+                            <Textarea
+                            id="question-text"
+                            className="col-span-3 min-h-[250px]"
+                            placeholder="Cole seu texto aqui..."
+                            value={questionText}
+                            onChange={(e) => setQuestionText(e.target.value)}
+                            />
+                        </div>
+                        </div>
+                        <DialogFooter>
+                        <DialogClose asChild>
+                            <Button variant="outline">Cancelar</Button>
+                        </DialogClose>
+                        <Button
+                            onClick={handleImport}
+                            disabled={isImporting || !questionText}
+                        >
+                            {isImporting ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : null}
+                            Importar Questões
+                        </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                    </Dialog>
                 </div>
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button variant="outline">Cancelar</Button>
-                  </DialogClose>
-                  <Button
-                    onClick={handleImport}
-                    disabled={isImporting || !questionText}
-                  >
-                    {isImporting ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : null}
-                    Importar Questões
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </CardContent>
-        </Card>
-        <Card className="hover:border-primary transition-colors">
-          <Link href="/management/administrative-law" className="block h-full">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                Direito Administrativo
-                <ExternalLink className="h-5 w-5 text-muted-foreground" />
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Clique aqui para visualizar todas as questões cadastradas para esta matéria.
-              </p>
-            </CardContent>
-          </Link>
-        </Card>
+            </div>
+        </div>
+
+        <div className="relative h-60 overflow-hidden rounded-3xl group">
+             <div className="absolute inset-0 bg-card"></div>
+            <Link href="/management/administrative-law" className="relative z-10 h-full flex flex-col bg-black/80 border border-white/10 p-8">
+                <div className="flex-grow">
+                    <CardTitle className="flex items-center justify-between text-xl font-bold text-white">
+                        Direito Administrativo
+                        <ExternalLink className="h-5 w-5 text-gray-300" />
+                    </CardTitle>
+                    <p className="text-sm text-gray-300 mt-2">
+                        Clique aqui para visualizar todas as questões cadastradas para esta matéria.
+                    </p>
+                </div>
+            </Link>
+        </div>
+
       </div>
     </div>
   );
