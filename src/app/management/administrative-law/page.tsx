@@ -110,7 +110,7 @@ export default function AdministrativeLawPage() {
                             className={cn(
                               'flex items-start space-x-3 p-3 rounded-lg border transition-colors',
                               isCorrect
-                                ? 'bg-green-100/60 border-green-400 text-green-900'
+                                ? 'bg-green-800/30 border-green-600 text-green-300'
                                 : 'bg-card'
                             )}
                           >
