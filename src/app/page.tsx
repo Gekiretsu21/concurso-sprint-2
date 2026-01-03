@@ -264,7 +264,7 @@ export default function LandingPage() {
                 Não queira resultados diferentes se você continua fazendo as mesmas coisas. Clique abaixo e transforme a maneira que você estuda para concursos.
               </p>
               <Button size="lg" className="mt-8 bg-green-500 hover:bg-green-600 text-foreground font-bold text-lg" asChild>
-                <Link href="#">
+                <Link href="https://wa.me/5531989916924" target="_blank" rel="noopener noreferrer">
                   <MessageCircle className="mr-2" /> QUERO SER APROVADO
                 </Link>
               </Button>
