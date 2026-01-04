@@ -67,15 +67,15 @@ export function AuthButton() {
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            className="relative h-10 flex items-center justify-start gap-2"
+            className="relative h-10 flex items-center justify-end gap-2"
           >
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={user.photoURL ?? undefined} />
-              <AvatarFallback>{firstName.charAt(0)}</AvatarFallback>
-            </Avatar>
             <span className="hidden md:block font-medium">
               Bem-vindo, {firstName}
             </span>
+             <Avatar className="h-8 w-8">
+              <AvatarImage src={user.photoURL ?? undefined} />
+              <AvatarFallback>{firstName.charAt(0)}</AvatarFallback>
+            </Avatar>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end" forceMount>
