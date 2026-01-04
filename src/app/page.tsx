@@ -150,7 +150,6 @@ export default function LandingPage() {
               </Card>
             </div>
             <div className="text-center md:text-left">
-              <Quote className="w-16 h-16 text-primary mx-auto md:mx-0" />
               <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mt-4">
                 Se você se sente assim,
               </h1>
