@@ -120,16 +120,6 @@ export default function PenalLawPage() {
             const userHasCorrectlyAnswered = isAnswered && isCorrect;
             const userHasIncorrectlyAnswered = isAnswered && !isCorrect;
 
-            const getAlternativeClassName = (alternativeKey: string) => {
-              if (isAnswered) {
-                if (alternativeKey === q.correctAnswer) return 'bg-teal-500/80 border-teal-400';
-                if (alternativeKey === selected && !isCorrect) return 'bg-destructive/50 border-destructive/70 opacity-70';
-                return 'bg-background/30 border-white/10 opacity-70';
-              }
-              if (selected === alternativeKey) return 'bg-primary/20 border-primary';
-              return 'bg-background/30 border-white/10 hover:bg-white/20';
-            };
-
             return (
               <div key={q.id} className="bg-black/60 border border-white/10 rounded-3xl shadow-lg shadow-black/30">
                 <CardHeader className="p-6">
@@ -148,41 +138,89 @@ export default function PenalLawPage() {
                 <CardContent className="p-6">
                   <div className="space-y-3">
                     {alternativesKeys.map((key, optIndex) => {
-                       const alternativeText = q[key];
-                       if (!alternativeText) return null;
-                       const alternativeKey = key.toString();
-                       
-                       return (
-                          <div
-                            key={optIndex}
-                            onClick={() => handleSelectAnswer(q.id, alternativeKey)}
-                            className={cn(
-                              'flex items-start space-x-3 p-3 rounded-lg border transition-colors',
-                              isAnswered ? 'cursor-not-allowed' : 'cursor-pointer',
-                              getAlternativeClassName(alternativeKey)
-                            )}
-                          >
-                            <div className="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full border bg-background font-bold text-sm">
-                                {String.fromCharCode(65 + optIndex)}
-                            </div>
-                            <div className="flex-1 pt-0.5">
-                              {alternativeText}
-                            </div>
+                      const alternativeText = q[key];
+                      if (!alternativeText) return null;
+
+                      const alternativeKey = key.toString();
+                      const isThisAlternativeSelected = selected === alternativeKey;
+                      const isThisAlternativeCorrect = alternativeKey === q.correctAnswer;
+
+                      // Lógica de Estilização corrigida
+                      const getAlternativeClassName = () => {
+                        // 1. Se ainda não respondeu, comportamento padrão de seleção
+                        if (!isAnswered) {
+                          if (isThisAlternativeSelected) return 'bg-primary/20 border-primary';
+                          return 'bg-background/30 border-white/10 hover:bg-white/20';
+                        }
+
+                        // 2. Se já respondeu...
+
+                        // CENÁRIO A: Usuário Acertou (Mantém cores)
+                        if (isCorrect) {
+                          if (isThisAlternativeSelected) return 'bg-primary/20 border-primary'; // Mantém a cor de seleção
+                          return 'bg-background/30 border-white/10 opacity-50'; // As outras ficam levemente apagadas
+                        }
+
+                        // CENÁRIO B: Usuário Errou
+                        if (!isCorrect) {
+                          // Revela o Gabarito (Verde Piscina 80%)
+                          if (isThisAlternativeCorrect) return 'bg-teal-500/80 border-teal-400 text-white';
+
+                          // A que o usuário marcou errada (Cinza 50%)
+                          if (isThisAlternativeSelected) return 'bg-gray-600/50 border-gray-600 text-gray-400';
+
+                          // As outras alternativas neutras
+                          return 'bg-background/30 border-white/10 opacity-30';
+                        }
+                      };
+
+                      return (
+                        <div
+                          key={optIndex}
+                          onClick={() => handleSelectAnswer(q.id, alternativeKey)}
+                          className={cn(
+                            'flex items-start space-x-3 p-3 rounded-lg border transition-all duration-300', // Adicionei duration-300 para suavizar
+                            isAnswered ? 'cursor-not-allowed' : 'cursor-pointer',
+                            getAlternativeClassName()
+                          )}
+                        >
+                          <div className={cn(
+                            "flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full border text-sm font-bold",
+                            // Ajuste da bolinha da letra (A, B, C...) para combinar com o fundo
+                            isAnswered && !isCorrect && isThisAlternativeCorrect ? "bg-white text-teal-600 border-white" : "bg-background border-white/20"
+                          )}>
+                            {String.fromCharCode(65 + optIndex)}
                           </div>
-                       )
+                          <div className="flex-1 pt-0.5">
+                            {alternativeText}
+                          </div>
+                        </div>
+                      )
                     })}
                   </div>
                 </CardContent>
-                <CardFooter className="p-6 justify-between items-center">
-                  <div className="text-sm h-5">
-                      {userHasCorrectlyAnswered && <p className="text-teal-400 font-semibold">Parabéns, resposta correta!</p>}
-                      {userHasIncorrectlyAnswered && <p className="text-gray-400">Você errou. Gabarito: Letra {q.correctAnswer.toUpperCase()}</p>}
+                <CardFooter className="p-6 flex flex-col items-stretch gap-4 sm:flex-row sm:justify-between sm:items-center">
+                  <div className="text-sm min-h-[1.25rem]">
+                    {userHasCorrectlyAnswered && (
+                      <p className="text-teal-400 font-medium">
+                        Parabéns, resposta correta.
+                      </p>
+                    )}
+                    {userHasIncorrectlyAnswered && (
+                      <p className="text-gray-400 font-medium">
+                        Você errou. Gabarito: Letra {q.correctAnswer.toUpperCase()}
+                      </p>
+                    )}
                   </div>
-                  <div className="flex gap-2">
-                      <Button onClick={() => handleConfirmAnswer(q.id)} disabled={!selected || isAnswered} variant={isAnswered ? "outline" : "default"}>
-                        Responder
-                      </Button>
-                      <Button variant="outline">Comentários</Button>
+                  <div className="flex gap-2 self-end sm:self-auto">
+                    <Button 
+                      onClick={() => handleConfirmAnswer(q.id)} 
+                      disabled={!selected || isAnswered}
+                      className={isAnswered ? "opacity-50" : ""}
+                    >
+                      {isAnswered ? "Respondido" : "Responder"}
+                    </Button>
+                    <Button variant="outline">Comentários</Button>
                   </div>
                 </CardFooter>
               </div>
