@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
+import { useParams } from 'next/navigation';
 
 interface Question {
   id: string;
@@ -163,18 +164,17 @@ function QuestionCard({
   );
 }
 
-export default function SimulatedExamPage({
-  params: { examId },
-}: {
-  params: { examId: string };
-}) {
+export default function SimulatedExamPage() {
+  const params = useParams();
+  const examId = params.examId as string;
+
   const { firestore, user } = useFirebase();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(true);
 
   const examDocRef = useMemoFirebase(
     () =>
-      firestore && user
+      firestore && user && examId
         ? (doc(
             firestore,
             `users/${user.uid}/simulatedExams`,
