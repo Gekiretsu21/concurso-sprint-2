@@ -54,11 +54,11 @@ export default function LandingPage() {
           <div className="flex items-center justify-between h-16">
             <Link
               href="/"
-              className="flex items-center gap-2 text-xl font-bold"
+              className="flex items-center gap-2 text-xl font-bold whitespace-nowrap"
             >
               MENTORIA <Zap className="w-5 h-5 text-accent" /> ACADEMY
             </Link>
-            <nav className="hidden md:flex items-center gap-6 text-base font-medium">
+            <nav className="hidden lg:flex items-center gap-4 text-base font-medium">
               {navLinks.map(link => (
                 <Link
                   key={link.name}
@@ -77,7 +77,7 @@ export default function LandingPage() {
               <AuthButton />
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="icon" className="md:hidden">
+                  <Button variant="outline" size="icon" className="lg:hidden">
                     <Menu />
                     <span className="sr-only">Abrir menu</span>
                   </Button>
