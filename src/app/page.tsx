@@ -105,7 +105,7 @@ export default function LandingPage() {
       </header>
 
       {/* Image Banner Section */}
-      <section className="py-8">
+      <section className="py-2">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative w-full max-w-[85%] mx-auto h-auto">
             <Image
@@ -113,7 +113,7 @@ export default function LandingPage() {
               alt="Banner da Mentoria Academy"
               width={1920}
               height={640}
-              className="w-full h-auto object-cover rounded-lg"
+              className="w-full h-auto object-cover"
               priority
             />
           </div>
@@ -150,7 +150,7 @@ export default function LandingPage() {
               </Card>
             </div>
             <div className="text-center md:text-left">
-              <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mt-4">
+              <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight">
                 Se você se sente assim,
               </h1>
               <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-primary">
