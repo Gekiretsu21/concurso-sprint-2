@@ -111,7 +111,7 @@ export default function LandingPage() {
         <section className="bg-primary">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 flex justify-center">
             <Image
-              src="/mentoria-academy-logo.png"
+              src="https://i.imgur.com/n4U5k1s.png"
               alt="MentorIA Academy Logo"
               width={500}
               height={150}
