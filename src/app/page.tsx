@@ -105,16 +105,18 @@ export default function LandingPage() {
       </header>
 
       {/* Image Banner Section */}
-      <section>
-        <div className="relative w-full h-auto">
-          <Image
-            src="/534414620_1262520999230153_8610051095494767603_n.jpg"
-            alt="Banner da Mentoria Academy"
-            width={1920}
-            height={640}
-            className="w-full h-auto object-cover"
-            priority
-          />
+      <section className="py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative w-full max-w-[70%] mx-auto h-auto">
+            <Image
+              src="/534414620_1262520999230153_8610051095494767603_n.jpg"
+              alt="Banner da Mentoria Academy"
+              width={1920}
+              height={640}
+              className="w-full h-auto object-cover rounded-lg shadow-md"
+              priority
+            />
+          </div>
         </div>
       </section>
 
