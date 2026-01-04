@@ -1,11 +1,36 @@
+
+'use client';
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Crown, Library, Lock, MessageCircle, Quote, Rocket, ShieldCheck, Sparkles, XCircle, Zap, Scale } from 'lucide-react';
+import {
+  ArrowRight,
+  Crown,
+  Library,
+  Lock,
+  MessageCircle,
+  Quote,
+  Rocket,
+  ShieldCheck,
+  Sparkles,
+  XCircle,
+  Zap,
+  Scale,
+  Menu,
+} from 'lucide-react';
 import { AuthButton } from '@/components/AuthButton';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import { useState } from 'react';
 
 export default function LandingPage() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   const navLinks = [
     { name: 'A Realidade', href: '#realidade' },
     { name: 'Diferencial', href: '#diferencial' },
@@ -27,7 +52,10 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-2 text-xl font-bold">
+            <Link
+              href="/"
+              className="flex items-center gap-2 text-xl font-bold"
+            >
               MENTORIA <Zap className="w-5 h-5 text-accent" /> ACADEMY
             </Link>
             <nav className="hidden md:flex items-center gap-6 text-base font-medium">
@@ -45,7 +73,35 @@ export default function LandingPage() {
                 </Link>
               ))}
             </nav>
-            <AuthButton />
+            <div className="flex items-center gap-2">
+              <AuthButton />
+              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="icon" className="md:hidden">
+                    <Menu />
+                    <span className="sr-only">Abrir menu</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right">
+                  <nav className="flex flex-col gap-6 text-lg font-medium mt-8">
+                    {navLinks.map(link => (
+                      <Link
+                        key={link.name}
+                        href={link.href}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={
+                          link.special
+                            ? 'font-bold text-primary'
+                            : 'text-muted-foreground'
+                        }
+                      >
+                        {link.name}
+                      </Link>
+                    ))}
+                  </nav>
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
         </div>
       </header>
@@ -57,26 +113,46 @@ export default function LandingPage() {
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-4">
               <Card className="bg-[#E0F2FE] border-none p-4 transform -rotate-3 shadow-sm">
-                <p className="text-gray-800">"Eu estudo muito, mas parece que a matéria não entra na minha cabeça"</p>
+                <p className="text-gray-800">
+                  "Eu estudo muito, mas parece que a matéria não entra na minha
+                  cabeça"
+                </p>
               </Card>
               <Card className="bg-[#E0E7FF] border-none p-4 transform rotate-2 ml-8 shadow-sm">
-                <p className="text-gray-800">"Já fiz o método tradicional e na hora da prova não consigo acertar"</p>
+                <p className="text-gray-800">
+                  "Já fiz o método tradicional e na hora da prova não consigo
+                  acertar"
+                </p>
               </Card>
               <Card className="bg-[#F5F5F4] border-none p-4 transform -rotate-1 shadow-sm">
-                <p className="text-gray-800">"Perdi as esperanças de passar em concurso"</p>
+                <p className="text-gray-800">
+                  "Perdi as esperanças de passar em concurso"
+                </p>
               </Card>
               <Card className="bg-[#E2E8F0] border-none p-4 transform rotate-1 ml-4 shadow-sm">
-                <p className="text-gray-800">"As vezes acho que todos conseguem, menos eu"</p>
+                <p className="text-gray-800">
+                  "As vezes acho que todos conseguem, menos eu"
+                </p>
               </Card>
             </div>
             <div className="text-center md:text-left">
               <Quote className="w-16 h-16 text-primary mx-auto md:mx-0" />
-              <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mt-4">Se você se sente assim,</h1>
-              <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-primary">VOCÊ PRECISA DE ESTRATÉGIA</h2>
+              <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mt-4">
+                Se você se sente assim,
+              </h1>
+              <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-primary">
+                VOCÊ PRECISA DE ESTRATÉGIA
+              </h2>
               <p className="mt-6 text-lg text-muted-foreground">
-                Não é falta de esforço, é falta de método. Os modelos antigos não funcionam para as provas atuais. Nós construímos a solução definitiva para você conquistar sua farda em 2026.
+                Não é falta de esforço, é falta de método. Os modelos antigos
+                não funcionam para as provas atuais. Nós construímos a solução
+                definitiva para você conquistar sua farda em 2026.
               </p>
-               <Button asChild size="lg" className="mt-8 bg-primary text-primary-foreground hover:bg-primary/90">
+              <Button
+                asChild
+                size="lg"
+                className="mt-8 bg-primary text-primary-foreground hover:bg-primary/90"
+              >
                 <Link href="#cta">Garantir Vaga</Link>
               </Button>
             </div>
@@ -86,58 +162,94 @@ export default function LandingPage() {
         {/* Diferenciais Section */}
         <section id="diferencial" className="py-20 sm:py-32 bg-secondary/30">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-3xl sm:text-4xl font-bold">Por que a MentorIA Academy é diferente?</h2>
-            <p className="mt-4 text-lg text-muted-foreground">Não somos um "Netflix de aulas". Somos um laboratório de aprovação focado em dados e prática.</p>
+            <h2 className="text-3xl sm:text-4xl font-bold">
+              Por que a MentorIA Academy é diferente?
+            </h2>
+            <p className="mt-4 text-lg text-muted-foreground">
+              Não somos um "Netflix de aulas". Somos um laboratório de aprovação
+              focado em dados e prática.
+            </p>
             <div className="mt-12 grid md:grid-cols-2 gap-8 text-left">
               <Card className="bg-card border-destructive/50 p-6 shadow-md">
                 <header>
-                  <h3 className="flex items-center gap-2 text-xl font-bold text-destructive"><XCircle /> O Jeito Tradicional (Ultrapassado)</h3>
+                  <h3 className="flex items-center gap-2 text-xl font-bold text-destructive">
+                    <XCircle /> O Jeito Tradicional (Ultrapassado)
+                  </h3>
                 </header>
                 <div className="pt-4 space-y-3 text-muted-foreground">
-                  <p>• Estudo passivo: horas lendo ou assistindo sem praticar.</p>
+                  <p>
+                    • Estudo passivo: horas lendo ou assistindo sem praticar.
+                  </p>
                   <p>• Conteúdo genérico que não foca na sua banca.</p>
                   <p>• PDFs gigantescos impossíveis de revisar.</p>
                   <p>• Solidão: você estuda sem saber se está evoluindo.</p>
                 </div>
               </Card>
               <Card className="bg-card border-primary p-6 shadow-md">
-                 <header>
-                  <h3 className="flex items-center gap-2 text-xl font-bold text-primary"><Zap /> O Jeito MentorIA (2026)</h3>
+                <header>
+                  <h3 className="flex items-center gap-2 text-xl font-bold text-primary">
+                    <Zap /> O Jeito MentorIA (2026)
+                  </h3>
                 </header>
                 <div className="pt-4 space-y-3 text-foreground">
-                  <p>• Aprendizado Ativo: Você aprende executando, com atividades práticas constantes.</p>
-                  <p>• Inteligência de Banca: Deciframos exatamente como eles cobram.</p>
-                  <p>• Estratégia + IA: Tecnologia para identificar e fortalecer seus pontos fracos.</p>
-                  <p>• Alta Performance: Foco em tirar +80 pontos e garantir a vaga.</p>
+                  <p>
+                    • Aprendizado Ativo: Você aprende executando, com atividades
+                    práticas constantes.
+                  </p>
+                  <p>
+                    • Inteligência de Banca: Deciframos exatamente como eles
+                    cobram.
+                  </p>
+                  <p>
+                    • Estratégia + IA: Tecnologia para identificar e fortalecer
+                    seus pontos fracos.
+                  </p>
+                  <p>
+                    • Alta Performance: Foco em tirar +80 pontos e garantir a
+                    vaga.
+                  </p>
                 </div>
               </Card>
             </div>
           </div>
         </section>
-        
+
         {/* Pilares Section */}
         <section id="metodo" className="py-20 sm:py-32">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                <h2 className="text-3xl sm:text-4xl font-bold">Os Pilares da Aprovação</h2>
-                <p className="mt-4 text-lg text-muted-foreground">Nossa metodologia foi desenhada para quem não tem tempo a perder.</p>
-                <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <Card className="bg-card p-8 text-center shadow-lg">
-                        <Scale className="w-12 h-12 text-primary mx-auto mb-4"/>
-                        <h3 className="text-xl font-bold">Inteligência Jurídica</h3>
-                        <p className="mt-2 text-muted-foreground">Aprenda o Direito com quem vive a prática. Constitucional e Administrativo direto ao ponto da prova.</p>
-                    </Card>
-                    <Card className="bg-card p-8 text-center shadow-lg">
-                        <Rocket className="w-12 h-12 text-primary mx-auto mb-4"/>
-                        <h3 className="text-xl font-bold">Aceleração de Resultados</h3>
-                        <p className="mt-2 text-muted-foreground">Método comprovado para 'zerar o processo' de estudos e maximizar sua retenção de conteúdo.</p>
-                    </Card>
-                     <Card className="bg-card p-8 text-center shadow-lg">
-                        <ShieldCheck className="w-12 h-12 text-primary mx-auto mb-4"/>
-                        <h3 className="text-xl font-bold">Foco na Aprovação</h3>
-                        <p className="mt-2 text-muted-foreground">Estratégias de quem já foi aprovado em mais de 7 concursos públicos militares e civis.</p>
-                    </Card>
-                </div>
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-3xl sm:text-4xl font-bold">
+              Os Pilares da Aprovação
+            </h2>
+            <p className="mt-4 text-lg text-muted-foreground">
+              Nossa metodologia foi desenhada para quem não tem tempo a perder.
+            </p>
+            <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+              <Card className="bg-card p-8 text-center shadow-lg">
+                <Scale className="w-12 h-12 text-primary mx-auto mb-4" />
+                <h3 className="text-xl font-bold">Inteligência Jurídica</h3>
+                <p className="mt-2 text-muted-foreground">
+                  Aprenda o Direito com quem vive a prática. Constitucional e
+                  Administrativo direto ao ponto da prova.
+                </p>
+              </Card>
+              <Card className="bg-card p-8 text-center shadow-lg">
+                <Rocket className="w-12 h-12 text-primary mx-auto mb-4" />
+                <h3 className="text-xl font-bold">Aceleração de Resultados</h3>
+                <p className="mt-2 text-muted-foreground">
+                  Método comprovado para 'zerar o processo' de estudos e
+                  maximizar sua retenção de conteúdo.
+                </p>
+              </Card>
+              <Card className="bg-card p-8 text-center shadow-lg">
+                <ShieldCheck className="w-12 h-12 text-primary mx-auto mb-4" />
+                <h3 className="text-xl font-bold">Foco na Aprovação</h3>
+                <p className="mt-2 text-muted-foreground">
+                  Estratégias de quem já foi aprovado em mais de 7 concursos
+                  públicos militares e civis.
+                </p>
+              </Card>
             </div>
+          </div>
         </section>
 
         {/* Mentores Section */}
@@ -146,103 +258,197 @@ export default function LandingPage() {
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div className="space-y-8">
                 <Card className="flex items-center gap-6 p-6 bg-card shadow-sm">
-                  <img src="https://picsum.photos/seed/mentor1/100/100" alt="Prof. Willian Toledo" className="w-24 h-24 rounded-full object-cover" />
+                  <img
+                    src="https://picsum.photos/seed/mentor1/100/100"
+                    alt="Prof. Willian Toledo"
+                    className="w-24 h-24 rounded-full object-cover"
+                  />
                   <div>
                     <h3 className="text-xl font-bold">Prof. Willian Toledo</h3>
-                    <p className="text-primary font-semibold">1º Tenente da PMMG</p>
-                    <p className="text-sm text-muted-foreground mt-2">Bacharel em Direito Público.<br />Pós-graduado em Ciências Militares.</p>
+                    <p className="text-primary font-semibold">
+                      1º Tenente da PMMG
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Bacharel em Direito Público.
+                      <br />
+                      Pós-graduado em Ciências Militares.
+                    </p>
                   </div>
                 </Card>
                 <Card className="flex items-center gap-6 p-6 bg-card shadow-sm">
-                  <img src="https://picsum.photos/seed/mentor2/100/100" alt="Prof. Álvaro Torres" className="w-24 h-24 rounded-full object-cover" />
+                  <img
+                    src="https://picsum.photos/seed/mentor2/100/100"
+                    alt="Prof. Álvaro Torres"
+                    className="w-24 h-24 rounded-full object-cover"
+                  />
                   <div>
                     <h3 className="text-xl font-bold">Prof. Álvaro Torres</h3>
-                    <p className="text-primary font-semibold">Aprovado PM, CBM, GCM, ANALI. SIST.</p>
-                    <p className="text-sm text-muted-foreground mt-2">Bacharel em Sistemas de Informação.<br />Pós-Graduado em Inteligência e Segurança.</p>
+                    <p className="text-primary font-semibold">
+                      Aprovado PM, CBM, GCM, ANALI. SIST.
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Bacharel em Sistemas de Informação.
+                      <br />
+                      Pós-Graduado em Inteligência e Segurança.
+                    </p>
                   </div>
                 </Card>
               </div>
               <div className="text-center md:text-right">
-                <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">A combinação perfeita entre <span className="text-accent">Conhecimento Jurídico</span> e <span className="text-accent">Estratégia de Prova</span>.</h2>
+                <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+                  A combinação perfeita entre{' '}
+                  <span className="text-accent">Conhecimento Jurídico</span> e{' '}
+                  <span className="text-accent">Estratégia de Prova</span>.
+                </h2>
               </div>
             </div>
           </div>
         </section>
-        
+
         {/* Cronograma Section */}
         <section className="py-20 sm:py-32 bg-secondary/30">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                <h2 className="text-3xl sm:text-4xl font-bold">Cronograma da Mentoria</h2>
-                <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {["Planejamento Estratégico", "Resolução de Questões", "Alta Performance", "Legislação Extravagante", "Técnicas de Resolução", "Simulados Comentados", "Redação Nota Máxima", "Reta Final & Revisão"].map((step, index) => (
-                         <Card key={step} className="p-4 bg-card text-center shadow-sm">
-                            <div className="text-primary font-bold text-lg">0{index + 1}</div>
-                            <h3 className="font-semibold mt-1">{step}</h3>
-                         </Card>
-                    ))}
-                </div>
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-3xl sm:text-4xl font-bold">
+              Cronograma da Mentoria
+            </h2>
+            <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                'Planejamento Estratégico',
+                'Resolução de Questões',
+                'Alta Performance',
+                'Legislação Extravagante',
+                'Técnicas de Resolução',
+                'Simulados Comentados',
+                'Redação Nota Máxima',
+                'Reta Final & Revisão',
+              ].map((step, index) => (
+                <Card key={step} className="p-4 bg-card text-center shadow-sm">
+                  <div className="text-primary font-bold text-lg">
+                    0{index + 1}
+                  </div>
+                  <h3 className="font-semibold mt-1">{step}</h3>
+                </Card>
+              ))}
             </div>
+          </div>
         </section>
 
         {/* Arsenal Section */}
         <section id="arsenal" className="py-20 sm:py-32">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                <h2 className="text-3xl sm:text-4xl font-bold flex items-center justify-center gap-3">
-                    <Library /> Arsenal de Estudos
-                </h2>
-                <p className="mt-4 text-lg text-muted-foreground">Materiais táticos para sua preparação. Alguns são de acesso livre, outros são desafios exclusivos.</p>
-                <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <Card className="bg-[#DCFCE7] p-6 flex flex-col text-left border-none shadow-sm">
-                        <div className="flex-grow">
-                          <Badge variant="destructive" className="flex-shrink-0 mb-3"><Lock className="w-3 h-3 mr-1" /> BLOQUEADO</Badge>
-                          <h3 className="font-bold text-gray-800">Simulado 02 - PPMG</h3>
-                          <p className="text-sm text-gray-600 mt-1">Acesso Restrito: Para acessar, você precisa da Palavra-Chave.</p>
-                        </div>
-                        <Link href="#" className="text-sm font-semibold text-primary mt-4 flex items-center gap-1 group">Desbloquear Simulado <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" /></Link>
-                    </Card>
-                     <Card className="bg-card p-6 flex flex-col text-left opacity-70 shadow-sm">
-                        <div className="flex-grow">
-                          <Badge variant="outline" className="flex-shrink-0 mb-3"><XCircle className="w-3 h-3 mr-1" /> EXPIRADO</Badge>
-                          <h3 className="font-bold">Simulado 01 - PPMG</h3>
-                          <p className="text-sm text-muted-foreground mt-1">Prazo Encerrado</p>
-                        </div>
-                    </Card>
-                     <Card className="bg-primary/10 p-6 flex flex-col text-left shadow-sm">
-                        <div className="flex-grow">
-                          <Badge className="flex-shrink-0 mb-3 bg-green-500/20 text-green-700 hover:bg-green-500/30 border-none"><Sparkles className="w-3 h-3 mr-1" /> EXTRA</Badge>
-                          <h3 className="font-bold">2026 é meu ano da APROVAÇÃO!</h3>
-                        </div>
-                        <Link href="/mentorlite" className="text-sm font-semibold text-primary mt-4 flex items-center gap-1 group">Acessar Agora <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" /></Link>
-                    </Card>
-                     <Card className="bg-accent text-accent-foreground p-6 flex flex-col text-left shadow-sm">
-                        <div className="flex-grow">
-                          <Badge variant="outline" className="flex-shrink-0 mb-3"><Crown className="w-3 h-3 mr-1" /> VIP</Badge>
-                          <h3 className="font-bold">Correção de Redação</h3>
-                           <p className="text-sm text-accent-foreground/80 mt-1">Somente para quem quer tirar 90+ na redação. Correção individual detalhada.</p>
-                        </div>
-                        <Link href="#" className="text-sm font-semibold text-background mt-4 flex items-center gap-1 group">Adquirir correção <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" /></Link>
-                    </Card>
-                    <Card className="bg-[#E2E8F0] p-6 flex flex-col text-left col-span-1 md:col-span-2 lg:col-span-1 border-none shadow-sm">
-                        <div className="flex-grow">
-                          <Badge className="flex-shrink-0 mb-3 bg-blue-500/20 text-blue-700 hover:bg-blue-500/30 border-none">DRIVE</Badge>
-                          <h3 className="font-bold text-gray-800">Drive com guia de redação e muito mais...</h3>
-                           <p className="text-sm text-gray-600 mt-1">Do zero à aprovação. Estruturas prontas...</p>
-                        </div>
-                    </Card>
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-3xl sm:text-4xl font-bold flex items-center justify-center gap-3">
+              <Library /> Arsenal de Estudos
+            </h2>
+            <p className="mt-4 text-lg text-muted-foreground">
+              Materiais táticos para sua preparação. Alguns são de acesso livre,
+              outros são desafios exclusivos.
+            </p>
+            <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <Card className="bg-[#DCFCE7] p-6 flex flex-col text-left border-none shadow-sm">
+                <div className="flex-grow">
+                  <Badge variant="destructive" className="flex-shrink-0 mb-3">
+                    <Lock className="w-3 h-3 mr-1" /> BLOQUEADO
+                  </Badge>
+                  <h3 className="font-bold text-gray-800">
+                    Simulado 02 - PPMG
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Acesso Restrito: Para acessar, você precisa da
+                    Palavra-Chave.
+                  </p>
                 </div>
+                <Link
+                  href="#"
+                  className="text-sm font-semibold text-primary mt-4 flex items-center gap-1 group"
+                >
+                  Desbloquear Simulado{' '}
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </Link>
+              </Card>
+              <Card className="bg-card p-6 flex flex-col text-left opacity-70 shadow-sm">
+                <div className="flex-grow">
+                  <Badge variant="outline" className="flex-shrink-0 mb-3">
+                    <XCircle className="w-3 h-3 mr-1" /> EXPIRADO
+                  </Badge>
+                  <h3 className="font-bold">Simulado 01 - PPMG</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Prazo Encerrado
+                  </p>
+                </div>
+              </Card>
+              <Card className="bg-primary/10 p-6 flex flex-col text-left shadow-sm">
+                <div className="flex-grow">
+                  <Badge className="flex-shrink-0 mb-3 bg-green-500/20 text-green-700 hover:bg-green-500/30 border-none">
+                    <Sparkles className="w-3 h-3 mr-1" /> EXTRA
+                  </Badge>
+                  <h3 className="font-bold">2026 é meu ano da APROVAÇÃO!</h3>
+                </div>
+                <Link
+                  href="/mentorlite"
+                  className="text-sm font-semibold text-primary mt-4 flex items-center gap-1 group"
+                >
+                  Acessar Agora{' '}
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </Link>
+              </Card>
+              <Card className="bg-accent text-accent-foreground p-6 flex flex-col text-left shadow-sm">
+                <div className="flex-grow">
+                  <Badge variant="outline" className="flex-shrink-0 mb-3">
+                    <Crown className="w-3 h-3 mr-1" /> VIP
+                  </Badge>
+                  <h3 className="font-bold">Correção de Redação</h3>
+                  <p className="text-sm text-accent-foreground/80 mt-1">
+                    Somente para quem quer tirar 90+ na redação. Correção
+                    individual detalhada.
+                  </p>
+                </div>
+                <Link
+                  href="#"
+                  className="text-sm font-semibold text-background mt-4 flex items-center gap-1 group"
+                >
+                  Adquirir correção{' '}
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </Link>
+              </Card>
+              <Card className="bg-[#E2E8F0] p-6 flex flex-col text-left col-span-1 md:col-span-2 lg:col-span-1 border-none shadow-sm">
+                <div className="flex-grow">
+                  <Badge className="flex-shrink-0 mb-3 bg-blue-500/20 text-blue-700 hover:bg-blue-500/30 border-none">
+                    DRIVE
+                  </Badge>
+                  <h3 className="font-bold text-gray-800">
+                    Drive com guia de redação e muito mais...
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Do zero à aprovação. Estruturas prontas...
+                  </p>
+                </div>
+              </Card>
             </div>
+          </div>
         </section>
 
         {/* CTA Section */}
         <section id="cta" className="py-20 sm:py-32">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="bg-primary rounded-2xl p-8 sm:p-12 text-center shadow-2xl shadow-primary/20">
-              <h2 className="text-3xl sm:text-4xl font-bold text-primary-foreground">Pronto para a Aprovação?</h2>
+              <h2 className="text-3xl sm:text-4xl font-bold text-primary-foreground">
+                Pronto para a Aprovação?
+              </h2>
               <p className="mt-4 text-lg text-primary-foreground/80 max-w-2xl mx-auto">
-                Não queira resultados diferentes se você continua fazendo as mesmas coisas. Clique abaixo e transforme a maneira que você estuda para concursos.
+                Não queira resultados diferentes se você continua fazendo as
+                mesmas coisas. Clique abaixo e transforme a maneira que você
+                estuda para concursos.
               </p>
-              <Button size="lg" className="mt-8 bg-background hover:bg-background/90 text-primary font-bold text-lg" asChild>
-                <Link href="https://wa.me/5531989916924" target="_blank" rel="noopener noreferrer">
+              <Button
+                size="lg"
+                className="mt-8 bg-background hover:bg-background/90 text-primary font-bold text-lg"
+                asChild
+              >
+                <Link
+                  href="https://wa.me/5531989916924"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <MessageCircle className="mr-2" /> QUERO SER APROVADO
                 </Link>
               </Button>
@@ -255,9 +461,15 @@ export default function LandingPage() {
       <footer className="border-t border-border">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-muted-foreground text-sm">
           <div className="flex justify-center gap-4 mb-4">
-            <Link href="#" className="hover:text-foreground">Termos</Link>
-            <Link href="#" className="hover:text-foreground">Privacidade</Link>
-            <Link href="#" className="hover:text-foreground">Instagram</Link>
+            <Link href="#" className="hover:text-foreground">
+              Termos
+            </Link>
+            <Link href="#" className="hover:text-foreground">
+              Privacidade
+            </Link>
+            <Link href="#" className="hover:text-foreground">
+              Instagram
+            </Link>
           </div>
           <p>© {new Date().getFullYear()} MentorIA Academy. Todos os direitos reservados.</p>
         </div>
