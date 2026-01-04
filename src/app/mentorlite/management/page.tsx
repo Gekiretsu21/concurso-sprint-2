@@ -19,9 +19,9 @@ import { useState, useEffect } from 'react';
 import { importQuestions } from '@/firebase/actions';
 import { useFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
-import Link from 'next/link';
 import { SubjectCard } from '@/components/SubjectCard';
 import { SimulatedExamDialog } from '@/components/SimulatedExamDialog';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 export default function ManagementPage() {
   const { toast } = useToast();
@@ -76,38 +76,30 @@ export default function ManagementPage() {
           Gerencie as configurações e dados do aplicativo.
         </p>
       </header>
-      <div className="flex flex-col items-center gap-6">
-        <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="relative group">
-            <div className="relative z-10 h-full flex items-center justify-between bg-gradient-to-r from-green-900 via-blue-400 to-blue-900 border border-white/10 p-6 rounded-3xl shadow-lg shadow-black/30 transition-transform duration-300 group-hover:scale-[1.02] group-hover:border-white/20">
-              <h2 className="text-xl font-bold text-white">
-                Importar Questões
-              </h2>
-              <div>
-                <Dialog>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader className="flex-row items-center justify-between">
+              <CardTitle>Importar Questões</CardTitle>
+               <Dialog>
                   {isClient ? (
                     <DialogTrigger asChild>
                       <Button
                         disabled={!user}
-                        className="bg-black text-white hover:bg-gray-800"
                       >
                         <ClipboardPaste />
                         Importar
                       </Button>
                     </DialogTrigger>
                   ) : (
-                    <Button
-                      disabled={true}
-                      className="bg-black text-white hover:bg-gray-800"
-                    >
+                    <Button disabled={true} >
                       <ClipboardPaste />
                       Importar
                     </Button>
                   )}
-                  <DialogContent className="sm:max-w-[812px] bg-gradient-to-br from-green-900/80 to-blue-900/80 border-white/20 text-white">
+                  <DialogContent className="sm:max-w-[812px]">
                     <DialogHeader>
                       <DialogTitle>Importar Questões por Texto</DialogTitle>
-                      <DialogDescription className="text-white/80">
+                      <DialogDescription>
                         Cole o conteúdo no campo abaixo. Certifique-se de que o
                         formato esteja correto.
                       </DialogDescription>
@@ -122,7 +114,7 @@ export default function ManagementPage() {
                         </Label>
                         <Textarea
                           id="question-text"
-                          className="col-span-3 min-h-[250px] bg-black/50 border-white/20 text-white"
+                          className="col-span-3 min-h-[250px]"
                           placeholder="Cole seu texto aqui..."
                           value={questionText}
                           onChange={e => setQuestionText(e.target.value)}
@@ -136,7 +128,6 @@ export default function ManagementPage() {
                       <Button
                         onClick={handleImport}
                         disabled={isImporting || !questionText}
-                        className="bg-black text-white hover:bg-gray-800"
                       >
                         {isImporting ? (
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -146,21 +137,26 @@ export default function ManagementPage() {
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
-              </div>
-            </div>
-          </div>
-          <div className="relative group">
-            <div className="relative z-10 h-full flex items-center justify-between bg-gradient-to-r from-purple-900 via-indigo-500 to-blue-900 border border-white/10 p-6 rounded-3xl shadow-lg shadow-black/30 transition-transform duration-300 group-hover:scale-[1.02] group-hover:border-white/20">
-              <h2 className="text-xl font-bold text-white">
-                Gerador de Simulados
-              </h2>
-              <div>
-                {isClient ? <SimulatedExamDialog /> : <Button className="bg-black text-white hover:bg-gray-800" disabled><FileText />Gerar</Button>}
-              </div>
-            </div>
-          </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">Use a caixa de diálogo para importar questões em massa a partir de um texto formatado.</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex-row items-center justify-between">
+                <CardTitle>Gerador de Simulados</CardTitle>
+                <div>
+                  {isClient ? <SimulatedExamDialog /> : <Button disabled><FileText />Gerar</Button>}
+                </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">Crie simulados personalizados selecionando matérias e o número de questões.</p>
+            </CardContent>
+          </Card>
         </div>
 
+      <div className="space-y-6">
+        <h3 className="text-2xl font-bold tracking-tight">Banco de Questões</h3>
         <SubjectCard
           subject="Direito Administrativo"
           href="/mentorlite/management/administrative-law"

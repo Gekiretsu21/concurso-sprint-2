@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 const mainFeatures = [
   {
@@ -76,50 +77,44 @@ export default function Home() {
         <h1 className="text-3xl font-bold tracking-tight mb-4">Seja bem-vindo, Concurseiro!</h1>
         <p className="text-muted-foreground">O que você gostaria de fazer hoje?</p>
       </section>
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => (
-          <div key={stat.title} className="relative h-40 overflow-hidden rounded-3xl group">
-             <div className="relative z-10 h-full flex flex-col bg-black/60 border border-white/10 p-6 shadow-lg shadow-black/30 transition-transform duration-300 group-hover:scale-[1.02] group-hover:border-white/20">
-                <div className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <h3 className="text-sm font-medium text-white">{stat.title}</h3>
-                  <stat.icon className={`h-4 w-4 text-gray-300 ${stat.color || ''}`} />
-                </div>
-                <div className="flex-grow flex flex-col justify-center">
-                  <div className="text-2xl font-bold text-white">{stat.value}</div>
-                  {stat.href ? (
-                    <Link href={stat.href} className="text-xs text-gray-400 hover:underline">
+          <Card key={stat.title}>
+             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+                <stat.icon className={`h-4 w-4 text-muted-foreground ${stat.color || ''}`} />
+             </CardHeader>
+             <CardContent>
+                <div className="text-2xl font-bold">{stat.value}</div>
+                {stat.href ? (
+                    <Link href={stat.href} className="text-xs text-muted-foreground hover:underline">
                       Ver detalhes
                     </Link>
                   ) : (
-                    <p className="text-xs text-gray-400">Atualizado recentemente</p>
+                    <p className="text-xs text-muted-foreground">Atualizado recentemente</p>
                   )}
-                </div>
-             </div>
-          </div>
+             </CardContent>
+          </Card>
         ))}
       </section>
       <section>
         <h2 className="text-2xl font-bold tracking-tight mb-4">Principais Ferramentas</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {mainFeatures.map((feature) => (
-              <div key={feature.title} className="relative h-80 overflow-hidden rounded-3xl group">
-                <div className="relative z-10 h-full flex flex-col bg-black/60 border border-white/10 p-8 shadow-lg shadow-black/30 transition-transform duration-300 group-hover:scale-[1.02] group-hover:border-white/20">
-                  <div className="flex-shrink-0 mb-4">
-                    <div className="bg-primary/10 p-3 rounded-lg w-fit">
+              <Card key={feature.title} className="flex flex-col">
+                <CardHeader>
+                    <div className="bg-primary/10 p-3 rounded-lg w-fit mb-4">
                         <feature.icon className="h-6 w-6 text-primary" />
                     </div>
-                  </div>
-                  <div className="flex-grow">
-                    <h3 className="text-xl font-bold text-white">{feature.title}</h3>
-                    <p className="text-sm text-gray-300 mt-1">{feature.description}</p>
-                  </div>
-                  <div className="flex-shrink-0 mt-6">
-                    <Button asChild className="w-full md:w-auto">
+                    <CardTitle className="text-xl">{feature.title}</CardTitle>
+                    <CardDescription>{feature.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="flex-grow flex items-end">
+                    <Button asChild className="w-full md:w-auto mt-auto">
                         <Link href={feature.href}>{feature.cta}</Link>
                     </Button>
-                  </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             ))}
         </div>
       </section>

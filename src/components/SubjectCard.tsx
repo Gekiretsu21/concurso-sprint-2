@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ExternalLink } from 'lucide-react';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
 interface SubjectCardProps {
   subject: string;
@@ -28,27 +29,28 @@ export function SubjectCard({ subject, href }: SubjectCardProps) {
   const { data: questions, isLoading } = useCollection<Question>(questionsQuery);
 
   return (
-    <div className="relative w-full max-w-4xl group">
-      <Link href={href} className="relative z-10 h-full flex flex-col bg-black/80 border border-white/10 p-6 min-h-[120px] rounded-3xl shadow-lg shadow-black/30 transition-transform duration-300 group-hover:scale-[1.02] group-hover:border-white/20">
-        <div className="flex-grow">
-          <h2 className="flex items-center justify-between text-xl font-bold text-white">
-            {subject}
-          </h2>
-          <p className="text-sm text-gray-300 mt-2">
-            Clique aqui para visualizar todas as questões cadastradas para esta matéria.
-          </p>
-        </div>
-        <div className="absolute right-8 top-1/2 -translate-y-1/2">
-          {isLoading ? (
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          ) : (
-            <div className="text-center">
-              <p className="text-3xl font-bold text-white">{questions?.length ?? 0}</p>
-              <p className="text-xs text-gray-400">Questões</p>
-            </div>
-          )}
-        </div>
+    <Card>
+      <Link href={href}>
+        <CardHeader className="flex-row items-center justify-between">
+          <div>
+            <CardTitle>{subject}</CardTitle>
+            <CardDescription className="mt-1">
+              Clique para visualizar todas as questões desta matéria.
+            </CardDescription>
+          </div>
+           <div className="flex items-center gap-2">
+            {isLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            ) : (
+              <div className="text-right">
+                <p className="text-2xl font-bold">{questions?.length ?? 0}</p>
+                <p className="text-xs text-muted-foreground">Questões</p>
+              </div>
+            )}
+            <ExternalLink className="h-5 w-5 text-muted-foreground" />
+          </div>
+        </CardHeader>
       </Link>
-    </div>
+    </Card>
   );
 }

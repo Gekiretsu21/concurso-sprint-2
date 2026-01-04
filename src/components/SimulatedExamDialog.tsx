@@ -115,15 +115,15 @@ export function SimulatedExamDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-black text-white hover:bg-gray-800">
+        <Button>
           <FileText />
           Gerar
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[625px] bg-gradient-to-br from-purple-900/80 to-indigo-900/80 border-white/20 text-white">
+      <DialogContent className="sm:max-w-[625px]">
         <DialogHeader>
           <DialogTitle>Gerar Novo Simulado</DialogTitle>
-          <DialogDescription className="text-white/80">
+          <DialogDescription>
             Configure seu simulado selecionando as matérias e o número de
             questões.
           </DialogDescription>
@@ -136,7 +136,6 @@ export function SimulatedExamDialog() {
               placeholder="Ex: Simulado PPMG 2024"
               value={examName}
               onChange={e => setExamName(e.target.value)}
-              className="bg-black/50 border-white/20 text-white"
             />
           </div>
 
@@ -157,7 +156,7 @@ export function SimulatedExamDialog() {
                       handleSubjectCountChange(subject, value)
                     }
                   >
-                    <SelectTrigger className="bg-black/50 border-white/20">
+                    <SelectTrigger>
                       <SelectValue placeholder="Nº de Questões" />
                     </SelectTrigger>
                     <SelectContent>
@@ -181,7 +180,6 @@ export function SimulatedExamDialog() {
           <Button
             onClick={handleGenerate}
             disabled={isLoading}
-            className="bg-black text-white hover:bg-gray-800"
           >
             {isLoading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

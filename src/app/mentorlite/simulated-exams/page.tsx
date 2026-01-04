@@ -8,15 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
 import { collection, query } from 'firebase/firestore';
@@ -56,42 +47,44 @@ export default function SimulatedExamsPage() {
       <div className="space-y-6">
         <h2 className="text-2xl font-bold tracking-tight">Meus Simulados</h2>
         {isLoading && (
-          <div className="flex items-center justify-center h-40 rounded-3xl border border-dashed border-white/20 bg-black/60">
+          <div className="flex items-center justify-center h-40 rounded-lg border border-dashed">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         )}
         {!isLoading && exams && exams.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {exams.map(exam => (
-              <div key={exam.id} className="relative group">
-                <Link
-                  href={`/mentorlite/simulated-exams/${exam.id}`}
-                  className="relative z-10 h-full flex flex-col bg-black/60 border border-white/10 p-6 min-h-[120px] rounded-3xl shadow-lg shadow-black/30 transition-transform duration-300 group-hover:scale-[1.02] group-hover:border-white/20"
-                >
-                  <div className="flex-grow">
-                    <h3 className="text-xl font-bold text-white">
-                      {exam.name}
-                    </h3>
-                  </div>
-                  <div className="text-sm text-gray-400 mt-2">
+              <Card key={exam.id}>
+                <CardHeader>
+                  <CardTitle>{exam.name}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                   <p className="text-sm text-muted-foreground">
                     {exam.questionCount} questões
-                  </div>
-                </Link>
-              </div>
+                  </p>
+                   <Button asChild className="mt-4 w-full">
+                      <Link href={`/mentorlite/simulated-exams/${exam.id}`}>
+                        Iniciar Simulado
+                      </Link>
+                  </Button>
+                </CardContent>
+              </Card>
             ))}
           </div>
         ) : (
           !isLoading && (
-            <div className="flex flex-col items-center justify-center h-40 rounded-3xl border border-dashed border-white/20 bg-black/60">
-              <p className="text-muted-foreground">
-                Nenhum simulado criado ainda.
-              </p>
-              <Button variant="link" asChild>
-                <Link href="/mentorlite/management">
-                  Crie seu primeiro simulado
-                </Link>
-              </Button>
-            </div>
+            <Card className="flex flex-col items-center justify-center h-40 border-dashed">
+              <CardContent className="text-center">
+                <p className="text-muted-foreground">
+                  Nenhum simulado criado ainda.
+                </p>
+                <Button variant="link" asChild>
+                  <Link href="/mentorlite/management">
+                    Crie seu primeiro simulado
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
           )
         )}
       </div>

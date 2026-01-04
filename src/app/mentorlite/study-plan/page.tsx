@@ -76,12 +76,12 @@ export default function StudyPlanPage() {
       </header>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-        <div className="bg-black/60 border border-white/10 rounded-3xl shadow-lg shadow-black/30">
-            <CardHeader className="p-6">
-                <CardTitle className="text-xl">Suas Informações</CardTitle>
+        <Card>
+            <CardHeader>
+                <CardTitle>Suas Informações</CardTitle>
                 <CardDescription>Quanto mais detalhes, melhor será o plano gerado.</CardDescription>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardContent>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                     <FormField
@@ -146,17 +146,17 @@ export default function StudyPlanPage() {
                     </form>
                 </Form>
             </CardContent>
-        </div>
+        </Card>
 
-        <div className="bg-black/60 border border-white/10 rounded-3xl shadow-lg shadow-black/30 flex flex-col sticky top-4">
-            <CardHeader className="p-6">
-                <CardTitle className="text-xl">Seu Plano Gerado por IA</CardTitle>
+        <Card className="flex flex-col sticky top-4">
+            <CardHeader>
+                <CardTitle>Seu Plano Gerado por IA</CardTitle>
                 <CardDescription>Aqui está sua sugestão de cronograma e foco de estudo.</CardDescription>
             </CardHeader>
-            <CardContent className="p-6 flex-1 flex items-center justify-center min-h-[400px]">
+            <CardContent className="flex-1 flex items-center justify-center min-h-[400px]">
                 {isLoading && <Loader2 className="h-8 w-8 animate-spin text-primary" />}
                 {error && <p className="text-destructive text-center">{error}</p>}
-                {studyPlan && <div className="prose prose-sm dark:prose-invert max-w-none text-foreground whitespace-pre-wrap h-full overflow-y-auto max-h-[600px]">{studyPlan}</div>}
+                {studyPlan && <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap h-full overflow-y-auto max-h-[600px]">{studyPlan}</div>}
                 {!isLoading && !studyPlan && !error && (
                     <div className="text-center text-muted-foreground p-8">
                         <Sparkles className="mx-auto h-12 w-12" />
@@ -164,7 +164,7 @@ export default function StudyPlanPage() {
                     </div>
                 )}
             </CardContent>
-        </div>
+        </Card>
       </div>
     </div>
   );

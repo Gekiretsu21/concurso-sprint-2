@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import {
+  Card,
   CardContent,
   CardDescription,
   CardFooter,
@@ -122,10 +123,10 @@ export default function ConstitutionalLawPage() {
             const userHasIncorrectlyAnswered = isAnswered && !isCorrect;
 
             return (
-              <div key={q.id} className="bg-black/60 border border-white/10 rounded-3xl shadow-lg shadow-black/30">
-                <CardHeader className="p-6">
+              <Card key={q.id}>
+                <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-xl">Questão {index + 1}</CardTitle>
+                    <CardTitle>Questão {index + 1}</CardTitle>
                     <div className="flex items-center gap-2 text-xs">
                         <Badge variant="secondary">{q.Assunto}</Badge>
                         <Badge variant="secondary">{q.Cargo}</Badge>
@@ -136,7 +137,7 @@ export default function ConstitutionalLawPage() {
                     {formatEnunciado(q.Enunciado)}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="p-6">
+                <CardContent>
                   <div className="space-y-3">
                     {alternativesKeys.map((key, optIndex) => {
                       const alternativeText = q[key];
@@ -150,19 +151,19 @@ export default function ConstitutionalLawPage() {
                         const selectedNormalized = String(selected).toLowerCase();
                       
                         if (!isAnswered) {
-                          if (selectedNormalized === currentKeyNormalized) return 'bg-gray-600/50 border-gray-500 text-foreground';
-                          return 'bg-background/30 border-white/10 hover:bg-white/20 text-muted-foreground';
+                           if (selectedNormalized === currentKeyNormalized) return 'bg-secondary border-primary';
+                           return 'hover:bg-secondary/80';
                         }
                       
                         if (isCorrect) {
-                           if (selectedNormalized === currentKeyNormalized) return 'bg-teal-500/80 border-teal-400 text-white font-bold';
-                           return 'bg-background/30 border-white/5 opacity-50';
+                           if (selectedNormalized === currentKeyNormalized) return 'bg-emerald-100 border-emerald-400 text-emerald-900 font-medium';
+                           return 'opacity-60';
                         }
                       
                         if (!isCorrect) {
-                          if (currentKeyNormalized === correctAnswerNormalized) return 'bg-teal-500/80 border-teal-400 text-white font-bold';
-                          if (selectedNormalized === currentKeyNormalized) return 'bg-destructive/50 border-destructive text-gray-400';
-                          return 'bg-background/20 border-white/5 opacity-30';
+                          if (currentKeyNormalized === correctAnswerNormalized) return 'bg-emerald-100 border-emerald-400 text-emerald-900 font-medium';
+                          if (selectedNormalized === currentKeyNormalized) return 'bg-destructive/10 border-destructive/40 text-destructive';
+                          return 'opacity-50';
                         }
                       };
 
@@ -177,8 +178,8 @@ export default function ConstitutionalLawPage() {
                           )}
                         >
                           <div className={cn(
-                            "flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full border text-sm font-bold",
-                            isAnswered && (isCorrect || !isCorrect) && alternativeKey.toLowerCase() === String(q.correctAnswer).toLowerCase() ? "bg-white text-teal-600 border-white" : "bg-background border-white/20"
+                             "flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full border bg-background text-sm font-bold",
+                             isAnswered && (isCorrect || !isCorrect) && alternativeKey.toLowerCase() === String(q.correctAnswer).toLowerCase() ? "bg-primary text-primary-foreground border-primary" : "border-muted-foreground"
                           )}>
                             {String.fromCharCode(65 + optIndex)}
                           </div>
@@ -190,44 +191,45 @@ export default function ConstitutionalLawPage() {
                     })}
                   </div>
                 </CardContent>
-                <CardFooter className="p-6 flex flex-col items-stretch gap-4 sm:flex-row sm:justify-between sm:items-center">
+                <CardFooter className="flex-col items-stretch gap-4 sm:flex-row sm:justify-between sm:items-center">
                   <div className="text-sm min-h-[1.25rem]">
                     {userHasCorrectlyAnswered && (
-                      <p className="text-teal-400 font-medium">
+                      <p className="text-emerald-600 font-medium">
                         Parabéns, resposta correta.
                       </p>
                     )}
                     {userHasIncorrectlyAnswered && (
-                      <p className="text-gray-400 font-medium">
+                      <p className="text-destructive font-medium">
                         Você errou. Gabarito: Letra {q.correctAnswer.toUpperCase()}
                       </p>
                     )}
                   </div>
                   <div className="flex gap-2 self-end sm:self-auto">
                     <Button 
-                      variant="outline"
+                      variant="default"
                       onClick={() => handleConfirmAnswer(q.id)} 
                       disabled={!selected || isAnswered}
-                      className={isAnswered ? "opacity-50" : ""}
                     >
                       {isAnswered ? "Respondido" : "Responder"}
                     </Button>
                     <Button variant="outline">Comentários</Button>
                   </div>
                 </CardFooter>
-              </div>
+              </Card>
             )
           })}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center h-64 rounded-3xl border border-dashed border-white/20 bg-black/60">
+        <Card className="flex flex-col items-center justify-center h-64">
+          <CardContent className="text-center">
           <p className="text-muted-foreground">
             Nenhuma questão de Direito Constitucional encontrada.
           </p>
           <Button variant="link" asChild>
             <Link href="/mentorlite/management">Voltar ao Gerenciamento</Link>
           </Button>
-        </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
