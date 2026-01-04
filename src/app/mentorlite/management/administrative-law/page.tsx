@@ -115,8 +115,9 @@ export default function AdministrativeLawPage() {
           {adminQuestions.map((q, index) => {
             const isAnswered = answeredQuestions[q.id];
             const selected = selectedAnswers[q.id];
-            // CORREÇÃO AQUI: Normaliza tudo para minúsculo antes de comparar
+            
             const isCorrect = String(selected).toLowerCase() === String(q.correctAnswer).toLowerCase();
+            
             const userHasCorrectlyAnswered = isAnswered && isCorrect;
             const userHasIncorrectlyAnswered = isAnswered && !isCorrect;
 
@@ -154,7 +155,7 @@ export default function AdministrativeLawPage() {
                         }
                       
                         if (isCorrect) {
-                           if (selectedNormalized === currentKeyNormalized) return 'bg-primary/20 border-primary text-foreground';
+                           if (selectedNormalized === currentKeyNormalized) return 'bg-teal-500/80 border-teal-400 text-white font-bold';
                            return 'bg-background/30 border-white/5 opacity-50';
                         }
                       
@@ -177,7 +178,7 @@ export default function AdministrativeLawPage() {
                         >
                           <div className={cn(
                             "flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full border text-sm font-bold",
-                            isAnswered && !isCorrect && alternativeKey.toLowerCase() === String(q.correctAnswer).toLowerCase() ? "bg-white text-teal-600 border-white" : "bg-background border-white/20"
+                            isAnswered && (isCorrect || !isCorrect) && alternativeKey.toLowerCase() === String(q.correctAnswer).toLowerCase() ? "bg-white text-teal-600 border-white" : "bg-background border-white/20"
                           )}>
                             {String.fromCharCode(65 + optIndex)}
                           </div>
