@@ -115,8 +115,8 @@ export default function AdministrativeLawPage() {
           {adminQuestions.map((q, index) => {
             const isAnswered = answeredQuestions[q.id];
             const selected = selectedAnswers[q.id];
-            const isCorrect = selected === q.correctAnswer;
-
+            // CORREÇÃO AQUI: Normaliza tudo para minúsculo antes de comparar
+            const isCorrect = String(selected).toLowerCase() === String(q.correctAnswer).toLowerCase();
             const userHasCorrectlyAnswered = isAnswered && isCorrect;
             const userHasIncorrectlyAnswered = isAnswered && !isCorrect;
 
@@ -142,35 +142,26 @@ export default function AdministrativeLawPage() {
                       if (!alternativeText) return null;
 
                       const alternativeKey = key.toString();
-                      const isThisAlternativeSelected = selected === alternativeKey;
-                      const isThisAlternativeCorrect = alternativeKey === q.correctAnswer;
 
-                      // Lógica de Estilização corrigida
                       const getAlternativeClassName = () => {
-                        // 1. Se ainda não respondeu, comportamento padrão de seleção
+                        const currentKeyNormalized = alternativeKey.toLowerCase();
+                        const correctAnswerNormalized = String(q.correctAnswer).toLowerCase();
+                        const selectedNormalized = String(selected).toLowerCase();
+
                         if (!isAnswered) {
-                          if (isThisAlternativeSelected) return 'bg-primary/20 border-primary';
-                          return 'bg-background/30 border-white/10 hover:bg-white/20';
+                          if (selectedNormalized === currentKeyNormalized) return 'bg-primary/20 border-primary text-foreground';
+                          return 'bg-background/30 border-white/10 hover:bg-white/20 text-muted-foreground';
                         }
-
-                        // 2. Se já respondeu...
-
-                        // CENÁRIO A: Usuário Acertou (Mantém cores)
+                      
                         if (isCorrect) {
-                          if (isThisAlternativeSelected) return 'bg-primary/20 border-primary'; // Mantém a cor de seleção
-                          return 'bg-background/30 border-white/10 opacity-50'; // As outras ficam levemente apagadas
+                           if (selectedNormalized === currentKeyNormalized) return 'bg-primary/20 border-primary text-foreground';
+                           return 'bg-background/30 border-white/5 opacity-50';
                         }
-
-                        // CENÁRIO B: Usuário Errou
+                      
                         if (!isCorrect) {
-                          // Revela o Gabarito (Verde Piscina 80%)
-                          if (isThisAlternativeCorrect) return 'bg-teal-500/80 border-teal-400 text-white';
-
-                          // A que o usuário marcou errada (Cinza 50%)
-                          if (isThisAlternativeSelected) return 'bg-gray-600/50 border-gray-600 text-gray-400';
-
-                          // As outras alternativas neutras
-                          return 'bg-background/30 border-white/10 opacity-30';
+                          if (currentKeyNormalized === correctAnswerNormalized) return 'bg-teal-500/80 border-teal-400 text-white font-bold';
+                          if (selectedNormalized === currentKeyNormalized) return 'bg-gray-600/50 border-gray-600 text-gray-400';
+                          return 'bg-background/20 border-white/5 opacity-30';
                         }
                       };
 
@@ -179,15 +170,14 @@ export default function AdministrativeLawPage() {
                           key={optIndex}
                           onClick={() => handleSelectAnswer(q.id, alternativeKey)}
                           className={cn(
-                            'flex items-start space-x-3 p-3 rounded-lg border transition-all duration-300', // Adicionei duration-300 para suavizar
+                            'flex items-start space-x-3 p-3 rounded-lg border transition-all duration-300',
                             isAnswered ? 'cursor-not-allowed' : 'cursor-pointer',
                             getAlternativeClassName()
                           )}
                         >
                           <div className={cn(
                             "flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full border text-sm font-bold",
-                            // Ajuste da bolinha da letra (A, B, C...) para combinar com o fundo
-                            isAnswered && !isCorrect && isThisAlternativeCorrect ? "bg-white text-teal-600 border-white" : "bg-background border-white/20"
+                            isAnswered && !isCorrect && alternativeKey.toLowerCase() === String(q.correctAnswer).toLowerCase() ? "bg-white text-teal-600 border-white" : "bg-background border-white/20"
                           )}>
                             {String.fromCharCode(65 + optIndex)}
                           </div>
