@@ -11,7 +11,6 @@ import {
   Library,
   Lock,
   MessageCircle,
-  Quote,
   Rocket,
   ShieldCheck,
   Sparkles,
@@ -123,7 +122,7 @@ export default function LandingPage() {
       {/* Main Content */}
       <main className="flex-1">
         {/* Hero Section */}
-        <section id="realidade" className="py-6">
+        <section id="realidade" className="py-4">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-4">
               <Card className="bg-[#E0F2FE] border-none p-4 transform -rotate-3 shadow-sm">
