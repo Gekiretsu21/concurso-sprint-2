@@ -59,7 +59,7 @@ function QuestionCard({
   const userHasCorrectlyAnswered = isAnswered && isCorrect;
   const userHasIncorrectlyAnswered = isAnswered && !isCorrect;
 
-  const handleSelectAnswer = (questionId: string, answer: string) => {
+  const handleSelectAnswer = (answer: string) => {
     if (isAnswered) return;
     setSelectedAnswer(prev => (prev === answer ? null : answer));
   };
@@ -69,26 +69,26 @@ function QuestionCard({
   };
   
   const getAlternativeClassName = (alternativeKey: string) => {
-      const currentKeyNormalized = alternativeKey.toLowerCase();
-      const correctAnswerNormalized = String(question.correctAnswer).toLowerCase();
-      const selectedNormalized = String(selected).toLowerCase();
-    
-      if (!isAnswered) {
-        if (selectedNormalized === currentKeyNormalized) return 'bg-gray-600/50 border-gray-500 text-foreground';
-        return 'bg-background/30 border-white/10 hover:bg-white/20 text-muted-foreground';
-      }
-    
-      if (isCorrect) {
-          if (selectedNormalized === currentKeyNormalized) return 'bg-teal-500/80 border-teal-400 text-white font-bold';
-          return 'bg-background/30 border-white/5 opacity-50';
-      }
-    
-      if (!isCorrect) {
-        if (currentKeyNormalized === correctAnswerNormalized) return 'bg-teal-500/80 border-teal-400 text-white font-bold';
-        if (selectedNormalized === currentKeyNormalized) return 'bg-destructive/50 border-destructive text-gray-400';
-        return 'bg-background/20 border-white/5 opacity-30';
-      }
-    };
+    const currentKeyNormalized = alternativeKey.toLowerCase();
+    const correctAnswerNormalized = String(question.correctAnswer).toLowerCase();
+    const selectedNormalized = String(selected).toLowerCase();
+
+    if (!isAnswered) {
+      if (selectedNormalized === currentKeyNormalized) return 'bg-gray-600/50 border-gray-500 text-foreground';
+      return 'bg-background/30 border-white/10 hover:bg-white/20 text-muted-foreground';
+    }
+
+    if (isCorrect) {
+      if (selectedNormalized === currentKeyNormalized) return 'bg-teal-500/80 border-teal-400 text-white font-bold';
+      return 'bg-background/30 border-white/5 opacity-50';
+    }
+
+    if (!isCorrect) {
+      if (currentKeyNormalized === correctAnswerNormalized) return 'bg-teal-500/80 border-teal-400 text-white font-bold';
+      if (selectedNormalized === currentKeyNormalized) return 'bg-destructive/50 border-destructive text-gray-400';
+      return 'bg-background/20 border-white/5 opacity-30';
+    }
+  };
 
 
   return (
@@ -115,7 +115,7 @@ function QuestionCard({
             return (
               <div
                 key={optIndex}
-                onClick={() => handleSelectAnswer(question.id, alternativeKey)}
+                onClick={() => handleSelectAnswer(alternativeKey)}
                 className={cn(
                   'flex items-start space-x-3 p-3 rounded-lg border transition-all duration-300',
                   isAnswered ? 'cursor-not-allowed' : 'cursor-pointer',
@@ -125,7 +125,7 @@ function QuestionCard({
                 <div
                   className={cn(
                     'flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full border text-sm font-bold',
-                    isAnswered && !isCorrect && alternativeKey.toLowerCase() === String(question.correctAnswer).toLowerCase() ? 'bg-white text-teal-600 border-white' : 'bg-background border-white/20'
+                     isAnswered && (isCorrect || !isCorrect) && alternativeKey.toLowerCase() === String(question.correctAnswer).toLowerCase() ? "bg-white text-teal-600 border-white" : "bg-background border-white/20"
                   )}
                 >
                   {String.fromCharCode(65 + optIndex)}
@@ -164,14 +164,13 @@ function QuestionCard({
 }
 
 export default function SimulatedExamPage({
-  params,
+  params: { examId },
 }: {
   params: { examId: string };
 }) {
   const { firestore, user } = useFirebase();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(true);
-  const { examId } = params;
 
   const examDocRef = useMemoFirebase(
     () =>
