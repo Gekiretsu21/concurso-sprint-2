@@ -62,7 +62,7 @@ export default function LandingPage() {
                     href={link.href}
                     className={
                       link.special
-                        ? 'font-bold text-white hover:text-white/80 transition-colors'
+                        ? 'font-bold text-accent hover:text-accent/80 transition-colors'
                         : 'text-primary-foreground/80 hover:text-primary-foreground transition-colors'
                     }
                   >
@@ -88,7 +88,7 @@ export default function LandingPage() {
                           onClick={() => setIsMobileMenuOpen(false)}
                           className={
                             link.special
-                              ? 'font-bold text-primary'
+                              ? 'font-bold text-accent'
                               : 'text-muted-foreground'
                           }
                         >
