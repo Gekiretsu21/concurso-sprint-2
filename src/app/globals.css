@@ -4,39 +4,39 @@
 
 @layer base {
   :root {
-    --background: 220 20% 96%; /* Ice White - #F0F4F8 */
-    --foreground: 224 22% 18%; /* Dark Gray/Black - #1F2937 */
+    --background: 210 40% 98%; /* Off-White / Ice White */
+    --foreground: 222 47% 11%; /* Dark Gray */
 
-    --card: 210 40% 98%; /* Default card background if needed (Pure White) */
-    --card-foreground: 224 22% 18%;
+    --card: 210 40% 100%; /* Pure White for default cards if needed */
+    --card-foreground: 222 47% 11%;
 
-    --popover: 210 40% 98%;
-    --popover-foreground: 224 22% 18%;
+    --popover: 210 40% 100%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 173 80% 36%; /* Jade Green - #20B2AA */
+    --primary: 217 91% 60%; /* Solid Blue (replaces purple) */
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 160 40% 90%; /* Soft/Pastel Jade - for info cards */
-    --secondary-foreground: 224 22% 18%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 220 14% 90%; /* Lighter gray for muted text backgrounds */
-    --muted-foreground: 220 9% 46%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    
+    --accent: 41 96% 50%; /* Gold/Yellow for accents */
+    --accent-foreground: 222 47% 11%;
 
-    --accent: 85 34% 35%; /* Military Green - #556B2F */
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 84% 60%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 220 13% 89%; /* Subtle border color */
-    --input: 220 13% 89%;
-    --ring: 173 80% 36%; /* Jade Green for focus rings */
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 217 91% 60%; /* Solid Blue for focus rings */
 
     --radius: 0.5rem;
 
-    --chart-1: 173 80% 36%; /* Jade Green */
-    --chart-2: 145 63% 42%; /* Emerald Green */
-    --chart-3: 85 34% 35%;  /* Military Green */
+    --chart-1: 217 91% 60%; /* Blue */
+    --chart-2: 142 76% 36%; /* Green */
+    --chart-3: 41 96% 50%;  /* Yellow/Gold */
 
     /* --- Sidebar Dark Theme --- */
     --sidebar-background: 85 34% 15%; /* Deep Military Green */
@@ -50,7 +50,7 @@
   }
 
   .dark {
-    /* Keeping dark mode variables for potential future use, but app will default to light */
+    /* Dark mode variables are kept but won't be used by default */
     --background: 222 84% 4.9%;
     --foreground: 210 40% 98%;
 
@@ -60,7 +60,7 @@
     --popover: 222 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 173 80% 46%;
+    --primary: 217 91% 60%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 217.2 32.6% 17.5%;
@@ -69,7 +69,7 @@
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 85 34% 25%;
+    --accent: 41 96% 50%;
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
@@ -77,7 +77,7 @@
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 173 80% 46%;
+    --ring: 217 91% 60%;
   }
 }
 
