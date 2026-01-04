@@ -17,14 +17,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { LogIn, LogOut, User as UserIcon, UserPlus } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { LoginDialog } from './LoginDialog';
 import { useState } from 'react';
 
 export function AuthButton() {
   const { auth } = useFirebase();
   const { user, isUserLoading } = useUser();
-  const router = useRouter();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
 
@@ -40,14 +38,13 @@ export function AuthButton() {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      router.push('/');
     } catch (error) {
       console.error('Error signing out: ', error);
     }
   };
 
   if (isUserLoading) {
-    return <Button variant="outline" disabled>Carregando...</Button>;
+    return <Button variant="ghost" disabled>Carregando...</Button>;
   }
 
   if (user) {
@@ -67,7 +64,7 @@ export function AuthButton() {
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            className="relative h-10 flex items-center justify-end gap-2"
+            className="relative h-10 flex items-center justify-end gap-2 hover:bg-primary/90"
           >
             <span className="hidden md:block font-medium">
               Bem-vindo, {firstName}
@@ -90,7 +87,7 @@ export function AuthButton() {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => router.push('/mentorlite')}>
+          <DropdownMenuItem onClick={() => (window.location.href = '/mentorlite')}>
             <UserIcon className="mr-2 h-4 w-4" />
             <span>Meu Painel</span>
           </DropdownMenuItem>
@@ -107,7 +104,7 @@ export function AuthButton() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-            <Button>
+            <Button variant="secondary">
                 Login
             </Button>
         </DropdownMenuTrigger>

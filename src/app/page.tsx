@@ -27,6 +27,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { useState } from 'react';
+import Image from 'next/image';
 
 export default function LandingPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -49,7 +50,7 @@ export default function LandingPage() {
       </div>
 
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border">
+      <header className="sticky top-0 z-50 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link
@@ -67,8 +68,8 @@ export default function LandingPage() {
                     href={link.href}
                     className={
                       link.special
-                        ? 'font-bold text-primary hover:text-primary/90 transition-colors'
-                        : 'text-muted-foreground hover:text-foreground transition-colors'
+                        ? 'font-bold text-white hover:text-white/80 transition-colors'
+                        : 'text-primary-foreground/80 hover:text-primary-foreground transition-colors'
                     }
                   >
                     {link.name}
@@ -79,7 +80,7 @@ export default function LandingPage() {
                 <AuthButton />
                 <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                   <SheetTrigger asChild>
-                    <Button variant="outline" size="icon" className="lg:hidden">
+                    <Button variant="ghost" size="icon" className="lg:hidden hover:bg-primary/90">
                       <Menu />
                       <span className="sr-only">Abrir menu</span>
                     </Button>
@@ -111,6 +112,7 @@ export default function LandingPage() {
 
       {/* Main Content */}
       <main className="flex-1">
+
         {/* Hero Section */}
         <section id="realidade" className="py-20 sm:py-32">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-12 items-center">
