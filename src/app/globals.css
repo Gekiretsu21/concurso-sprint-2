@@ -4,39 +4,39 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%; /* Off-White / Ice White */
-    --foreground: 222 47% 11%; /* Dark Gray */
+    --background: 220 14% 96%; /* Branco Gelo - #F8FAFC */
+    --foreground: 224 71% 4%; /* Cinza Escuro - #1E293B */
 
-    --card: 210 40% 100%; /* Pure White for default cards if needed */
-    --card-foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 71% 4%;
 
-    --popover: 210 40% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71% 4%;
 
-    --primary: 217 91% 60%; /* Solid Blue (replaces purple) */
-    --primary-foreground: 210 40% 98%;
+    --primary: 217 91% 60%; /* Azul Sólido */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 220 13% 91%;
+    --secondary-foreground: 224 71% 4%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 220 13% 91%;
+    --muted-foreground: 220 9% 46%;
     
-    --accent: 41 96% 50%; /* Gold/Yellow for accents */
-    --accent-foreground: 222 47% 11%;
+    --accent: 35 92% 51%; /* Amarelo/Dourado - #D97706 */
+    --accent-foreground: 224 71% 4%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 217 91% 60%; /* Solid Blue for focus rings */
+    --border: 220 13% 89%;
+    --input: 220 13% 89%;
+    --ring: 217 91% 60%;
 
     --radius: 0.5rem;
 
     --chart-1: 217 91% 60%; /* Blue */
     --chart-2: 142 76% 36%; /* Green */
-    --chart-3: 41 96% 50%;  /* Yellow/Gold */
+    --chart-3: 35 92% 51%;  /* Yellow/Gold */
 
     /* --- Sidebar Dark Theme --- */
     --sidebar-background: 85 34% 15%; /* Deep Military Green */
@@ -69,7 +69,7 @@
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 41 96% 50%;
+    --accent: 35 92% 51%;
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
