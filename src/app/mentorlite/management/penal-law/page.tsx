@@ -74,7 +74,7 @@ export default function PenalLawPage() {
     if (answeredQuestions[questionId]) return;
     setSelectedAnswers(prev => ({
       ...prev,
-      [questionId]: answer,
+      [questionId]: prev[questionId] === answer ? '' : answer,
     }));
   };
 
@@ -120,6 +120,16 @@ export default function PenalLawPage() {
             const userHasCorrectlyAnswered = isAnswered && isCorrect;
             const userHasIncorrectlyAnswered = isAnswered && !isCorrect;
 
+            const getAlternativeClassName = (alternativeKey: string) => {
+              if (isAnswered) {
+                if (alternativeKey === q.correctAnswer) return 'bg-teal-500/80 border-teal-400';
+                if (alternativeKey === selected && !isCorrect) return 'bg-destructive/50 border-destructive/70 opacity-70';
+                return 'bg-background/30 border-white/10 opacity-70';
+              }
+              if (selected === alternativeKey) return 'bg-primary/20 border-primary';
+              return 'bg-background/30 border-white/10 hover:bg-white/20';
+            };
+
             return (
               <div key={q.id} className="bg-black/60 border border-white/10 rounded-3xl shadow-lg shadow-black/30">
                 <CardHeader className="p-6">
@@ -141,18 +151,7 @@ export default function PenalLawPage() {
                        const alternativeText = q[key];
                        if (!alternativeText) return null;
                        const alternativeKey = key.toString();
-                       const isThisAlternativeSelected = selected === alternativeKey;
-                       const isThisAlternativeCorrect = alternativeKey === q.correctAnswer;
                        
-                       const getAlternativeClassName = () => {
-                         if (isAnswered) {
-                           if (isThisAlternativeCorrect) return 'bg-teal-500/80 border-teal-400';
-                           if (isThisAlternativeSelected && !isThisAlternativeCorrect) return 'bg-destructive/50 border-destructive/70 opacity-70';
-                         }
-                         if (isThisAlternativeSelected) return 'bg-primary/20 border-primary';
-                         return 'bg-background/30 border-white/10 hover:bg-white/20';
-                       };
-
                        return (
                           <div
                             key={optIndex}
@@ -160,7 +159,7 @@ export default function PenalLawPage() {
                             className={cn(
                               'flex items-start space-x-3 p-3 rounded-lg border transition-colors',
                               isAnswered ? 'cursor-not-allowed' : 'cursor-pointer',
-                              getAlternativeClassName()
+                              getAlternativeClassName(alternativeKey)
                             )}
                           >
                             <div className="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full border bg-background font-bold text-sm">
@@ -176,11 +175,11 @@ export default function PenalLawPage() {
                 </CardContent>
                 <CardFooter className="p-6 justify-between items-center">
                   <div className="text-sm h-5">
-                      {userHasCorrectlyAnswered && <p className="text-teal-400">Parabéns, resposta correta!</p>}
+                      {userHasCorrectlyAnswered && <p className="text-teal-400 font-semibold">Parabéns, resposta correta!</p>}
                       {userHasIncorrectlyAnswered && <p className="text-gray-400">Você errou. Gabarito: Letra {q.correctAnswer.toUpperCase()}</p>}
                   </div>
                   <div className="flex gap-2">
-                      <Button onClick={() => handleConfirmAnswer(q.id)} disabled={!selected || isAnswered}>
+                      <Button onClick={() => handleConfirmAnswer(q.id)} disabled={!selected || isAnswered} variant={isAnswered ? "outline" : "default"}>
                         Responder
                       </Button>
                       <Button variant="outline">Comentários</Button>
