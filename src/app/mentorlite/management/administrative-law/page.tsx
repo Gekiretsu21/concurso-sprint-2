@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
+import { useUser } from '@/firebase/auth/use-user';
 
 interface Question {
   id: string;
@@ -43,6 +44,7 @@ function formatEnunciado(text: string) {
 
 export default function AdministrativeLawPage() {
   const { firestore } = useFirebase();
+  const { user } = useUser();
   const [isClient, setIsClient] = useState(false);
   const [subject, setSubject] = useState('');
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
@@ -54,10 +56,10 @@ export default function AdministrativeLawPage() {
 
   const questionsQuery = useMemoFirebase(
     () =>
-      firestore && isClient
+      firestore && user && isClient
         ? query(collection(firestore, 'questoes'), where('Materia', '==', 'Direito Administrativo'))
         : null,
-    [firestore, isClient]
+    [firestore, user, isClient]
   );
   
   const { data: adminQuestions, isLoading: isLoadingQuestions } =
@@ -151,8 +153,8 @@ export default function AdministrativeLawPage() {
                         const selectedNormalized = String(selected).toLowerCase();
                       
                         if (!isAnswered) {
-                          if (selectedNormalized === currentKeyNormalized) return 'bg-secondary border-primary';
-                          return 'hover:bg-secondary/80';
+                           if (selectedNormalized === currentKeyNormalized) return 'bg-secondary border-primary';
+                           return 'hover:bg-secondary/80';
                         }
                       
                         if (isCorrect) {
