@@ -108,7 +108,7 @@ export function AuthButton() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
             <Button>
-                Acessar
+                Login
             </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end" forceMount>
