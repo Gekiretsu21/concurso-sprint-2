@@ -31,7 +31,6 @@ import {
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { cn } from '@/lib/utils';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useFirebase } from '@/firebase/provider';
@@ -125,7 +124,13 @@ function UserNav() {
   if (!user) {
     return null;
   }
+  
+  const getFirstName = (displayName: string | null) => {
+    if (!displayName) return 'Concurseiro';
+    return displayName.split(' ')[0];
+  };
 
+  const firstName = user.isAnonymous ? 'Anônimo' : getFirstName(user.displayName);
   const userDisplayName = user.isAnonymous ? 'Usuário Anônimo' : user.displayName ?? 'Concurseiro';
   const userDisplayEmail = user.isAnonymous ? 'Login anônimo' : user.email;
 
@@ -135,9 +140,9 @@ function UserNav() {
         <Button variant="ghost" className="relative h-10 flex items-center justify-start gap-2">
           <Avatar className="h-8 w-8">
             <AvatarImage src={user.photoURL ?? undefined} />
-            <AvatarFallback>{userDisplayName.charAt(0)}</AvatarFallback>
+            <AvatarFallback>{firstName.charAt(0)}</AvatarFallback>
           </Avatar>
-          <span className="hidden md:block font-medium">{userDisplayName}</span>
+          <span className="hidden md:block font-medium">Bem-vindo, {firstName}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>

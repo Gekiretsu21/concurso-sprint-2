@@ -52,6 +52,13 @@ export function AuthButton() {
   }
 
   if (user) {
+    const getFirstName = (displayName: string | null) => {
+      if (!displayName) return 'Concurseiro';
+      return displayName.split(' ')[0];
+    };
+    const firstName = user.isAnonymous
+      ? 'Anônimo'
+      : getFirstName(user.displayName);
     const userDisplayName =
       user.isAnonymous ? 'Usuário Anônimo' : user.displayName ?? 'Concurseiro';
     const userDisplayEmail = user.isAnonymous ? 'Login anônimo' : user.email;
@@ -65,10 +72,10 @@ export function AuthButton() {
           >
             <Avatar className="h-8 w-8">
               <AvatarImage src={user.photoURL ?? undefined} />
-              <AvatarFallback>{userDisplayName.charAt(0)}</AvatarFallback>
+              <AvatarFallback>{firstName.charAt(0)}</AvatarFallback>
             </Avatar>
             <span className="hidden md:block font-medium">
-              {userDisplayName}
+              Bem-vindo, {firstName}
             </span>
           </Button>
         </DropdownMenuTrigger>
