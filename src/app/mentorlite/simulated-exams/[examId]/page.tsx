@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { useDoc, useFirebase } from '@/firebase';
+import { useMemo, useState, useEffect } from 'react';
+import { useDoc, useFirebase, useMemoFirebase } from '@/firebase';
 import { doc, getDoc, DocumentReference } from 'firebase/firestore';
 import {
   CardContent,
@@ -68,32 +68,27 @@ function QuestionCard({
     setIsAnswered(true);
   };
   
-  const getAlternativeClassName = () => {
-    const currentKeyNormalized = (key: string) => key.toLowerCase();
-    const correctAnswerNormalized = String(question.correctAnswer).toLowerCase();
-    const selectedNormalized = String(selected).toLowerCase();
-
-    return (key: string) => {
-      const normalizedKey = currentKeyNormalized(key);
+  const getAlternativeClassName = (alternativeKey: string) => {
+      const currentKeyNormalized = alternativeKey.toLowerCase();
+      const correctAnswerNormalized = String(question.correctAnswer).toLowerCase();
+      const selectedNormalized = String(selected).toLowerCase();
+    
       if (!isAnswered) {
-        if (selectedNormalized === normalizedKey) return 'bg-gray-600/50 border-gray-500 text-foreground';
+        if (selectedNormalized === currentKeyNormalized) return 'bg-gray-600/50 border-gray-500 text-foreground';
         return 'bg-background/30 border-white/10 hover:bg-white/20 text-muted-foreground';
       }
-
+    
       if (isCorrect) {
-         if (selectedNormalized === normalizedKey) return 'bg-teal-500/80 border-teal-400 text-white font-bold';
-         return 'bg-background/30 border-white/5 opacity-50';
+          if (selectedNormalized === currentKeyNormalized) return 'bg-teal-500/80 border-teal-400 text-white font-bold';
+          return 'bg-background/30 border-white/5 opacity-50';
       }
-
+    
       if (!isCorrect) {
-        if (normalizedKey === correctAnswerNormalized) return 'bg-teal-500/80 border-teal-400 text-white font-bold';
-        if (selectedNormalized === normalizedKey) return 'bg-destructive/50 border-destructive text-gray-400';
+        if (currentKeyNormalized === correctAnswerNormalized) return 'bg-teal-500/80 border-teal-400 text-white font-bold';
+        if (selectedNormalized === currentKeyNormalized) return 'bg-destructive/50 border-destructive text-gray-400';
         return 'bg-background/20 border-white/5 opacity-30';
       }
-    }
-  };
-
-  const alternativeClassNameFn = getAlternativeClassName();
+    };
 
 
   return (
@@ -124,7 +119,7 @@ function QuestionCard({
                 className={cn(
                   'flex items-start space-x-3 p-3 rounded-lg border transition-all duration-300',
                   isAnswered ? 'cursor-not-allowed' : 'cursor-pointer',
-                  alternativeClassNameFn(alternativeKey)
+                  getAlternativeClassName(alternativeKey)
                 )}
               >
                 <div
@@ -176,17 +171,18 @@ export default function SimulatedExamPage({
   const { firestore, user } = useFirebase();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(true);
+  const { examId } = params;
 
-  const examDocRef = useMemo(
+  const examDocRef = useMemoFirebase(
     () =>
       firestore && user
         ? (doc(
             firestore,
             `users/${user.uid}/simulatedExams`,
-            params.examId
+            examId
           ) as DocumentReference<SimulatedExam>)
         : null,
-    [firestore, user, params.examId]
+    [firestore, user, examId]
   );
 
   const { data: exam, isLoading: isLoadingExam } = useDoc<SimulatedExam>(examDocRef);
