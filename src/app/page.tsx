@@ -113,7 +113,7 @@ export default function LandingPage() {
               alt="Banner da Mentoria Academy"
               width={1920}
               height={640}
-              className="w-full h-auto object-cover rounded-lg shadow-md"
+              className="w-full h-auto object-cover rounded-lg"
               priority
             />
           </div>
