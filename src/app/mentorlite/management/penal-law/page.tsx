@@ -148,9 +148,9 @@ export default function PenalLawPage() {
                         const currentKeyNormalized = alternativeKey.toLowerCase();
                         const correctAnswerNormalized = String(q.correctAnswer).toLowerCase();
                         const selectedNormalized = String(selected).toLowerCase();
-
+                      
                         if (!isAnswered) {
-                          if (selectedNormalized === currentKeyNormalized) return 'bg-primary/20 border-primary text-foreground';
+                          if (selectedNormalized === currentKeyNormalized) return 'bg-gray-600/50 border-gray-500 text-foreground';
                           return 'bg-background/30 border-white/10 hover:bg-white/20 text-muted-foreground';
                         }
                       
@@ -161,7 +161,7 @@ export default function PenalLawPage() {
                       
                         if (!isCorrect) {
                           if (currentKeyNormalized === correctAnswerNormalized) return 'bg-teal-500/80 border-teal-400 text-white font-bold';
-                          if (selectedNormalized === currentKeyNormalized) return 'bg-gray-600/50 border-gray-600 text-gray-400';
+                          if (selectedNormalized === currentKeyNormalized) return 'bg-destructive/50 border-destructive text-gray-400';
                           return 'bg-background/20 border-white/5 opacity-30';
                         }
                       };
@@ -205,6 +205,7 @@ export default function PenalLawPage() {
                   </div>
                   <div className="flex gap-2 self-end sm:self-auto">
                     <Button 
+                      variant="outline"
                       onClick={() => handleConfirmAnswer(q.id)} 
                       disabled={!selected || isAnswered}
                       className={isAnswered ? "opacity-50" : ""}
