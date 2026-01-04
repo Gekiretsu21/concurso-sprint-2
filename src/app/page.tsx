@@ -104,6 +104,20 @@ export default function LandingPage() {
         </div>
       </header>
 
+      {/* Image Banner Section */}
+      <section>
+        <div className="relative w-full h-auto">
+          <Image
+            src="/534414620_1262520999230153_8610051095494767603_n.jpg"
+            alt="Banner da Mentoria Academy"
+            width={1920}
+            height={640}
+            className="w-full h-auto object-cover"
+            priority
+          />
+        </div>
+      </section>
+
       {/* Main Content */}
       <main className="flex-1">
         {/* Hero Section */}
