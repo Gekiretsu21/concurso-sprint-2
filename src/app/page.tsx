@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Award, BookOpen, CheckCircle, Crown, FileText, FolderKanban, GraduationCap, Laptop, Lightbulb, Lock, Mic, Rocket, Scale, ShieldCheck, Sparkles, Star, Zap, XCircle, MessageSquare, Quote, BrainCircuit, Bot, Library, MessageCircle } from 'lucide-react';
+import { AuthButton } from '@/components/AuthButton';
 
 export default function LandingPage() {
   const navLinks = [
@@ -44,9 +45,7 @@ export default function LandingPage() {
                 </Link>
               ))}
             </nav>
-            <Button asChild>
-              <Link href="#cta">Garantir Vaga</Link>
-            </Button>
+            <AuthButton />
           </div>
         </div>
       </header>
@@ -77,6 +76,9 @@ export default function LandingPage() {
               <p className="mt-6 text-lg text-muted-foreground">
                 Não é falta de esforço, é falta de método. Os modelos antigos não funcionam para as provas atuais. Nós construímos a solução definitiva para você conquistar sua farda em 2026.
               </p>
+               <Button asChild size="lg" className="mt-8">
+                <Link href="#cta">Garantir Vaga</Link>
+              </Button>
             </div>
           </div>
         </section>
