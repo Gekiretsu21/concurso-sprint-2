@@ -4,7 +4,6 @@ import { useMemo, useState, useEffect } from 'react';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import {
-  Card,
   CardContent,
   CardDescription,
   CardFooter,
@@ -45,6 +44,8 @@ export default function ConstitutionalLawPage() {
   const { firestore } = useFirebase();
   const [isClient, setIsClient] = useState(false);
   const [subject, setSubject] = useState('');
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
+  const [answeredQuestions, setAnsweredQuestions] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     setIsClient(true);
@@ -68,6 +69,21 @@ export default function ConstitutionalLawPage() {
       setSubject('Direito Constitucional');
     }
   }, [isClient]);
+
+  const handleSelectAnswer = (questionId: string, answer: string) => {
+    if (answeredQuestions[questionId]) return;
+    setSelectedAnswers(prev => ({
+      ...prev,
+      [questionId]: answer,
+    }));
+  };
+
+  const handleConfirmAnswer = (questionId: string) => {
+    setAnsweredQuestions(prev => ({
+      ...prev,
+      [questionId]: true,
+    }));
+  };
 
   const isLoading = isLoadingQuestions || !isClient;
 
@@ -97,6 +113,13 @@ export default function ConstitutionalLawPage() {
       ) : constitutionalQuestions && constitutionalQuestions.length > 0 ? (
         <div className="space-y-6">
           {constitutionalQuestions.map((q, index) => {
+            const isAnswered = answeredQuestions[q.id];
+            const selected = selectedAnswers[q.id];
+            const isCorrect = selected === q.correctAnswer;
+            
+            const userHasCorrectlyAnswered = isAnswered && isCorrect;
+            const userHasIncorrectlyAnswered = isAnswered && !isCorrect;
+
             return (
               <div key={q.id} className="bg-black/60 border border-white/10 rounded-3xl shadow-lg shadow-black/30">
                 <CardHeader className="p-6">
@@ -117,17 +140,27 @@ export default function ConstitutionalLawPage() {
                     {alternativesKeys.map((key, optIndex) => {
                        const alternativeText = q[key];
                        if (!alternativeText) return null;
-
-                       const isCorrect = key.toString() === q.correctAnswer;
+                       const alternativeKey = key.toString();
+                       const isThisAlternativeSelected = selected === alternativeKey;
+                       const isThisAlternativeCorrect = alternativeKey === q.correctAnswer;
                        
+                       const getAlternativeClassName = () => {
+                         if (isAnswered) {
+                           if (isThisAlternativeCorrect) return 'bg-teal-500/80 border-teal-400';
+                           if (isThisAlternativeSelected && !isThisAlternativeCorrect) return 'bg-destructive/50 border-destructive/70 opacity-70';
+                         }
+                         if (isThisAlternativeSelected) return 'bg-primary/20 border-primary';
+                         return 'bg-background/30 border-white/10 hover:bg-white/20';
+                       };
+
                        return (
                           <div
                             key={optIndex}
+                            onClick={() => handleSelectAnswer(q.id, alternativeKey)}
                             className={cn(
                               'flex items-start space-x-3 p-3 rounded-lg border transition-colors',
-                              isCorrect
-                                ? 'bg-green-800/30 border-green-600 text-green-300'
-                                : 'bg-background/30 border-white/10'
+                              isAnswered ? 'cursor-not-allowed' : 'cursor-pointer',
+                              getAlternativeClassName()
                             )}
                           >
                             <div className="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full border bg-background font-bold text-sm">
@@ -141,9 +174,17 @@ export default function ConstitutionalLawPage() {
                     })}
                   </div>
                 </CardContent>
-                <CardFooter className="p-6 justify-end gap-2">
-                    <Button>Responder</Button>
-                    <Button variant="outline">Comentários</Button>
+                <CardFooter className="p-6 justify-between items-center">
+                   <div className="text-sm h-5">
+                      {userHasCorrectlyAnswered && <p className="text-teal-400">Parabéns, resposta correta!</p>}
+                      {userHasIncorrectlyAnswered && <p className="text-gray-400">Você errou. Gabarito: Letra {q.correctAnswer.toUpperCase()}</p>}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button onClick={() => handleConfirmAnswer(q.id)} disabled={!selected || isAnswered}>
+                        Responder
+                      </Button>
+                      <Button variant="outline">Comentários</Button>
+                    </div>
                 </CardFooter>
               </div>
             )
