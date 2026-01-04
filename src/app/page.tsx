@@ -53,7 +53,7 @@ export default function LandingPage() {
               >
                 MENTORIA <Zap className="w-5 h-5 text-accent" /> ACADEMY
               </Link>
-              <Link href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">
+              <Link href="https://www.instagram.com/amentoriaacademy" target="_blank" rel="noopener noreferrer" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
