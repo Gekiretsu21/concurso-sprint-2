@@ -4,6 +4,53 @@
 
 @layer base {
   :root {
+    --background: 220 20% 96%; /* Ice White - #F0F4F8 */
+    --foreground: 224 22% 18%; /* Dark Gray/Black - #1F2937 */
+
+    --card: 210 40% 98%; /* Default card background if needed (Pure White) */
+    --card-foreground: 224 22% 18%;
+
+    --popover: 210 40% 98%;
+    --popover-foreground: 224 22% 18%;
+
+    --primary: 173 80% 36%; /* Jade Green - #20B2AA */
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 160 40% 90%; /* Soft/Pastel Jade - for info cards */
+    --secondary-foreground: 224 22% 18%;
+
+    --muted: 220 14% 90%; /* Lighter gray for muted text backgrounds */
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 85 34% 35%; /* Military Green - #556B2F */
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 220 13% 89%; /* Subtle border color */
+    --input: 220 13% 89%;
+    --ring: 173 80% 36%; /* Jade Green for focus rings */
+
+    --radius: 0.5rem;
+
+    --chart-1: 173 80% 36%; /* Jade Green */
+    --chart-2: 145 63% 42%; /* Emerald Green */
+    --chart-3: 85 34% 35%;  /* Military Green */
+
+    /* --- Sidebar Dark Theme --- */
+    --sidebar-background: 85 34% 15%; /* Deep Military Green */
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 173 80% 46%; /* Brighter Jade for active/hover */
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 85 34% 25%; /* Slightly lighter military green */
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 85 34% 20%;
+    --sidebar-ring: 173 80% 46%;
+  }
+
+  .dark {
+    /* Keeping dark mode variables for potential future use, but app will default to light */
     --background: 222 84% 4.9%;
     --foreground: 210 40% 98%;
 
@@ -13,7 +60,7 @@
     --popover: 222 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 255 75% 58%;
+    --primary: 173 80% 46%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 217.2 32.6% 17.5%;
@@ -22,73 +69,15 @@
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 48 96% 59%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 85 34% 25%;
+    --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 255 75% 58%;
-
-    --radius: 0.5rem;
-
-    --chart-1: 255 75% 58%;
-    --chart-2: 160 80% 45%;
-    --chart-3: 48 96% 59%;
-
-    --sidebar-background: 222 84% 4%; /* Slightly darker background */
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 255 75% 58%; /* Purple for primary highlights */
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 217.2 32.6% 17.5%; /* Darker blue for accents */
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217.2 32.6% 25%; /* Slightly lighter border */
-    --sidebar-ring: 255 75% 58%;
-  }
-
-  .dark {
-    --background: 222 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 255 75% 58%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17se%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 48 96% 59%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 255 75% 58%;
-
-    --chart-1: 255 75% 58%;
-    --chart-2: 160 80% 45%;
-    --chart-3: 48 96% 59%;
-
-    --sidebar-background: 222 84% 4%; /* Slightly darker background */
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 255 75% 58%; /* Purple for primary highlights */
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 217.2 32.6% 17.5%; /* Darker blue for accents */
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217.2 32.6% 25%; /* Slightly lighter border */
-    --sidebar-ring: 255 75% 58%;
+    --ring: 173 80% 46%;
   }
 }
 
@@ -116,9 +105,5 @@
     --tw-prose-pre-bg: hsl(var(--muted));
     --tw-prose-th-borders: hsl(var(--border));
     --tw-prose-td-borders: hsl(var(--border));
-  }
-  .dark .prose {
-    --tw-prose-body: hsl(var(--foreground));
-    --tw-prose-headings: hsl(var(--foreground));
   }
 }

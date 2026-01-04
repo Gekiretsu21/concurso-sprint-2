@@ -101,7 +101,7 @@ export function AuthButton() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-            <Button className="bg-black text-white hover:bg-gray-800">
+            <Button>
                 Acessar
             </Button>
         </DropdownMenuTrigger>
