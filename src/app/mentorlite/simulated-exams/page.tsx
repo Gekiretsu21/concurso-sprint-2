@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useCollection, useFirebase } from '@/firebase';
+import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
 import { collection, query } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
@@ -33,10 +33,13 @@ export default function SimulatedExamsPage() {
   const { firestore } = useFirebase();
   const { user } = useUser();
 
-  const examsQuery =
-    firestore && user
-      ? query(collection(firestore, `users/${user.uid}/simulatedExams`))
-      : null;
+  const examsQuery = useMemoFirebase(
+    () =>
+      firestore && user
+        ? query(collection(firestore, `users/${user.uid}/simulatedExams`))
+        : null,
+    [firestore, user]
+  );
 
   const { data: exams, isLoading } =
     useCollection<SimulatedExam>(examsQuery);
