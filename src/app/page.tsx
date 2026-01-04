@@ -59,13 +59,13 @@ export default function LandingPage() {
               <Card className="bg-[#E0F2FE] border-none p-4 transform -rotate-3 shadow-sm">
                 <p className="text-gray-800">"Eu estudo muito, mas parece que a matéria não entra na minha cabeça"</p>
               </Card>
-              <Card className="bg-[#F3E8FF] border-none p-4 transform rotate-2 ml-8 shadow-sm">
+              <Card className="bg-[#E0E7FF] border-none p-4 transform rotate-2 ml-8 shadow-sm">
                 <p className="text-gray-800">"Já fiz o método tradicional e na hora da prova não consigo acertar"</p>
               </Card>
-              <Card className="bg-[#E0E7FF] border-none p-4 transform -rotate-1 shadow-sm">
+              <Card className="bg-[#F5F5F4] border-none p-4 transform -rotate-1 shadow-sm">
                 <p className="text-gray-800">"Perdi as esperanças de passar em concurso"</p>
               </Card>
-              <Card className="bg-[#F3F4F6] border-none p-4 transform rotate-1 ml-4 shadow-sm">
+              <Card className="bg-[#E2E8F0] border-none p-4 transform rotate-1 ml-4 shadow-sm">
                 <p className="text-gray-800">"As vezes acho que todos conseguem, menos eu"</p>
               </Card>
             </div>
@@ -138,30 +138,6 @@ export default function LandingPage() {
                     </Card>
                 </div>
             </div>
-        </section>
-
-        {/* IA Section */}
-        <section id="mentor-ia" className="py-20 sm:py-32 bg-secondary/30">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div className="inline-block bg-primary/10 text-primary font-semibold px-3 py-1 rounded-full text-sm mb-4">
-              ✨ POWERED BY GEMINI
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-bold">O Mentor da Aprovação ✨</h2>
-            <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">Teste nosso Mentor IA. Escolha um comando abaixo para descobrir o melhor caminho:</p>
-            <div className="mt-8 max-w-3xl mx-auto">
-              <Card className="p-6 bg-card shadow-lg">
-                <div className="flex flex-wrap gap-2 justify-center">
-                  {["Qual o método mais rápido para ser aprovado?", "Vale a pena estudar por videoaulas longas?", "Como conciliar trabalho e estudo?", "Qual a melhor estratégia para carreiras policiais?"].map(tag => (
-                    <Button key={tag} variant="secondary" size="sm">{tag}</Button>
-                  ))}
-                </div>
-                <div className="mt-6 flex gap-2">
-                  <input type="text" placeholder="Ou digite sua dúvida aqui..." className="flex-grow bg-input text-foreground rounded-md px-4"/>
-                  <Button>Consultar</Button>
-                </div>
-              </Card>
-            </div>
-          </div>
         </section>
 
         {/* Mentores Section */}
