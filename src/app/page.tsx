@@ -107,7 +107,7 @@ export default function LandingPage() {
       {/* Image Banner Section */}
       <section className="py-8">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative w-full max-w-[70%] mx-auto h-auto">
+          <div className="relative w-full max-w-[85%] mx-auto h-auto">
             <Image
               src="/LOGO/logotipo site.png"
               alt="Banner da Mentoria Academy"
