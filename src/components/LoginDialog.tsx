@@ -30,6 +30,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Por favor, insira um email válido.' }),
@@ -74,11 +75,33 @@ export function LoginDialog({ isOpen, onOpenChange, mode }: LoginDialogProps) {
       router.push('/mentorlite');
     } catch (error: any) {
       console.error(error);
-      toast({
-        variant: 'destructive',
-        title: `Erro ao ${mode === 'login' ? 'fazer login' : 'criar conta'}`,
-        description: 'Verifique suas credenciais e tente novamente.',
-      });
+      if (error.code === 'auth/operation-not-allowed') {
+        toast({
+            variant: 'destructive',
+            title: 'Ação Necessária: Habilite o Login por E-mail',
+            description: (
+              <div>
+                <p>O método de login por e-mail/senha não está ativado no seu projeto Firebase.</p>
+                <a
+                  href="https://console.firebase.google.com/project/studio-6116545318-c4cd8/authentication/providers"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline font-bold"
+                >
+                  Clique aqui para habilitar no Firebase Console
+                </a>
+                <p className="mt-2 text-xs">Atualize a página após habilitar.</p>
+              </div>
+            ),
+            duration: 15000,
+          });
+      } else {
+        toast({
+            variant: 'destructive',
+            title: `Erro ao ${mode === 'login' ? 'fazer login' : 'criar conta'}`,
+            description: 'Verifique suas credenciais e tente novamente.',
+          });
+      }
     } finally {
       setIsLoading(false);
     }
