@@ -7,6 +7,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -140,6 +141,10 @@ export default function AdministrativeLawPage() {
                     })}
                   </div>
                 </CardContent>
+                <CardFooter className="p-6 justify-end gap-2">
+                    <Button>Responder</Button>
+                    <Button variant="outline">Comentários</Button>
+                </CardFooter>
               </div>
             )
           })}
