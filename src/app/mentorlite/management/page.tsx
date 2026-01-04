@@ -26,7 +26,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 export default function ManagementPage() {
   const { toast } = useToast();
   const { firestore } = useFirebase();
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const [questionText, setQuestionText] = useState('');
   const [isImporting, setIsImporting] = useState(false);
   const [isClient, setIsClient] = useState(false);
@@ -68,6 +68,8 @@ export default function ManagementPage() {
     }
   };
 
+  const isButtonDisabled = !user || isUserLoading;
+
   return (
     <div className="flex flex-col gap-8">
       <header>
@@ -84,10 +86,10 @@ export default function ManagementPage() {
                   {isClient ? (
                     <DialogTrigger asChild>
                       <Button
-                        disabled={!user}
+                        disabled={isButtonDisabled}
                       >
-                        <ClipboardPaste />
-                        Importar
+                        {isUserLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ClipboardPaste />}
+                        {isUserLoading ? 'Carregando...' : 'Importar'}
                       </Button>
                     </DialogTrigger>
                   ) : (
