@@ -1,9 +1,6 @@
 'use client';
 
-import {
-  useFirebase,
-  useUser,
-} from '@/firebase';
+import { useFirebase, useUser } from '@/firebase';
 import { Button } from './ui/button';
 import {
   GoogleAuthProvider,
@@ -19,13 +16,17 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { LogOut, User as UserIcon } from 'lucide-react';
+import { LogIn, LogOut, User as UserIcon, UserPlus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { LoginDialog } from './LoginDialog';
+import { useState } from 'react';
 
 export function AuthButton() {
   const { auth } = useFirebase();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
 
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
@@ -97,8 +98,42 @@ export function AuthButton() {
   }
 
   return (
-    <Button onClick={handleGoogleLogin}>
-      Login com Google
-    </Button>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+            <Button className="bg-black text-white hover:bg-gray-800">
+                Acessar
+            </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-56" align="end" forceMount>
+            <DropdownMenuItem onClick={() => setIsLoginOpen(true)}>
+                <LogIn className="mr-2 h-4 w-4" />
+                <span>Fazer Login</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setIsRegisterOpen(true)}>
+                <UserPlus className="mr-2 h-4 w-4" />
+                <span>Crie sua conta</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleGoogleLogin}>
+                <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
+                    <path fill="currentColor" d="M488 261.8C488 403.3 381.5 512 244 512 110.1 512 0 402 0 261.8 0 120.5 110.1 11.8 244 11.8c72.1 0 132.3 28.3 177.3 72.3L371.1 129.9c-39.2-37.2-94.2-62.3-157.1-62.3-120.3 0-217.9 97.9-217.9 219.8s97.6 219.8 217.9 219.8c123.3 0 203.2-85.3 209.6-180.5H244V261.8z"></path>
+                </svg>
+                <span>Entrar com Google</span>
+            </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <LoginDialog
+        isOpen={isLoginOpen}
+        onOpenChange={setIsLoginOpen}
+        mode="login"
+      />
+      <LoginDialog
+        isOpen={isRegisterOpen}
+        onOpenChange={setIsRegisterOpen}
+        mode="register"
+      />
+    </>
   );
 }
