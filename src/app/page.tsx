@@ -43,7 +43,7 @@ export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground font-body antialiased">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-primary text-primary-foreground">
+      <header className="sticky top-0 z-50 bg-gradient-to-r from-black to-gray-900 text-primary-foreground">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link
