@@ -109,7 +109,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative w-full max-w-[70%] mx-auto h-auto">
             <Image
-              src="/534414620_1262520999230153_8610051095494767603_n.jpg"
+              src="/LOGO/logotipo site.png"
               alt="Banner da Mentoria Academy"
               width={1920}
               height={640}
