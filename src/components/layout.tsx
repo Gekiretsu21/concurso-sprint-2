@@ -59,34 +59,8 @@ const menuItems = [
   },
 ];
 
-function AuthButton() {
-  const { auth } = useFirebase();
-  const { user } = useUser();
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error('Error signing out: ', error);
-    }
-  };
-
-  if (user) {
-    return (
-      <Button variant="ghost" className="w-full justify-start" onClick={handleLogout}>
-        <LogOut className="mr-2 h-4 w-4" />
-        Sair
-      </Button>
-    );
-  }
-
-  return null;
-}
-
 function MainSidebar() {
   const pathname = usePathname();
-  const { user } = useUser();
-  const userAvatar = PlaceHolderImages.find(p => p.id === 'user-avatar');
   const { state } = useSidebar();
   const [isMounted, setIsMounted] = useState(false);
 
@@ -131,26 +105,6 @@ function MainSidebar() {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
-        <div className="pb-4">
-          <AuthButton />
-        </div>
-        <div className="flex items-center gap-3">
-          <Avatar>
-            <AvatarImage src={user?.photoURL ?? userAvatar?.imageUrl} data-ai-hint={userAvatar?.imageHint} />
-            <AvatarFallback>{user?.isAnonymous ? 'A' : user?.displayName?.charAt(0) ?? 'C'}</AvatarFallback>
-          </Avatar>
-          <div
-            className={cn(
-              'flex flex-col transition-opacity duration-200',
-              state === 'collapsed' ? 'opacity-0' : 'opacity-100'
-            )}
-          >
-            <p className="text-sm font-medium text-sidebar-foreground">
-              {user?.isAnonymous ? 'Usuário Anônimo' : user?.displayName ?? 'Concurseiro'}
-            </p>
-            <p className="text-xs text-sidebar-foreground/70">{user ? 'Usuário' : 'Plano Pro'}</p>
-          </div>
-        </div>
       </SidebarFooter>
     </Sidebar>
   );
