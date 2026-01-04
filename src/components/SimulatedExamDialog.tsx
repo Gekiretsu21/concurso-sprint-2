@@ -31,7 +31,7 @@ const SUBJECTS = [
   'Direito Constitucional',
   'Direito Penal',
 ];
-const QUESTION_COUNTS = [5, 10, 15, 20];
+const QUESTION_COUNTS = Array.from({ length: 20 }, (_, i) => i + 1);
 
 interface SubjectSelection {
   [subject: string]: number;
