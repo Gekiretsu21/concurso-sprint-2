@@ -32,7 +32,6 @@ export function AuthButton() {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-      router.push('/mentorlite');
     } catch (error) {
       console.error('Error signing in with Google: ', error);
     }

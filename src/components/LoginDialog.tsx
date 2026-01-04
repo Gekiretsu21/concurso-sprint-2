@@ -72,7 +72,6 @@ export function LoginDialog({ isOpen, onOpenChange, mode }: LoginDialogProps) {
         await signInWithEmailAndPassword(auth, values.email, values.password);
       }
       onOpenChange(false);
-      router.push('/mentorlite');
     } catch (error: any) {
       console.error(error);
       if (error.code === 'auth/operation-not-allowed') {
