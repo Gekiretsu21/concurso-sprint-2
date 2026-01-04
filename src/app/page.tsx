@@ -54,13 +54,13 @@ export default function LandingPage() {
           <div className="flex items-center justify-between h-16">
             <Link
               href="/"
-              className="flex items-center gap-2 text-xl font-bold whitespace-nowrap"
+              className="flex items-center gap-2 text-lg font-bold whitespace-nowrap"
             >
               MENTORIA <Zap className="w-5 h-5 text-accent" /> ACADEMY
             </Link>
 
             <div className="flex items-center gap-4">
-              <nav className="hidden lg:flex items-center gap-4 text-base font-medium">
+              <nav className="hidden lg:flex items-center gap-4 text-sm font-medium">
                 {navLinks.map(link => (
                   <Link
                     key={link.name}
