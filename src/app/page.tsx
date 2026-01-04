@@ -58,49 +58,52 @@ export default function LandingPage() {
             >
               MENTORIA <Zap className="w-5 h-5 text-accent" /> ACADEMY
             </Link>
-            <nav className="hidden lg:flex items-center gap-4 text-base font-medium">
-              {navLinks.map(link => (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  className={
-                    link.special
-                      ? 'font-bold text-primary hover:text-primary/90 transition-colors'
-                      : 'text-muted-foreground hover:text-foreground transition-colors'
-                  }
-                >
-                  {link.name}
-                </Link>
-              ))}
-            </nav>
-            <div className="flex items-center gap-2">
-              <AuthButton />
-              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="outline" size="icon" className="lg:hidden">
-                    <Menu />
-                    <span className="sr-only">Abrir menu</span>
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right">
-                  <nav className="flex flex-col gap-6 text-lg font-medium mt-8">
-                    {navLinks.map(link => (
-                      <Link
-                        key={link.name}
-                        href={link.href}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className={
-                          link.special
-                            ? 'font-bold text-primary'
-                            : 'text-muted-foreground'
-                        }
-                      >
-                        {link.name}
-                      </Link>
-                    ))}
-                  </nav>
-                </SheetContent>
-              </Sheet>
+
+            <div className="flex items-center gap-4">
+              <nav className="hidden lg:flex items-center gap-4 text-base font-medium">
+                {navLinks.map(link => (
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    className={
+                      link.special
+                        ? 'font-bold text-primary hover:text-primary/90 transition-colors'
+                        : 'text-muted-foreground hover:text-foreground transition-colors'
+                    }
+                  >
+                    {link.name}
+                  </Link>
+                ))}
+              </nav>
+              <div className="flex items-center gap-2">
+                <AuthButton />
+                <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" size="icon" className="lg:hidden">
+                      <Menu />
+                      <span className="sr-only">Abrir menu</span>
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="right">
+                    <nav className="flex flex-col gap-6 text-lg font-medium mt-8">
+                      {navLinks.map(link => (
+                        <Link
+                          key={link.name}
+                          href={link.href}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className={
+                            link.special
+                              ? 'font-bold text-primary'
+                              : 'text-muted-foreground'
+                          }
+                        >
+                          {link.name}
+                        </Link>
+                      ))}
+                    </nav>
+                  </SheetContent>
+                </Sheet>
+              </div>
             </div>
           </div>
         </div>
@@ -301,34 +304,6 @@ export default function LandingPage() {
                   <span className="text-accent">Estratégia de Prova</span>.
                 </h2>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Cronograma Section */}
-        <section className="py-20 sm:py-32 bg-secondary/30">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-3xl sm:text-4xl font-bold">
-              Cronograma da Mentoria
-            </h2>
-            <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                'Planejamento Estratégico',
-                'Resolução de Questões',
-                'Alta Performance',
-                'Legislação Extravagante',
-                'Técnicas de Resolução',
-                'Simulados Comentados',
-                'Redação Nota Máxima',
-                'Reta Final & Revisão',
-              ].map((step, index) => (
-                <Card key={step} className="p-4 bg-card text-center shadow-sm">
-                  <div className="text-primary font-bold text-lg">
-                    0{index + 1}
-                  </div>
-                  <h3 className="font-semibold mt-1">{step}</h3>
-                </Card>
-              ))}
             </div>
           </div>
         </section>
