@@ -155,7 +155,7 @@ export default function ManagementPage() {
                 Gerador de Simulados
               </h2>
               <div>
-                <SimulatedExamDialog />
+                {isClient ? <SimulatedExamDialog /> : <Button className="bg-black text-white hover:bg-gray-800" disabled><FileText />Gerar</Button>}
               </div>
             </div>
           </div>
