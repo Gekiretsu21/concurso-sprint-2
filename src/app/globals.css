@@ -79,6 +79,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-image: linear-gradient(to left, hsl(var(--background)), hsl(var(--secondary)));
   }
   .prose {
     --tw-prose-body: hsl(var(--foreground));
