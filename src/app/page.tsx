@@ -106,21 +106,6 @@ export default function LandingPage() {
 
       {/* Main Content */}
       <main className="flex-1">
-
-        {/* Logo Banner Section */}
-        <section className="bg-primary">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 flex justify-center">
-            <Image
-              src="https://i.imgur.com/n4U5k1s.png"
-              alt="MentorIA Academy Logo"
-              width={500}
-              height={150}
-              priority
-              className="h-auto w-auto max-w-full hover:opacity-70 transition-opacity duration-300"
-            />
-          </div>
-        </section>
-
         {/* Hero Section */}
         <section id="realidade" className="py-20 sm:py-32">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-12 items-center">
