@@ -18,7 +18,6 @@ import {
   Zap,
   Scale,
   Menu,
-  Instagram,
 } from 'lucide-react';
 import { AuthButton } from '@/components/AuthButton';
 import {
@@ -55,7 +54,39 @@ export default function LandingPage() {
                 MENTORIA <Zap className="w-5 h-5 text-accent" /> ACADEMY
               </Link>
               <Link href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">
-                <Instagram className="w-5 h-5" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  className="w-6 h-6"
+                >
+                  <defs>
+                    <radialGradient
+                      id="insta-gradient"
+                      cx="0.3"
+                      cy="1"
+                      r="1"
+                    >
+                      <stop offset="0" stopColor="#F58529" />
+                      <stop offset="0.1" stopColor="#FEDA77" />
+                      <stop offset="0.3" stopColor="#DD2A7B" />
+                      <stop offset="0.5" stopColor="#8134AF" />
+                      <stop offset="1" stopColor="#515BD4" />
+                    </radialGradient>
+                  </defs>
+                  <rect
+                    width="20"
+                    height="20"
+                    x="2"
+                    y="2"
+                    rx="5"
+                    ry="5"
+                    fill="none"
+                    stroke="url(#insta-gradient)"
+                    strokeWidth="2"
+                  ></rect>
+                  <circle cx="12" cy="12" r="5" fill="none" stroke="url(#insta-gradient)" strokeWidth="2"></circle>
+                  <line x1="16.5" y1="7.5" x2="16.5" y2="7.5" fill="none" stroke="url(#insta-gradient)" strokeWidth="3" strokeLinecap="round"></line>
+                </svg>
               </Link>
             </div>
 
