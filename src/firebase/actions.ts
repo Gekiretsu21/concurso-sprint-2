@@ -1,9 +1,19 @@
 'use client';
 
-import { addDoc, collection, Firestore } from 'firebase/firestore';
+import {
+  addDoc,
+  collection,
+  Firestore,
+  writeBatch,
+  query,
+  where,
+  getDocs,
+  limit,
+  doc,
+  serverTimestamp,
+} from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-
 
 export async function importQuestions(
   firestore: Firestore,
@@ -22,42 +32,44 @@ export async function importQuestions(
     // Format: Materia/Ano/Assunto/Cargo/Enunciado/a/b/c/d/e/correctAnswer
     const parts = qStr.split('/');
     if (parts.length < 11) {
-      console.warn('Skipping invalid question format (less than 11 parts):', qStr);
+      console.warn(
+        'Skipping invalid question format (less than 11 parts):',
+        qStr
+      );
       continue;
     }
 
     const [
-        Materia,
-        Ano,
-        Assunto,
-        Cargo,
-        Enunciado,
-        a,
-        b,
-        c,
-        d,
-        e,
-        correctAnswer
+      Materia,
+      Ano,
+      Assunto,
+      Cargo,
+      Enunciado,
+      a,
+      b,
+      c,
+      d,
+      e,
+      correctAnswer,
     ] = parts;
 
-
     const newQuestion = {
-        Materia: Materia.trim(),
-        Ano: Ano.trim(),
-        Assunto: Assunto.trim(),
-        Cargo: Cargo.trim(),
-        Enunciado: Enunciado.trim(),
-        a: a.trim(),
-        b: b.trim(),
-        c: c.trim(),
-        d: d.trim(),
-        e: e.trim(),
-        correctAnswer: correctAnswer.trim(),
+      Materia: Materia.trim(),
+      Ano: Ano.trim(),
+      Assunto: Assunto.trim(),
+      Cargo: Cargo.trim(),
+      Enunciado: Enunciado.trim(),
+      a: a.trim(),
+      b: b.trim(),
+      c: c.trim(),
+      d: d.trim(),
+      e: e.trim(),
+      correctAnswer: correctAnswer.trim(),
     };
 
     // Use non-blocking write with error handling
     addDoc(questionsCollection, newQuestion).catch(serverError => {
-      console.error("Firestore addDoc error:", serverError);
+      console.error('Firestore addDoc error:', serverError);
       const permissionError = new FirestorePermissionError({
         path: questionsCollection.path,
         operation: 'create',
@@ -66,4 +78,75 @@ export async function importQuestions(
       errorEmitter.emit('permission-error', permissionError);
     });
   }
+}
+
+// Function to fetch random questions for a given subject
+async function getRandomQuestions(
+  firestore: Firestore,
+  subject: string,
+  count: number
+): Promise<string[]> {
+  const questionsCollection = collection(firestore, 'questoes');
+  const q = query(
+    questionsCollection,
+    where('Materia', '==', subject)
+  );
+
+  const snapshot = await getDocs(q);
+  const allQuestionIds = snapshot.docs.map(doc => doc.id);
+
+  // Shuffle and pick
+  const shuffled = allQuestionIds.sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, count);
+}
+
+interface CreateSimulatedExamDTO {
+  name: string;
+  subjects: { [subject: string]: number };
+}
+
+export async function createSimulatedExam(
+  firestore: Firestore,
+  userId: string,
+  dto: CreateSimulatedExamDTO
+): Promise<void> {
+  const allQuestionIds: string[] = [];
+  let totalQuestions = 0;
+
+  for (const [subject, count] of Object.entries(dto.subjects)) {
+    if (count > 0) {
+      const questionIds = await getRandomQuestions(firestore, subject, count);
+      if (questionIds.length < count) {
+        throw new Error(
+          `Não há questões suficientes para a matéria '${subject}'. Encontradas: ${questionIds.length}, Solicitadas: ${count}.`
+        );
+      }
+      allQuestionIds.push(...questionIds);
+      totalQuestions += count;
+    }
+  }
+
+  if (allQuestionIds.length === 0) {
+    throw new Error('Nenhuma questão foi selecionada para o simulado.');
+  }
+
+  const examData = {
+    name: dto.name,
+    userId,
+    createdAt: serverTimestamp(),
+    questionIds: allQuestionIds,
+    questionCount: totalQuestions,
+  };
+
+  const examsCollection = collection(firestore, `users/${userId}/simulatedExams`);
+  
+  addDoc(examsCollection, examData).catch(serverError => {
+    console.error('Firestore addDoc error for exam:', serverError);
+    const permissionError = new FirestorePermissionError({
+      path: examsCollection.path,
+      operation: 'create',
+      requestResourceData: examData,
+    });
+    errorEmitter.emit('permission-error', permissionError);
+  });
 }
