@@ -28,12 +28,13 @@ service cloud.firestore {
       allow create: if isSignedIn(); // Or some admin rule
     }
     
-    // Community simulados can be read by anyone signed in, but only created
+    // Community simulados can be read by anyone signed in.
+    // Creation is allowed for signed-in users.
+    // Updates and deletes are disallowed to maintain integrity.
     match /communitySimulados/{simuladoId} {
-       allow get: if isSignedIn();
-       allow list: if isSignedIn();
+       allow read: if isSignedIn();
        allow create: if isSignedIn();
-       allow update, delete: if false; // Nobody can alter community simulados
+       allow update, delete: if false;
     }
   }
 }
