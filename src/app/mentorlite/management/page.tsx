@@ -21,7 +21,7 @@ import { useFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
 import { SubjectCard } from '@/components/SubjectCard';
 import { SimulatedExamDialog } from '@/components/SimulatedExamDialog';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import Link from 'next/link';
 
 export default function ManagementPage() {
