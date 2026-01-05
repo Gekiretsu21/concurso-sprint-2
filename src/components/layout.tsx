@@ -43,6 +43,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { signOut } from 'firebase/auth';
 
 const menuItems = [
   { href: '/mentorlite', icon: LayoutDashboard, label: 'Dashboard' },
@@ -71,7 +72,12 @@ function MainSidebar() {
   }, []);
 
   const isAdmin = user?.email === 'amentoriaacademy@gmail.com';
-  const allMenuItems = isAdmin ? [...menuItems, adminMenuItem] : menuItems;
+  
+  const allMenuItems = menuItems;
+  if (isAdmin) {
+    allMenuItems.push(adminMenuItem);
+  }
+
 
   return (
     <Sidebar>
@@ -117,11 +123,20 @@ function MainSidebar() {
 
 function UserNav() {
   const { user } = useUser();
+  const { auth } = useFirebase();
 
   if (!user) {
     return null;
   }
   
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Error signing out: ', error);
+    }
+  };
+
   const getFirstName = (displayName: string | null) => {
     if (!displayName) return 'Concurseiro';
     return displayName.split(' ')[0];
@@ -161,6 +176,10 @@ function UserNav() {
         <DropdownMenuItem>
           <UserIcon className="mr-2 h-4 w-4" />
           <span>Perfil</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleLogout}>
+            <LogOut className="mr-2 h-4 w-4" />
+            <span>Sair</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
