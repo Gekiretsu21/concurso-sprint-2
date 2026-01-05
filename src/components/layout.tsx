@@ -137,13 +137,10 @@ function UserNav() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 flex items-center justify-start gap-2">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={user.photoURL ?? undefined} />
-            <AvatarFallback>{firstName.charAt(0)}</AvatarFallback>
-          </Avatar>
-          <span className="hidden md:block font-medium">Bem-vindo, {firstName}</span>
-        </Button>
+        <Avatar className="h-9 w-9 cursor-pointer">
+          <AvatarImage src={user.photoURL ?? undefined} />
+          <AvatarFallback>{firstName.charAt(0)}</AvatarFallback>
+        </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
@@ -166,6 +163,25 @@ function UserNav() {
   );
 }
 
+function UserWelcome() {
+    const { user } = useUser();
+
+    if (!user) return null;
+
+    const getFirstName = (displayName: string | null) => {
+        if (!displayName) return 'Concurseiro';
+        return displayName.split(' ')[0];
+    };
+
+    const firstName = user.isAnonymous ? 'Anônimo' : getFirstName(user.displayName);
+
+    return (
+        <span className="hidden md:block font-medium text-sm text-foreground">
+            Bem-vindo, {firstName}
+        </span>
+    );
+}
+
 export function AppLayout({ children }: { children: ReactNode }) {
   return (
     <SidebarProvider>
@@ -175,13 +191,14 @@ export function AppLayout({ children }: { children: ReactNode }) {
           <SidebarTrigger className="block" />
           <div className="flex-1" />
           <div className="flex items-center gap-4">
-            <UserNav />
-            <Button variant="ghost" size="icon" asChild>
+             <Button variant="ghost" size="icon" asChild>
               <Link href="/">
                 <Home className="size-5" />
                 <span className="sr-only">Página Inicial</span>
               </Link>
             </Button>
+            <UserWelcome />
+            <UserNav />
           </div>
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">{children}</main>
