@@ -33,7 +33,6 @@ import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { cn } from '@/lib/utils';
 import { useUser } from '@/firebase';
-import { signOut } from 'firebase/auth';
 import { useFirebase } from '@/firebase/provider';
 import { useEffect, useState } from 'react';
 import {
@@ -53,13 +52,13 @@ const menuItems = [
   { href: '/mentorlite/flashcards', icon: Layers, label: 'Flashcards' },
   { href: '/mentorlite/analytics', icon: BarChart2, label: 'Estatísticas' },
   { href: '/mentorlite/study-plan', icon: BrainCircuit, label: 'Plano de Estudo IA' },
-  {
-    href: '/mentorlite/management',
-    icon: Settings,
-    label: 'Gerenciamento',
-    adminOnly: true,
-  },
 ];
+
+const adminMenuItem = {
+  href: '/mentorlite/management',
+  icon: Settings,
+  label: 'Gerenciamento',
+};
 
 function MainSidebar() {
   const pathname = usePathname();
@@ -72,6 +71,7 @@ function MainSidebar() {
   }, []);
 
   const isAdmin = user?.email === 'amentoriaacademy@gmail.com';
+  const allMenuItems = isAdmin ? [...menuItems, adminMenuItem] : menuItems;
 
   return (
     <Sidebar>
@@ -90,14 +90,10 @@ function MainSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
-          {menuItems.map(item => {
-            if (item.adminOnly && !isAdmin) {
-              return null;
-            }
-            return (
+          {allMenuItems.map(item => (
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={{ children: item.label }}>
-                  <Link href={item.href} target={(item as any).target}>
+                  <Link href={item.href}>
                     <item.icon />
                     <span
                       className={cn(
@@ -110,8 +106,7 @@ function MainSidebar() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-            );
-          })}
+          ))}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
@@ -122,15 +117,6 @@ function MainSidebar() {
 
 function UserNav() {
   const { user } = useUser();
-  const { auth } = useFirebase();
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error('Error signing out: ', error);
-    }
-  };
 
   if (!user) {
     return null;
@@ -175,10 +161,6 @@ function UserNav() {
         <DropdownMenuItem>
           <UserIcon className="mr-2 h-4 w-4" />
           <span>Perfil</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleLogout}>
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Sair</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
