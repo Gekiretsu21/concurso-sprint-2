@@ -93,7 +93,7 @@ service cloud.firestore {
     /**
      * @description Controls access to the global, user-contributed question bank.
      * @path /questoes/{questaoId}
-     * @allow (get, list) Any authenticated user can read questions.
+     * @allow (read) Any authenticated user can read questions.
      * @allow (create) Any authenticated user can add a question.
      * @allow (update, delete) Operations are denied for now for simplicity.
      * @principle Provides public read access for shared data, and controlled writes.
@@ -106,13 +106,13 @@ service cloud.firestore {
     
     /**
      * @description Controls access to the public community-contributed simulados.
-     * @path /communitySimulados/{simuladoId}
-     * @allow (read) Any authenticated user can read community simulados.
+     * @path /communitySimulados
+     * @allow (list, get) Any authenticated user can read community simulados.
      * @allow (create) Any authenticated user can add a simulado.
      * @principle Provides public read access for shared data, and controlled writes.
      */
     match /communitySimulados/{simuladoId} {
-      allow read: if isSignedIn();
+      allow get, list: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if false;
     }
