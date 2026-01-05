@@ -73,9 +73,13 @@ function MainSidebar() {
 
   const isAdmin = user?.email === 'amentoriaacademy@gmail.com';
   
-  const allMenuItems = menuItems;
+  // Create a new array to avoid mutating the original `menuItems` array.
+  const allMenuItems = [...menuItems];
   if (isAdmin) {
-    allMenuItems.push(adminMenuItem);
+    // Ensure the admin item is not already present before adding it.
+    if (!allMenuItems.find(item => item.href === adminMenuItem.href)) {
+      allMenuItems.push(adminMenuItem);
+    }
   }
 
 
