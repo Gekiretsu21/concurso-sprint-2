@@ -57,17 +57,21 @@ const menuItems = [
     href: '/mentorlite/management',
     icon: Settings,
     label: 'Gerenciamento',
+    adminOnly: true,
   },
 ];
 
 function MainSidebar() {
   const pathname = usePathname();
   const { state } = useSidebar();
+  const { user } = useUser();
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  const isAdmin = user?.email === 'amentoriaacademy@gmail.com';
 
   return (
     <Sidebar>
@@ -86,23 +90,28 @@ function MainSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
-          {menuItems.map(item => (
-            <SidebarMenuItem key={item.href}>
-              <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={{ children: item.label }}>
-                <Link href={item.href} target={(item as any).target}>
-                  <item.icon />
-                  <span
-                    className={cn(
-                      'transition-opacity duration-200',
-                      state === 'collapsed' ? 'opacity-0' : 'opacity-100'
-                    )}
-                  >
-                    {item.label}
-                  </span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+          {menuItems.map(item => {
+            if (item.adminOnly && !isAdmin) {
+              return null;
+            }
+            return (
+              <SidebarMenuItem key={item.href}>
+                <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={{ children: item.label }}>
+                  <Link href={item.href} target={(item as any).target}>
+                    <item.icon />
+                    <span
+                      className={cn(
+                        'transition-opacity duration-200',
+                        state === 'collapsed' ? 'opacity-0' : 'opacity-100'
+                      )}
+                    >
+                      {item.label}
+                    </span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
