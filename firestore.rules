@@ -99,7 +99,7 @@ service cloud.firestore {
      * @principle Provides public read access for shared data, and controlled writes.
      */
     match /questoes/{questaoId} {
-      allow get, list: if isSignedIn();
+      allow read: if isSignedIn();
       allow create: if isSignedIn();
       allow update, delete: if false; // Deny updates and deletes for now
     }
@@ -107,12 +107,12 @@ service cloud.firestore {
     /**
      * @description Controls access to the public community-contributed simulados.
      * @path /communitySimulados/{simuladoId}
-     * @allow (get, list) Any authenticated user can read community simulados.
+     * @allow (read) Any authenticated user can read community simulados.
      * @allow (create) Any authenticated user can add a simulado.
      * @principle Provides public read access for shared data, and controlled writes.
      */
     match /communitySimulados/{simuladoId} {
-      allow get, list: if isSignedIn();
+      allow read: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if false;
     }
