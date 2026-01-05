@@ -14,7 +14,7 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardPaste, FileText, Loader2 } from 'lucide-react';
+import { ClipboardPaste, FileText, Loader2, Users } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { importQuestions } from '@/firebase/actions';
 import { useFirebase } from '@/firebase';
@@ -22,6 +22,7 @@ import { useUser } from '@/firebase/auth/use-user';
 import { SubjectCard } from '@/components/SubjectCard';
 import { SimulatedExamDialog } from '@/components/SimulatedExamDialog';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import Link from 'next/link';
 
 export default function ManagementPage() {
   const { toast } = useToast();
@@ -158,7 +159,7 @@ export default function ManagementPage() {
         </div>
 
       <div className="space-y-6">
-        <h3 className="text-2xl font-bold tracking-tight">Banco de Questões</h3>
+        <h3 className="text-2xl font-bold tracking-tight">Recursos</h3>
         <SubjectCard
           subject="Direito Administrativo"
           href="/mentorlite/management/administrative-law"
@@ -168,6 +169,18 @@ export default function ManagementPage() {
           href="/mentorlite/management/constitutional-law"
         />
         <SubjectCard subject="Direito Penal" href="/mentorlite/management/penal-law" />
+         <Card>
+            <Link href="/mentorlite/management/users">
+                <CardHeader className="flex-row items-center justify-between">
+                    <div>
+                        <CardTitle className="flex items-center gap-2"><Users /> Usuários</CardTitle>
+                        <CardDescription className="mt-1">
+                        Gerencie os usuários cadastrados na plataforma.
+                        </CardDescription>
+                    </div>
+                </CardHeader>
+            </Link>
+        </Card>
       </div>
     </div>
   );
