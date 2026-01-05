@@ -17,7 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 
 interface Question {
   id: string;
@@ -166,22 +166,29 @@ function QuestionCard({
 
 export default function SimulatedExamPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const examId = params.examId as string;
+  // If a userId is passed in the query, it's a community exam. Otherwise, it's the user's own.
+  const examOwnerId = searchParams.get('userId');
+
 
   const { firestore, user } = useFirebase();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(true);
 
   const examDocRef = useMemoFirebase(
-    () =>
-      firestore && user && examId
-        ? (doc(
+    () => {
+      if (!firestore || !user || !examId) return null;
+      // If examOwnerId is present, we are viewing a community exam, so we use that ID.
+      // Otherwise, we default to the currently logged-in user's ID for "My Simulados".
+      const ownerId = examOwnerId || user.uid;
+      return doc(
             firestore,
-            `users/${user.uid}/simulatedExams`,
+            `users/${ownerId}/simulatedExams`,
             examId
-          ) as DocumentReference<SimulatedExam>)
-        : null,
-    [firestore, user, examId]
+          ) as DocumentReference<SimulatedExam>
+    },
+    [firestore, user, examId, examOwnerId]
   );
 
   const { data: exam, isLoading: isLoadingExam } = useDoc<SimulatedExam>(examDocRef);
@@ -210,12 +217,13 @@ export default function SimulatedExamPage() {
   }, [exam, firestore]);
   
   const isLoading = isLoadingExam || isLoadingQuestions;
+  const backHref = examOwnerId ? '/mentorlite/community-simulados' : '/mentorlite/simulated-exams';
 
   return (
     <div className="flex flex-col gap-8">
       <header className="flex items-center gap-4">
         <Button asChild variant="outline" size="icon">
-          <Link href="/mentorlite/simulated-exams">
+          <Link href={backHref}>
             <ChevronLeft />
             <span className="sr-only">Voltar</span>
           </Link>
@@ -247,8 +255,8 @@ export default function SimulatedExamPage() {
               Nenhuma questão encontrada para este simulado.
             </p>
             <Button variant="link" asChild>
-              <Link href="/mentorlite/simulated-exams">
-                Voltar para Simulados
+              <Link href={backHref}>
+                Voltar
               </Link>
             </Button>
           </CardContent>

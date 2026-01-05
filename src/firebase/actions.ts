@@ -137,13 +137,22 @@ export async function createSimulatedExam(
     questionIds: allQuestionIds,
     questionCount: totalQuestions,
   };
-
-  const examsCollection = collection(firestore, `users/${userId}/simulatedExams`);
   
-  addDoc(examsCollection, examData).catch(serverError => {
-    console.error('Firestore addDoc error for exam:', serverError);
+  const batch = writeBatch(firestore);
+
+  // 1. Write to the user's private collection
+  const userExamRef = doc(collection(firestore, `users/${userId}/simulatedExams`));
+  batch.set(userExamRef, examData);
+
+  // 2. Write to the public community collection
+  const communityExamRef = doc(collection(firestore, 'communitySimulados'));
+  batch.set(communityExamRef, { ...examData, originalExamId: userExamRef.id });
+
+  // Use non-blocking write with error handling for the batch
+  batch.commit().catch(serverError => {
+    console.error('Firestore batch write error for exam:', serverError);
     const permissionError = new FirestorePermissionError({
-      path: examsCollection.path,
+      path: `users/${userId}/simulatedExams and communitySimulados`,
       operation: 'create',
       requestResourceData: examData,
     });

@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   LogOut,
   Settings,
+  Users,
   User as UserIcon,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -47,7 +48,8 @@ import {
 const menuItems = [
   { href: '/mentorlite', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/mentorlite/questions', icon: ClipboardList, label: 'Questões' },
-  { href: '/mentorlite/simulated-exams', icon: FileText, label: 'Simulados' },
+  { href: '/mentorlite/simulated-exams', icon: FileText, label: 'Meus Simulados' },
+  { href: '/mentorlite/community-simulados', icon: Users, label: 'Simulados da Comunidade' },
   { href: '/mentorlite/flashcards', icon: Layers, label: 'Flashcards' },
   { href: '/mentorlite/analytics', icon: BarChart2, label: 'Estatísticas' },
   { href: '/mentorlite/study-plan', icon: BrainCircuit, label: 'Plano de Estudo IA' },
@@ -135,12 +137,23 @@ function UserNav() {
   const userDisplayEmail = user.isAnonymous ? 'Login anônimo' : user.email;
 
   return (
-    <DropdownMenu>
+     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Avatar className="h-9 w-9 cursor-pointer">
-          <AvatarImage src={user.photoURL ?? undefined} />
-          <AvatarFallback>{firstName.charAt(0)}</AvatarFallback>
-        </Avatar>
+        <div className="flex items-center gap-4 cursor-pointer">
+           <Button variant="ghost" size="icon" asChild>
+              <Link href="/">
+                <Home className="size-5" />
+                <span className="sr-only">Página Inicial</span>
+              </Link>
+            </Button>
+            <span className="hidden md:block font-medium text-sm text-foreground">
+                Bem-vindo, {firstName}
+            </span>
+            <Avatar className="h-9 w-9">
+              <AvatarImage src={user.photoURL ?? undefined} />
+              <AvatarFallback>{firstName.charAt(0)}</AvatarFallback>
+            </Avatar>
+        </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
@@ -163,25 +176,6 @@ function UserNav() {
   );
 }
 
-function UserWelcome() {
-    const { user } = useUser();
-
-    if (!user) return null;
-
-    const getFirstName = (displayName: string | null) => {
-        if (!displayName) return 'Concurseiro';
-        return displayName.split(' ')[0];
-    };
-
-    const firstName = user.isAnonymous ? 'Anônimo' : getFirstName(user.displayName);
-
-    return (
-        <span className="hidden md:block font-medium text-sm text-foreground">
-            Bem-vindo, {firstName}
-        </span>
-    );
-}
-
 export function AppLayout({ children }: { children: ReactNode }) {
   return (
     <SidebarProvider>
@@ -191,13 +185,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
           <SidebarTrigger className="block" />
           <div className="flex-1" />
           <div className="flex items-center gap-4">
-             <Button variant="ghost" size="icon" asChild>
-              <Link href="/">
-                <Home className="size-5" />
-                <span className="sr-only">Página Inicial</span>
-              </Link>
-            </Button>
-            <UserWelcome />
             <UserNav />
           </div>
         </header>
