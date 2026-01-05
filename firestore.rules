@@ -11,28 +11,29 @@ function isOwner(userId) {
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Users can only read/write their own profile
+    // Users can read/write their own profile
     match /users/{userId} {
       allow read, update, delete: if isOwner(userId);
       allow create: if isSignedIn();
+    }
+    
+    // User-specific data is only accessible by the owner
+    match /users/{userId}/{collection}/{docId} {
+      allow read, write: if isOwner(userId);
     }
 
     // Questions are public to any authenticated user
     match /questions/{questionId} {
       allow read: if isSignedIn();
-      allow create, update, delete: if false; // Or some admin rule
+      allow create: if isSignedIn(); // Or some admin rule
     }
     
     // Community simulados can be read by anyone signed in, but only created
     match /communitySimulados/{simuladoId} {
-       allow get, list: if isSignedIn();
+       allow get: if isSignedIn();
+       allow list: if isSignedIn();
        allow create: if isSignedIn();
        allow update, delete: if false; // Nobody can alter community simulados
-    }
-
-    // User-specific data is only accessible by the owner
-    match /users/{userId}/{collection}/{docId} {
-      allow read, write: if isOwner(userId);
     }
   }
 }
