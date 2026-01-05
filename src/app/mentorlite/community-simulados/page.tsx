@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -27,7 +27,7 @@ export default function CommunitySimuladosPage() {
   const communityExamsQuery = useMemoFirebase(
     () =>
       firestore
-        ? query(collection(firestore, 'communitySimulados'), orderBy('createdAt', 'desc'))
+        ? query(collection(firestore, 'communitySimulados'))
         : null,
     [firestore]
   );
