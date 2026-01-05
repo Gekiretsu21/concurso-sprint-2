@@ -8,39 +8,44 @@ function isOwner(userId) {
   return request.auth.uid == userId;
 }
 
-// TODO: Implement isAdmin logic, e.g., by checking for a custom claim
+// Placeholder for admin logic. We will implement this later.
 function isAdmin() {
   // return request.auth.token.admin == true;
-  return true; // For development purposes, everyone is an admin.
+  return false; // By default, no one is an admin for safety.
 }
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // User Management: Only admins can list all users.
-    // Individual users can read/write their own profile.
+    // User data is private.
+    // An admin can read anyone's profile for management purposes.
+    // A user can read and write their own profile.
     match /users/{userId} {
-      allow read, update, delete: if isOwner(userId);
-      allow create: if isSignedIn();
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId);
     }
-    match /users/{document=**} {
+    // Only admins can list all users.
+     match /users/{document=**} {
       allow list: if isAdmin();
     }
     
-    // User-specific data is only accessible by the owner
+    // User-specific subcollections are only accessible by the owner.
     match /users/{userId}/{collection}/{docId} {
       allow read, write: if isOwner(userId);
     }
 
-    // Questions are public to any authenticated user
+    // Questions are public to any authenticated user for reading.
+    // Writing/creating should probably be restricted to admins in the future.
     match /questions/{questionId} {
-      allow read, write: if isSignedIn(); 
+      allow read: if isSignedIn();
+      allow write: if isAdmin(); // Only admins can create/update questions
     }
     
-    // Community simulados can be read by any authenticated user and created by them.
-    match /communitySimulados/{document=**} {
+    // Community simulados can be read by any authenticated user.
+    // Any authenticated user can create a community simulado.
+    // Updates/deletes are disallowed to maintain integrity.
+    match /communitySimulados/{simuladoId} {
        allow read, create: if isSignedIn();
-       // Updates and deletes are disallowed to maintain integrity.
        allow update, delete: if false;
     }
   }

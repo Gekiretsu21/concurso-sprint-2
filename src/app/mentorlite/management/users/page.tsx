@@ -1,8 +1,7 @@
 
 'use client';
 
-import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
-import { collection, query } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Loader2 } from 'lucide-react';
@@ -11,23 +10,37 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  dailyStreak: number;
-}
+import { getAllUsers, UserData } from './actions';
+import { useToast } from '@/hooks/use-toast';
 
 export default function UsersPage() {
-  const { firestore } = useFirebase();
+  const [users, setUsers] = useState<UserData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-  const usersQuery = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'users')) : null),
-    [firestore]
-  );
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setIsLoading(true);
+      try {
+        const userList = await getAllUsers();
+        setUsers(userList);
+      } catch (error) {
+         let message = 'Ocorreu um erro ao buscar os usuários.';
+          if (error instanceof Error && error.message.includes('Failed to retrieve user list.')) {
+            message = 'Você não tem permissão para visualizar os usuários. Verifique as credenciais do Admin SDK no seu arquivo .env.local.';
+          }
+         toast({
+          variant: 'destructive',
+          title: 'Erro de Permissão',
+          description: message,
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const { data: users, isLoading } = useCollection<User>(usersQuery);
+    fetchUsers();
+  }, [toast]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -39,7 +52,7 @@ export default function UsersPage() {
           </Link>
         </Button>
         <div>
-            <h1 className="text-3xl font-bold tracking-tight">Gerenciamento de Usuários</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Gerenciamento de Usuários (Admin)</h1>
             <p className="text-muted-foreground">Visualize e gerencie todos os usuários da plataforma.</p>
         </div>
       </header>
