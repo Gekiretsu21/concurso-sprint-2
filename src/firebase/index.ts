@@ -16,23 +16,10 @@ export function initializeFirebase() {
       // Attempt to initialize via Firebase App Hosting environment variables
       firebaseApp = initializeApp();
     } catch (e) {
-      // This will fail in local development, so we fall back to a hardcoded config.
-      // In a real app, you would use environment variables here.
-      if (process.env.NODE_ENV !== 'production') {
-        console.warn(
-          'Automatic initialization failed. This is expected in local development. Falling back to a hardcoded config. In a real app, you would use environment variables.'
-        );
-        firebaseApp = initializeApp({
-          projectId: 'studio-6116545318-c4cd8',
-          appId: '1:80306279068:web:2d75edabf8423a69c69359',
-          apiKey: 'AIzaSyDNdXvivPkEZDNWcAOAwHPY_szbtfX_OlE',
-          authDomain: 'studio-6116545318-c4cd8.firebaseapp.com',
-        });
-      } else {
-        console.error('Automatic Firebase initialization failed in production.', e);
-        // In production, we might want to re-throw or handle this more gracefully.
-        throw e;
-      }
+      console.error('Automatic Firebase initialization failed. This might be expected in local development if environment variables are not set. Ensure your environment is configured correctly.', e);
+      // In a real app, you might want to have a fallback for local dev, but for App Hosting, 
+      // the automatic initialization is key. We re-throw to make the configuration issue visible.
+      throw e;
     }
     return getSdks(firebaseApp);
   }
