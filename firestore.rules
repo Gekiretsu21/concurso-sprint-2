@@ -24,16 +24,18 @@ service cloud.firestore {
 
     // Questions are public to any authenticated user
     match /questions/{questionId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn(); // Or some admin rule
+      allow read, write: if isSignedIn(); 
     }
     
-    // Community simulados can be read by anyone signed in.
-    // Creation is allowed for signed-in users.
-    // Updates and deletes are disallowed to maintain integrity.
-    match /communitySimulados/{simuladoId} {
+    // Any authenticated user can read the community simulados.
+    match /communitySimulados/{document=**} {
        allow read: if isSignedIn();
+    }
+
+    // Creating community simulados is allowed for signed in users
+    match /communitySimulados/{simuladoId} {
        allow create: if isSignedIn();
+       // Updates and deletes are disallowed to maintain integrity.
        allow update, delete: if false;
     }
   }
