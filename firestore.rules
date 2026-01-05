@@ -107,7 +107,7 @@ service cloud.firestore {
     /**
      * @description Controls access to the public community-contributed simulados.
      * @path /communitySimulados
-     * @allow (list, get) Any authenticated user can read community simulados.
+     * @allow (read) Any authenticated user can read community simulados.
      * @allow (create) Any authenticated user can add a simulado.
      * @principle Provides public read access for shared data, and controlled writes.
      */
