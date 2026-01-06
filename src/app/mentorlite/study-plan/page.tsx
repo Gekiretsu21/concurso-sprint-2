@@ -10,19 +10,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { handleGenerateStudyPlan } from './actions';
 import { useState } from 'react';
 import { Loader2, Sparkles } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 const formSchema = z.object({
-  performanceStatistics: z.string().min(10, { message: 'Por favor, detalhe suas estatísticas.' }),
+  hoursPerDay: z.string().min(1, { message: 'Informe as horas.' }),
+  daysOfWeek: z.string().min(5, { message: 'Informe os dias.' }),
   goals: z.string().min(10, { message: 'Por favor, descreva seus objetivos.' }),
-  availableResources: z.string().min(10, { message: 'Por favor, liste os recursos disponíveis.' }),
-  availableTime: z.string().min(5, { message: 'Por favor, informe seu tempo disponível.' }),
+  examDate: z.string().min(5, { message: 'Informe a data da prova.' }),
 });
 
 const exampleData = {
-    performanceStatistics: "Meu desempenho geral é de 65%. Tenho mais dificuldade em Direito Administrativo (50% de acerto) e Raciocínio Lógico (55%). Minhas melhores matérias são Português (80%) e Direito Constitucional (75%).",
-    goals: "Meu objetivo principal é ser aprovado no concurso para Analista do Tribunal Regional Federal. Preciso aumentar meu percentual de acerto geral para pelo menos 85% nos próximos 3 meses.",
-    availableResources: "Tenho acesso a videoaulas do curso 'Estratégia Concursos', PDFs de todas as matérias, e a plataforma de questões 'Qconcursos'.",
-    availableTime: "Tenho 4 horas líquidas de estudo por dia de segunda a sexta, e 6 horas no sábado. Domingo é meu dia de descanso."
+    hoursPerDay: "4 horas por dia",
+    daysOfWeek: "Segunda a Sábado",
+    goals: "Ser aprovado no concurso para Soldado da PMMG. Preciso focar em Português e Direitos Humanos, que são meus pontos fracos.",
+    examDate: "Daqui a 6 meses"
 };
 
 
@@ -34,10 +35,10 @@ export default function StudyPlanPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      performanceStatistics: '',
+      hoursPerDay: '',
+      daysOfWeek: '',
       goals: '',
-      availableResources: '',
-      availableTime: '',
+      examDate: '',
     },
   });
 
@@ -56,10 +57,10 @@ export default function StudyPlanPage() {
   }
 
   const fillExample = () => {
-    form.setValue('performanceStatistics', exampleData.performanceStatistics);
+    form.setValue('hoursPerDay', exampleData.hoursPerDay);
+    form.setValue('daysOfWeek', exampleData.daysOfWeek);
     form.setValue('goals', exampleData.goals);
-    form.setValue('availableResources', exampleData.availableResources);
-    form.setValue('availableTime', exampleData.availableTime);
+    form.setValue('examDate', exampleData.examDate);
   }
 
   return (
@@ -86,18 +87,31 @@ export default function StudyPlanPage() {
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                     <FormField
                         control={form.control}
-                        name="performanceStatistics"
+                        name="hoursPerDay"
                         render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Estatísticas de Desempenho</FormLabel>
+                            <FormLabel>Quantidade de horas por dia</FormLabel>
                             <FormControl>
-                            <Textarea placeholder="Ex: Acerto de 70% em Português, 55% em Direito Administrativo..." {...field} rows={4} />
+                              <Input placeholder="Ex: 3 horas líquidas" {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
                         )}
                     />
                     <FormField
+                        control={form.control}
+                        name="daysOfWeek"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Quais dias da semana pode estudar?</FormLabel>
+                            <FormControl>
+                               <Input placeholder="Ex: Segunda a Sexta" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                     <FormField
                         control={form.control}
                         name="goals"
                         render={({ field }) => (
@@ -110,27 +124,14 @@ export default function StudyPlanPage() {
                         </FormItem>
                         )}
                     />
-                     <FormField
-                        control={form.control}
-                        name="availableResources"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Recursos Disponíveis</FormLabel>
-                            <FormControl>
-                            <Textarea placeholder="Ex: Videoaulas do cursinho X, PDFs, Livro Y..." {...field} rows={3} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
                     <FormField
                         control={form.control}
-                        name="availableTime"
+                        name="examDate"
                         render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Tempo Disponível</FormLabel>
+                            <FormLabel>Data provável da prova</FormLabel>
                             <FormControl>
-                            <Textarea placeholder="Ex: 3 horas por dia durante a semana, 6 horas nos finais de semana." {...field} rows={3} />
+                               <Input placeholder="Ex: Daqui a 3 meses" {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
