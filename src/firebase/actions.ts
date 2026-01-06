@@ -12,6 +12,7 @@ import {
   doc,
   serverTimestamp,
   updateDoc,
+  setDoc,
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -84,20 +85,16 @@ export async function importQuestions(
 
 export async function importFlashcards(
   firestore: Firestore,
-  userId: string,
   text: string
 ): Promise<void> {
   if (!text) {
     throw new Error('O texto não pode estar vazio.');
   }
-  if (!userId) {
-    throw new Error('Usuário não autenticado.');
-  }
-
+  
   const flashcardsStr = text.trim().split(';');
   const flashcardsCollection = collection(
     firestore,
-    `users/${userId}/flashcards`
+    'flashcards'
   );
 
   for (const fStr of flashcardsStr) {
@@ -129,6 +126,34 @@ export async function importFlashcards(
       errorEmitter.emit('permission-error', permissionError);
     });
   }
+}
+
+export async function handleFlashcardResponse(
+  firestore: Firestore,
+  userId: string,
+  flashcardId: string,
+  status: 'correct' | 'incorrect'
+): Promise<void> {
+  if (!userId) {
+    throw new Error('Usuário não autenticado.');
+  }
+  const responseRef = doc(firestore, `users/${userId}/flashcardResponses/${flashcardId}`);
+  const responseData = {
+    userId,
+    flashcardId,
+    status,
+    lastReviewed: serverTimestamp(),
+  };
+
+  setDoc(responseRef, responseData, { merge: true }).catch(serverError => {
+    console.error('Firestore setDoc error for flashcard response:', serverError);
+    const permissionError = new FirestorePermissionError({
+      path: responseRef.path,
+      operation: 'write',
+      requestResourceData: responseData,
+    });
+    errorEmitter.emit('permission-error', permissionError);
+  });
 }
 
 export async function toggleQuestionStatus(
@@ -231,3 +256,5 @@ export async function createSimulatedExam(
     errorEmitter.emit('permission-error', permissionError);
   });
 }
+
+    

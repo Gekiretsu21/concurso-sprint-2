@@ -78,17 +78,17 @@ export default function ManagementPage() {
   };
 
   const handleImportFlashcards = async () => {
-    if (!firestore || !user) {
+    if (!firestore) {
       toast({
         variant: 'destructive',
-        title: 'Erro',
-        description: 'Você precisa estar logado para importar flashcards.',
+        title: 'Erro de Conexão',
+        description: 'Não foi possível conectar ao banco de dados.',
       });
       return;
     }
     setIsImportingFlashcards(true);
     try {
-      await importFlashcards(firestore, user.uid, flashcardText);
+      await importFlashcards(firestore, flashcardText);
       toast({
         title: 'Importação Concluída',
         description: 'Os flashcards foram importados com sucesso!',
@@ -314,3 +314,5 @@ export default function ManagementPage() {
     </div>
   );
 }
+
+    

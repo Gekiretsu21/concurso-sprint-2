@@ -40,6 +40,11 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow write: if isSignedIn(); 
     }
+
+    // Flashcards are public to any authenticated user for reading and writing.
+    match /flashcards/{flashcardId} {
+      allow read, write: if isSignedIn();
+    }
     
     // Community simulados can be read by any authenticated user.
     // Any authenticated user can create a community simulado.
@@ -50,3 +55,5 @@ service cloud.firestore {
     }
   }
 }
+
+    
