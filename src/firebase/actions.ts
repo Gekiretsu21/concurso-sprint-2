@@ -11,6 +11,7 @@ import {
   limit,
   doc,
   serverTimestamp,
+  updateDoc,
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -65,6 +66,7 @@ export async function importQuestions(
       d: d.trim(),
       e: e.trim(),
       correctAnswer: correctAnswer.trim(),
+      status: 'active', // Default status
     };
 
     // Use non-blocking write with error handling
@@ -80,6 +82,25 @@ export async function importQuestions(
   }
 }
 
+export async function toggleQuestionStatus(
+  firestore: Firestore,
+  questionId: string,
+  currentStatus: 'active' | 'hidden'
+): Promise<void> {
+  const newStatus = currentStatus === 'active' ? 'hidden' : 'active';
+  const questionRef = doc(firestore, 'questoes', questionId);
+
+  updateDoc(questionRef, { status: newStatus }).catch(serverError => {
+    const permissionError = new FirestorePermissionError({
+      path: questionRef.path,
+      operation: 'update',
+      requestResourceData: { status: newStatus },
+    });
+    errorEmitter.emit('permission-error', permissionError);
+  });
+}
+
+
 // Function to fetch random questions for a given subject
 async function getRandomQuestions(
   firestore: Firestore,
@@ -89,7 +110,8 @@ async function getRandomQuestions(
   const questionsCollection = collection(firestore, 'questoes');
   const q = query(
     questionsCollection,
-    where('Materia', '==', subject)
+    where('Materia', '==', subject),
+    where('status', '==', 'active') // Only get active questions
   );
 
   const snapshot = await getDocs(q);
@@ -159,3 +181,5 @@ export async function createSimulatedExam(
     errorEmitter.emit('permission-error', permissionError);
   });
 }
+
+    
