@@ -19,6 +19,10 @@
   height: 100%;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem; /* 24px */
 }
 
 .flashcard-back {

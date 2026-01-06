@@ -16,12 +16,18 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardPaste, FileText, Layers, Loader2, Users } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { importQuestions } from '@/firebase/actions';
+import { importQuestions, importFlashcards } from '@/firebase/actions';
 import { useFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
 import { SubjectCard } from '@/components/SubjectCard';
 import { SimulatedExamDialog } from '@/components/SimulatedExamDialog';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardDescription,
+} from '@/components/ui/card';
 import Link from 'next/link';
 
 export default function ManagementPage() {
@@ -29,14 +35,16 @@ export default function ManagementPage() {
   const { firestore } = useFirebase();
   const { user, isUserLoading } = useUser();
   const [questionText, setQuestionText] = useState('');
-  const [isImporting, setIsImporting] = useState(false);
+  const [flashcardText, setFlashcardText] = useState('');
+  const [isImportingQuestions, setIsImportingQuestions] = useState(false);
+  const [isImportingFlashcards, setIsImportingFlashcards] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  const handleImport = async () => {
+  const handleImportQuestions = async () => {
     if (!firestore) {
       toast({
         variant: 'destructive',
@@ -46,7 +54,7 @@ export default function ManagementPage() {
       });
       return;
     }
-    setIsImporting(true);
+    setIsImportingQuestions(true);
     try {
       await importQuestions(firestore, questionText);
       toast({
@@ -65,7 +73,39 @@ export default function ManagementPage() {
         description: message,
       });
     } finally {
-      setIsImporting(false);
+      setIsImportingQuestions(false);
+    }
+  };
+
+  const handleImportFlashcards = async () => {
+    if (!firestore || !user) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Você precisa estar logado para importar flashcards.',
+      });
+      return;
+    }
+    setIsImportingFlashcards(true);
+    try {
+      await importFlashcards(firestore, user.uid, flashcardText);
+      toast({
+        title: 'Importação Concluída',
+        description: 'Os flashcards foram importados com sucesso!',
+      });
+      setFlashcardText('');
+    } catch (error) {
+      let message = 'Ocorreu um erro ao importar os flashcards.';
+      if (error instanceof Error) {
+        message = error.message;
+      }
+      toast({
+        variant: 'destructive',
+        title: 'Erro na Importação',
+        description: message,
+      });
+    } finally {
+      setIsImportingFlashcards(false);
     }
   };
 
@@ -80,92 +120,155 @@ export default function ManagementPage() {
         </p>
       </header>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader className="flex-row items-center justify-between">
-              <CardTitle>Importar Questões</CardTitle>
-               <Dialog>
-                  {isClient ? (
-                    <DialogTrigger asChild>
-                      <Button
-                        disabled={isButtonDisabled}
-                      >
-                        {isUserLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ClipboardPaste />}
-                        {isUserLoading ? 'Carregando...' : 'Importar'}
-                      </Button>
-                    </DialogTrigger>
-                  ) : (
-                    <Button disabled={true} >
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Importar Questões</CardTitle>
+            <Dialog>
+              {isClient ? (
+                <DialogTrigger asChild>
+                  <Button disabled={isButtonDisabled}>
+                    {isUserLoading ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
                       <ClipboardPaste />
-                      Importar
-                    </Button>
-                  )}
-                  <DialogContent className="sm:max-w-[812px]">
-                    <DialogHeader>
-                      <DialogTitle>Importar Questões por Texto</DialogTitle>
-                      <DialogDescription>
-                        Cole o conteúdo no campo abaixo. Certifique-se de que o
-                        formato esteja correto.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid grid-cols-4 items-start gap-4">
-                        <Label
-                          htmlFor="question-text"
-                          className="text-right pt-2"
-                        >
-                          Conteúdo
-                        </Label>
-                        <Textarea
-                          id="question-text"
-                          className="col-span-3 min-h-[250px]"
-                          placeholder="Cole seu texto aqui..."
-                          value={questionText}
-                          onChange={e => setQuestionText(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <DialogClose asChild>
-                        <Button variant="outline">Cancelar</Button>
-                      </DialogClose>
-                      <Button
-                        onClick={handleImport}
-                        disabled={isImporting || !questionText}
-                      >
-                        {isImporting ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : null}
-                        Importar Questões
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">Use a caixa de diálogo para importar questões em massa a partir de um texto formatado.</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex-row items-center justify-between">
-                <CardTitle>Gerador de Simulados</CardTitle>
-                <div>
-                  {isClient ? <SimulatedExamDialog /> : <Button disabled><FileText />Gerar</Button>}
+                    )}
+                    {isUserLoading ? 'Carregando...' : 'Importar'}
+                  </Button>
+                </DialogTrigger>
+              ) : (
+                <Button disabled={true}>
+                  <ClipboardPaste />
+                  Importar
+                </Button>
+              )}
+              <DialogContent className="sm:max-w-[812px]">
+                <DialogHeader>
+                  <DialogTitle>Importar Questões por Texto</DialogTitle>
+                  <DialogDescription>
+                    Cole o conteúdo no campo abaixo. Certifique-se de que o
+                    formato esteja correto.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-start gap-4">
+                    <Label htmlFor="question-text" className="text-right pt-2">
+                      Conteúdo
+                    </Label>
+                    <Textarea
+                      id="question-text"
+                      className="col-span-3 min-h-[250px]"
+                      placeholder="Cole seu texto aqui..."
+                      value={questionText}
+                      onChange={e => setQuestionText(e.target.value)}
+                    />
+                  </div>
                 </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">Crie simulados personalizados selecionando matérias e o número de questões.</p>
-            </CardContent>
-          </Card>
-           <Card>
-            <CardHeader className="flex-row items-center justify-between">
-                <CardTitle>Importar Flashcards</CardTitle>
-                <Button disabled><Layers />Importar</Button>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">Importe flashcards em massa para acelerar a criação de novos baralhos de estudo.</p>
-            </CardContent>
-          </Card>
-        </div>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant="outline">Cancelar</Button>
+                  </DialogClose>
+                  <Button
+                    onClick={handleImportQuestions}
+                    disabled={isImportingQuestions || !questionText}
+                  >
+                    {isImportingQuestions ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : null}
+                    Importar Questões
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Use a caixa de diálogo para importar questões em massa a partir de
+              um texto formatado.
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Gerador de Simulados</CardTitle>
+            <div>
+              {isClient ? (
+                <SimulatedExamDialog />
+              ) : (
+                <Button disabled>
+                  <FileText />
+                  Gerar
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Crie simulados personalizados selecionando matérias e o número de
+              questões.
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Importar Flashcards</CardTitle>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button disabled={isButtonDisabled}>
+                  {isUserLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Layers />
+                  )}
+                  {isUserLoading ? 'Carregando...' : 'Importar'}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[812px]">
+                <DialogHeader>
+                  <DialogTitle>Importar Flashcards por Texto</DialogTitle>
+                  <DialogDescription>
+                    Cole o conteúdo no campo abaixo no formato:
+                    Materia/Pergunta/Resposta;
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-start gap-4">
+                    <Label htmlFor="flashcard-text" className="text-right pt-2">
+                      Conteúdo
+                    </Label>
+                    <Textarea
+                      id="flashcard-text"
+                      className="col-span-3 min-h-[250px]"
+                      placeholder="Ex: Direito Administrativo/Quais são os atributos do ato administrativo?/Presunção de legitimidade, autoexecutoriedade, tipicidade e imperatividade (P-A-T-I);"
+                      value={flashcardText}
+                      onChange={e => setFlashcardText(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant="outline">Cancelar</Button>
+                  </DialogClose>
+                  <Button
+                    onClick={handleImportFlashcards}
+                    disabled={isImportingFlashcards || !flashcardText}
+                  >
+                    {isImportingFlashcards ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : null}
+                    Importar Flashcards
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Importe flashcards em massa para acelerar a criação de novos
+              baralhos de estudo.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="space-y-6">
         <h3 className="text-2xl font-bold tracking-tight">Recursos</h3>
@@ -177,18 +280,35 @@ export default function ManagementPage() {
           subject="Direito Constitucional"
           href="/mentorlite/management/constitutional-law"
         />
-        <SubjectCard subject="Direito Penal" href="/mentorlite/management/penal-law" />
-         <Card>
-            <Link href="/mentorlite/management/users">
+        <SubjectCard
+          subject="Direito Penal"
+          href="/mentorlite/management/penal-law"
+        />
+        <Card>
+            <Link href="/mentorlite/flashcards">
                 <CardHeader className="flex-row items-center justify-between">
                     <div>
-                        <CardTitle className="flex items-center gap-2"><Users /> Usuários</CardTitle>
+                        <CardTitle className="flex items-center gap-2"><Layers /> Flashcards</CardTitle>
                         <CardDescription className="mt-1">
-                        Gerencie os usuários cadastrados na plataforma.
+                        Acesse e estude todos os flashcards importados.
                         </CardDescription>
                     </div>
                 </CardHeader>
             </Link>
+        </Card>
+        <Card>
+          <Link href="/mentorlite/management/users">
+            <CardHeader className="flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Users /> Usuários
+                </CardTitle>
+                <CardDescription className="mt-1">
+                  Gerencie os usuários cadastrados na plataforma.
+                </CardDescription>
+              </div>
+            </CardHeader>
+          </Link>
         </Card>
       </div>
     </div>

@@ -82,6 +82,55 @@ export async function importQuestions(
   }
 }
 
+export async function importFlashcards(
+  firestore: Firestore,
+  userId: string,
+  text: string
+): Promise<void> {
+  if (!text) {
+    throw new Error('O texto não pode estar vazio.');
+  }
+  if (!userId) {
+    throw new Error('Usuário não autenticado.');
+  }
+
+  const flashcardsStr = text.trim().split(';');
+  const flashcardsCollection = collection(
+    firestore,
+    `users/${userId}/flashcards`
+  );
+
+  for (const fStr of flashcardsStr) {
+    if (fStr.trim() === '') continue;
+
+    // Format: Materia/Pergunta/Resposta
+    const parts = fStr.split('/');
+    if (parts.length < 3) {
+      console.warn('Skipping invalid flashcard format:', fStr);
+      continue;
+    }
+
+    const [subject, front, back] = parts;
+
+    const newFlashcard = {
+      subject: subject.trim(),
+      front: front.trim(),
+      back: back.trim(),
+      createdAt: serverTimestamp(),
+    };
+
+    addDoc(flashcardsCollection, newFlashcard).catch(serverError => {
+      console.error('Firestore addDoc error for flashcard:', serverError);
+      const permissionError = new FirestorePermissionError({
+        path: flashcardsCollection.path,
+        operation: 'create',
+        requestResourceData: newFlashcard,
+      });
+      errorEmitter.emit('permission-error', permissionError);
+    });
+  }
+}
+
 export async function toggleQuestionStatus(
   firestore: Firestore,
   questionId: string,
@@ -99,7 +148,6 @@ export async function toggleQuestionStatus(
     errorEmitter.emit('permission-error', permissionError);
   });
 }
-
 
 // Function to fetch random questions for a given subject
 async function getRandomQuestions(
@@ -159,11 +207,13 @@ export async function createSimulatedExam(
     questionIds: allQuestionIds,
     questionCount: totalQuestions,
   };
-  
+
   const batch = writeBatch(firestore);
 
   // 1. Write to the user's private collection
-  const userExamRef = doc(collection(firestore, `users/${userId}/simulatedExams`));
+  const userExamRef = doc(
+    collection(firestore, `users/${userId}/simulatedExams`)
+  );
   batch.set(userExamRef, examData);
 
   // 2. Write to the public community collection
@@ -181,5 +231,3 @@ export async function createSimulatedExam(
     errorEmitter.emit('permission-error', permissionError);
   });
 }
-
-    
