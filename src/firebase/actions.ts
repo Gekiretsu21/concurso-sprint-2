@@ -183,8 +183,7 @@ async function getRandomQuestions(
   const questionsCollection = collection(firestore, 'questoes');
   const q = query(
     questionsCollection,
-    where('Materia', '==', subject),
-    where('status', '==', 'active') // Only get active questions
+    where('Materia', '==', subject)
   );
 
   const snapshot = await getDocs(q);
@@ -256,5 +255,3 @@ export async function createSimulatedExam(
     errorEmitter.emit('permission-error', permissionError);
   });
 }
-
-    
