@@ -27,7 +27,7 @@ const mainFeatures = [
     href: '/mentorlite/simulated-exams',
     icon: FileText,
     description: 'Crie e realize simulados personalizados.',
-    cta: 'Gerar Simulado',
+    cta: 'Escolher um Simulado',
   },
   {
     title: 'Flashcards',
