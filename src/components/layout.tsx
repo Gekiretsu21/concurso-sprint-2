@@ -154,12 +154,6 @@ function UserNav() {
      <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <div className="flex items-center gap-4 cursor-pointer">
-           <Button variant="ghost" size="icon" asChild>
-              <Link href="/">
-                <Home className="size-5" />
-                <span className="sr-only">Página Inicial</span>
-              </Link>
-            </Button>
             <span className="hidden md:block font-medium text-sm text-foreground">
                 Bem-vindo, {firstName}
             </span>
@@ -199,6 +193,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
           <SidebarTrigger className="block" />
           <div className="flex-1" />
           <div className="flex items-center gap-4">
+             <Button variant="ghost" size="icon" asChild>
+              <Link href="/">
+                <Home className="size-5" />
+                <span className="sr-only">Página Inicial</span>
+              </Link>
+            </Button>
             <UserNav />
           </div>
         </header>
