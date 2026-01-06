@@ -50,7 +50,7 @@ export default function StudyPlanPage() {
       const result = await handleGenerateStudyPlan(values);
       setStudyPlan(result.studyPlan);
     } catch (e: any) {
-      setError(e.message || 'Ocorreu um erro ao gerar o plano. Tente novamente.');
+      setError(e.message || 'Failed to generate study plan. Please try again later.');
     } finally {
       setIsLoading(false);
     }
@@ -76,7 +76,7 @@ export default function StudyPlanPage() {
         </Button>
       </header>
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+      <div className="flex flex-col gap-8">
         <Card>
             <CardHeader>
                 <CardTitle>Suas Informações</CardTitle>
@@ -149,23 +149,25 @@ export default function StudyPlanPage() {
             </CardContent>
         </Card>
 
-        <Card className="flex flex-col sticky top-4">
-            <CardHeader>
-                <CardTitle>Seu Plano Gerado por IA</CardTitle>
-                <CardDescription>Aqui está sua sugestão de cronograma e foco de estudo.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 flex items-center justify-center min-h-[400px]">
-                {isLoading && <Loader2 className="h-8 w-8 animate-spin text-primary" />}
-                {error && <p className="text-destructive text-center">{error}</p>}
-                {studyPlan && <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap h-full overflow-y-auto max-h-[600px]">{studyPlan}</div>}
-                {!isLoading && !studyPlan && !error && (
-                    <div className="text-center text-muted-foreground p-8">
-                        <Sparkles className="mx-auto h-12 w-12" />
-                        <p className="mt-4">Seu plano de estudo aparecerá aqui após preencher as informações e clicar em "Gerar".</p>
-                    </div>
-                )}
-            </CardContent>
-        </Card>
+        {(isLoading || error || studyPlan) && (
+            <Card className="flex flex-col">
+                <CardHeader>
+                    <CardTitle>Seu Plano Gerado por IA</CardTitle>
+                    <CardDescription>Aqui está sua sugestão de cronograma e foco de estudo.</CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1 flex items-center justify-center min-h-[400px]">
+                    {isLoading && <Loader2 className="h-8 w-8 animate-spin text-primary" />}
+                    {error && <p className="text-destructive text-center">{error}</p>}
+                    {studyPlan && <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap h-full overflow-y-auto max-h-[600px]">{studyPlan}</div>}
+                    {!isLoading && !studyPlan && !error && (
+                        <div className="text-center text-muted-foreground p-8">
+                            <Sparkles className="mx-auto h-12 w-12" />
+                            <p className="mt-4">Seu plano de estudo aparecerá aqui após preencher as informações e clicar em "Gerar".</p>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        )}
       </div>
     </div>
   );
