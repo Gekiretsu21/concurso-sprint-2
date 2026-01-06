@@ -48,8 +48,8 @@ export default function StudyPlanPage() {
     try {
       const result = await handleGenerateStudyPlan(values);
       setStudyPlan(result.studyPlan);
-    } catch (e) {
-      setError('Ocorreu um erro ao gerar o plano. Tente novamente.');
+    } catch (e: any) {
+      setError(e.message || 'Ocorreu um erro ao gerar o plano. Tente novamente.');
     } finally {
       setIsLoading(false);
     }

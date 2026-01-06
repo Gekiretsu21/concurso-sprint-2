@@ -8,6 +8,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
 
 const GeneratePersonalizedStudyPlanInputSchema = z.object({
@@ -15,7 +16,9 @@ const GeneratePersonalizedStudyPlanInputSchema = z.object({
     .string()
     .describe('The user performance statistics across subjects.'),
   goals: z.string().describe('The user study goals.'),
-  availableResources: z.string().describe('Available study resources for the user.'),
+  availableResources: z
+    .string()
+    .describe('Available study resources for the user.'),
   availableTime: z.string().describe('The time the user has available to study.'),
 });
 
@@ -41,6 +44,7 @@ const prompt = ai.definePrompt({
   name: 'generatePersonalizedStudyPlanPrompt',
   input: {schema: GeneratePersonalizedStudyPlanInputSchema},
   output: {schema: GeneratePersonalizedStudyPlanOutputSchema},
+  model: googleAI('gemini-1.5-flash-latest'),
   prompt: `You are an expert study plan generator for competitive exams.
   Based on the user's performance statistics, goals, available resources, and time,
   generate a personalized study plan to help them optimize their study schedule and focus on
