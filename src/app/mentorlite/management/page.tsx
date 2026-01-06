@@ -14,7 +14,7 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardPaste, FileText, Loader2, Users } from 'lucide-react';
+import { ClipboardPaste, FileText, Layers, Loader2, Users } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { importQuestions } from '@/firebase/actions';
 import { useFirebase } from '@/firebase';
@@ -79,7 +79,7 @@ export default function ManagementPage() {
           Gerencie as configurações e dados do aplicativo.
         </p>
       </header>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
             <CardHeader className="flex-row items-center justify-between">
               <CardTitle>Importar Questões</CardTitle>
@@ -154,6 +154,15 @@ export default function ManagementPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">Crie simulados personalizados selecionando matérias e o número de questões.</p>
+            </CardContent>
+          </Card>
+           <Card>
+            <CardHeader className="flex-row items-center justify-between">
+                <CardTitle>Importar Flashcards</CardTitle>
+                <Button disabled><Layers />Importar</Button>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">Importe flashcards em massa para acelerar a criação de novos baralhos de estudo.</p>
             </CardContent>
           </Card>
         </div>
