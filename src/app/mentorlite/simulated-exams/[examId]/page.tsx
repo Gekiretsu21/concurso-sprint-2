@@ -200,17 +200,15 @@ export default function SimulatedExamPage() {
     () => {
       if (!firestore || !examId) return null;
 
-      let collectionName = `users/${user?.uid}/simulatedExams`; 
+      let collectionName = 'communitySimulados'; // Default to community simulados
 
       if (isPreviousExam) {
         collectionName = 'previousExams';
-      } else if (isCommunitySimulado) {
-        collectionName = 'communitySimulados';
       }
       
       return doc(firestore, collectionName, examId) as DocumentReference<SimulatedExam>;
     },
-    [firestore, user?.uid, examId, isPreviousExam, isCommunitySimulado]
+    [firestore, examId, isPreviousExam, isCommunitySimulado]
   );
 
   const { data: exam, isLoading: isLoadingExam } = useDoc<SimulatedExam>(examDocRef);
@@ -269,7 +267,7 @@ export default function SimulatedExamPage() {
   const getBackHref = () => {
     if (isPreviousExam) return '/mentorlite/previous-exams';
     if (isCommunitySimulado) return '/mentorlite/community-simulados';
-    return '/mentorlite/simulated-exams';
+    return '/mentorlite'; // Default to dashboard
   };
 
   const answeredCount = Object.values(userAnswers).filter(Boolean).length;

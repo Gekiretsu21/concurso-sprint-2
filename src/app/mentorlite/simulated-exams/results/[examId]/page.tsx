@@ -266,7 +266,6 @@ export default function ExamResultsPage() {
                 if (!firestore || !user) return;
                 
                 const examCollectionPaths = [
-                    `users/${user.uid}/simulatedExams`,
                     'previousExams',
                     'communitySimulados',
                 ];
@@ -287,14 +286,14 @@ export default function ExamResultsPage() {
                 } else {
                     console.error("Exam document not found in any collection for ID:", savedResult.examId);
                     setIsLoading(false); // Stop loading
-                    router.push('/mentorlite/simulated-exams'); // Redirect if exam is truly not found
+                    router.push('/mentorlite'); // Redirect if exam is truly not found
                 }
             };
             fetchExamAndQuestions();
         } else {
             // If finished loading and there's no savedResult (and no localStorage data), then redirect
             setIsLoading(false);
-            router.push('/mentorlite/simulated-exams');
+            router.push('/mentorlite');
         }
     }
 
@@ -444,14 +443,12 @@ export default function ExamResultsPage() {
       
       <div className="flex justify-center mt-8">
         <Button asChild size="lg">
-            <Link href="/mentorlite/simulated-exams">
+            <Link href="/mentorlite">
                 <Home className="mr-2" />
-                Voltar para Simulados
+                Voltar para o Dashboard
             </Link>
         </Button>
       </div>
     </div>
   );
 }
-
-    
