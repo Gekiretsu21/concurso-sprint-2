@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Users as UsersIcon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
@@ -58,11 +58,26 @@ export default function UsersPage() {
         </div>
       </header>
 
+       <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total de Usuários</CardTitle>
+          <UsersIcon className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">
+            {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : users.length}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Usuários cadastrados na plataforma.
+          </p>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Usuários Cadastrados</CardTitle>
           <CardDescription>
-            {isLoading ? 'Carregando usuários...' : `Total de ${users?.length || 0} usuários.`}
+            {isLoading ? 'Carregando usuários...' : `Lista com os últimos usuários cadastrados.`}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -108,5 +123,3 @@ export default function UsersPage() {
     </div>
   );
 }
-
-    
