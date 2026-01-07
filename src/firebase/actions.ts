@@ -30,6 +30,40 @@ interface ExamDetails {
   examName: string;
 }
 
+export async function updateStudyTime(firestore: Firestore, userId: string, seconds: number): Promise<void> {
+  if (!userId || seconds <= 0) return;
+
+  const userRef = doc(firestore, 'users', userId);
+  const updatePayload = {
+    'stats.totalStudyTime': increment(seconds)
+  };
+
+  try {
+    await updateDoc(userRef, updatePayload);
+  } catch (error: any) {
+    if (error.code === 'not-found') {
+      // User document or stats object doesn't exist, create it.
+      const initialData = { stats: { totalStudyTime: seconds } };
+      setDoc(userRef, initialData, { merge: true }).catch(serverError => {
+        const permissionError = new FirestorePermissionError({
+          path: userRef.path,
+          operation: 'write',
+          requestResourceData: initialData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
+    } else {
+      const permissionError = new FirestorePermissionError({
+        path: userRef.path,
+        operation: 'update',
+        requestResourceData: updatePayload,
+      });
+      errorEmitter.emit('permission-error', permissionError);
+    }
+  }
+}
+
+
 export async function registerQuestionAnswer(
   firestore: Firestore,
   userId: string,

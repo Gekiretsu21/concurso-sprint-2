@@ -45,6 +45,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { signOut } from 'firebase/auth';
+import { useStudyTimeTracker } from '@/hooks/use-study-time-tracker';
+
 
 const menuItems = [
   { href: '/mentorlite', icon: LayoutDashboard, label: 'Dashboard' },
@@ -184,6 +186,9 @@ function UserNav() {
 }
 
 export function AppLayout({ children }: { children: ReactNode }) {
+  const { firestore, user } = useFirebase();
+  useStudyTimeTracker(user?.uid, firestore);
+
   return (
     <SidebarProvider>
       <MainSidebar />
