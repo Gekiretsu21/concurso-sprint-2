@@ -32,6 +32,9 @@ import Link from 'next/link';
 import { collection, DocumentData } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 // Helper to generate a URL-friendly slug from a subject name
 const createSubjectSlug = (subject: string) => {
@@ -60,6 +63,8 @@ export default function ManagementPage() {
   const [isImportingFlashcards, setIsImportingFlashcards] = useState(false);
   const [isCleaning, setIsCleaning] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [isPreviousExam, setIsPreviousExam] = useState(false);
+  const [examName, setExamName] = useState('');
 
   useEffect(() => {
     setIsClient(true);
@@ -102,12 +107,15 @@ export default function ManagementPage() {
     }
     setIsImportingQuestions(true);
     try {
-      await importQuestions(firestore, questionText);
-      toast({
-        title: 'Importação Concluída',
-        description: 'As questões foram importadas com sucesso!',
-      });
-      setQuestionText('');
+        const examDetails = isPreviousExam ? { isPreviousExam, examName } : undefined;
+        await importQuestions(firestore, questionText, examDetails);
+        toast({
+            title: 'Importação Concluída',
+            description: 'As questões foram importadas com sucesso!',
+        });
+        setQuestionText('');
+        setExamName('');
+        setIsPreviousExam(false);
     } catch (error) {
       let message = 'Ocorreu um erro ao importar as questões.';
       if (error instanceof Error) {
@@ -239,6 +247,23 @@ export default function ManagementPage() {
                       onChange={e => setQuestionText(e.target.value)}
                     />
                   </div>
+                   <div className="col-span-4 grid grid-cols-4 items-center gap-4">
+                      <div/>
+                      <div className="col-span-3 space-y-4">
+                         <div className="flex items-center space-x-2">
+                            <Checkbox id="is-previous-exam" checked={isPreviousExam} onCheckedChange={(checked) => setIsPreviousExam(checked as boolean)} />
+                            <Label htmlFor="is-previous-exam">Prova Anterior</Label>
+                        </div>
+                        <div className={cn("transition-all duration-300 ease-in-out", isPreviousExam ? "max-h-40 opacity-100" : "max-h-0 opacity-0 overflow-hidden")}>
+                            {isPreviousExam && (
+                                <div className="space-y-2">
+                                <Label htmlFor="exam-name">Nome da Prova</Label>
+                                <Input id="exam-name" value={examName} onChange={(e) => setExamName(e.target.value)} placeholder="Ex: PMMG Soldado 2023"/>
+                                </div>
+                            )}
+                        </div>
+                      </div>
+                   </div>
                 </div>
                 <DialogFooter>
                   <DialogClose asChild>
@@ -246,7 +271,7 @@ export default function ManagementPage() {
                   </DialogClose>
                   <Button
                     onClick={handleImportQuestions}
-                    disabled={isImportingQuestions || !questionText}
+                    disabled={isImportingQuestions || !questionText || (isPreviousExam && !examName)}
                   >
                     {isImportingQuestions ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />

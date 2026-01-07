@@ -18,12 +18,21 @@ import {
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
+interface ExamDetails {
+    isPreviousExam: boolean;
+    examName: string;
+}
+
 export async function importQuestions(
   firestore: Firestore,
-  text: string
+  text: string,
+  examDetails?: ExamDetails
 ): Promise<void> {
   if (!text) {
     throw new Error('O texto não pode estar vazio.');
+  }
+  if (examDetails?.isPreviousExam && !examDetails.examName) {
+      throw new Error('O nome da prova é obrigatório ao marcar "Prova Anterior".');
   }
 
   const questionsStr = text.trim().split(';');
@@ -56,7 +65,7 @@ export async function importQuestions(
       correctAnswer,
     ] = parts;
 
-    const newQuestion = {
+    const newQuestion: any = {
       Materia: Materia.trim(),
       Ano: Ano.trim(),
       Assunto: Assunto.trim(),
@@ -70,6 +79,10 @@ export async function importQuestions(
       correctAnswer: correctAnswer.trim(),
       status: 'active', // Default status
     };
+    
+    if (examDetails?.isPreviousExam) {
+        newQuestion.Prova = examDetails.examName.trim();
+    }
 
     // Use non-blocking write with error handling
     addDoc(questionsCollection, newQuestion).catch(serverError => {
