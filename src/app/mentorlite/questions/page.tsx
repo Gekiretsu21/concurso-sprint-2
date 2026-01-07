@@ -62,8 +62,10 @@ export default function QuestionsPage() {
         .filter(q => q.status !== 'hidden' && q.Materia && q.Materia.trim().toLowerCase() !== 'materia')
         .forEach(q => {
             let subjectName = q.Materia.trim();
-            if (subjectName.toLowerCase() === 'língua portuguesa' || subjectName.toLowerCase() === 'lingua portuguesa') {
+            if (subjectName.toLowerCase() === 'lingua portuguesa') {
                 subjectSet.add('Língua Portuguesa');
+            } else if (subjectName.toLowerCase() === 'legislacao juridica') {
+                subjectSet.add('Legislação Jurídica');
             } else {
                 subjectSet.add(subjectName);
             }
@@ -75,12 +77,16 @@ export default function QuestionsPage() {
     if (!allQuestions || !filterSubject) return [];
     
     const isLinguaPortuguesa = filterSubject === 'Língua Portuguesa';
+    const isLegislacaoJuridica = filterSubject === 'Legislação Jurídica';
     
     const topics = new Set(
       allQuestions
         .filter(q => {
+            const subjectLower = q.Materia.toLowerCase();
             const subjectMatch = isLinguaPortuguesa
-              ? q.Materia.toLowerCase() === 'língua portuguesa' || q.Materia.toLowerCase() === 'lingua portuguesa'
+              ? subjectLower === 'língua portuguesa' || subjectLower === 'lingua portuguesa'
+              : isLegislacaoJuridica
+              ? subjectLower === 'legislação jurídica' || subjectLower === 'legislacao juridica'
               : q.Materia === filterSubject;
             return subjectMatch && q.Assunto;
         })
@@ -96,9 +102,10 @@ export default function QuestionsPage() {
 
   const handleFilterSubmit = () => {
     let subjectQuery: string | string[] = filterSubject;
-    // If the selected subject is the standardized "Língua Portuguesa", search for both variations.
     if (filterSubject === 'Língua Portuguesa') {
         subjectQuery = ['Língua Portuguesa', 'Lingua Portuguesa'];
+    } else if (filterSubject === 'Legislação Jurídica') {
+        subjectQuery = ['Legislação Jurídica', 'Legislacao Juridica'];
     }
     setActiveFilters({ subject: subjectQuery, topics: selectedTopics, status: filterStatus });
   };

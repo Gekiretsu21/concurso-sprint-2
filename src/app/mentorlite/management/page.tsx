@@ -365,12 +365,8 @@ export default function ManagementPage() {
 
         if (subject && subject.trim() && !isHidden) {
             let subjectName = subject.trim();
-            // Standardize "Língua Portuguesa" variations
-            if (subjectName.toLowerCase() === 'língua portuguesa' || subjectName.toLowerCase() === 'lingua portuguesa') {
-                subjectName = 'Língua Portuguesa';
-            }
             
-            if (subjectName !== 'materia') { // Filter out header row
+            if (subjectName !== 'materia') {
                 if (!acc[subjectName]) {
                     acc[subjectName] = { name: subjectName, count: 0 };
                 }
@@ -379,6 +375,25 @@ export default function ManagementPage() {
         }
         return acc;
     }, {} as Record<string, {name: string, count: number}>);
+    
+    // Unify "Língua Portuguesa" variations
+    const portuguesComAcento = subjectCounts['Língua Portuguesa'];
+    const portuguesSemAcento = subjectCounts['Lingua Portuguesa'];
+    if (portuguesComAcento || portuguesSemAcento) {
+        const total = (portuguesComAcento?.count || 0) + (portuguesSemAcento?.count || 0);
+        subjectCounts['Língua Portuguesa'] = { name: 'Língua Portuguesa', count: total };
+        delete subjectCounts['Lingua Portuguesa'];
+    }
+
+    // Unify "Legislação Jurídica" variations
+    const legislacaoComAcento = subjectCounts['Legislação Jurídica'];
+    const legislacaoSemAcento = subjectCounts['Legislacao Juridica'];
+     if (legislacaoComAcento || legislacaoSemAcento) {
+        const total = (legislacaoComAcento?.count || 0) + (legislacaoSemAcento?.count || 0);
+        subjectCounts['Legislação Jurídica'] = { name: 'Legislação Jurídica', count: total };
+        delete subjectCounts['Legislacao Juridica'];
+    }
+
 
     return Object.values(subjectCounts)
         .sort((a, b) => a.name.localeCompare(b.name));
@@ -606,7 +621,7 @@ export default function ManagementPage() {
                       id="flashcard-text"
                       className="min-h-[350px]"
                       placeholder="Direito Administrativo | Atos Administrativos | Geral | Quais são os atributos do ato administrativo? | Presunção de legitimidade, autoexecutoriedade, tipicidade e imperatividade (mnemônico: PATI).
-Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativa antes de nomes próprios femininos? | A crase é facultativa, pois o artigo 'a' antes do nome é opcional. Ex: Entreguei à Paula. / Entreguei a Paula."
+Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativa antes de nomes próprios femininos? | A crase é facultativa, pois o artigo 'a' antes do nome é opcional."
                       value={flashcardText}
                       onChange={e => setFlashcardText(e.target.value)}
                     />

@@ -15,14 +15,19 @@ function SubjectPageContent() {
     ? decodeURIComponent(subjectParam).split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
     : '';
 
-  // Specific case to ensure correct accentuation for display
+  // Special cases to ensure correct accentuation for display
   if (subjectParam === 'lingua-portuguesa') {
     subjectName = 'Língua Portuguesa';
   }
+  if (subjectParam === 'legislacao-juridica') {
+    subjectName = 'Legislação Jurídica';
+  }
   
-  // Special handling for 'lingua-portuguesa' to query variations
+  // Special handling for variations
   const querySubjects = subjectParam === 'lingua-portuguesa' 
     ? ['Língua Portuguesa', 'Lingua Portuguesa']
+    : subjectParam === 'legislacao-juridica'
+    ? ['Legislação Jurídica', 'Legislacao Juridica']
     : [subjectName];
 
   return (
