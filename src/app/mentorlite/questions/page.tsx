@@ -53,9 +53,8 @@ export default function QuestionsPage() {
     if (!allQuestions) return [];
     const subjects = new Set(
       allQuestions
+        .filter(q => q.status !== 'hidden' && q.Materia && q.Materia.trim().toLowerCase() !== 'materia')
         .map(q => q.Materia)
-        .filter(Boolean)
-        .filter(s => s.trim().toLowerCase() !== 'materia')
     );
     return Array.from(subjects).sort();
   }, [allQuestions]);
