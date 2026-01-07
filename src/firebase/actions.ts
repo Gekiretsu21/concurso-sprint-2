@@ -219,8 +219,7 @@ async function getRandomQuestions(
   const questionsCollection = collection(firestore, 'questoes');
   const q = query(
     questionsCollection,
-    where('Materia', '==', subject),
-    where('status', '!=', 'hidden')
+    where('Materia', '==', subject)
   );
 
   const snapshot = await getDocs(q);

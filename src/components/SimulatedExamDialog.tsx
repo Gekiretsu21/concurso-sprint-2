@@ -49,7 +49,7 @@ export function SimulatedExamDialog() {
   );
   
   const questionsQuery = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'questoes'), where('status', '!=', 'hidden')) : null),
+    () => (firestore ? collection(firestore, 'questoes') : null),
     [firestore]
   );
   const { data: allQuestions, isLoading: isLoadingSubjects } = useCollection<DocumentData>(questionsQuery);
