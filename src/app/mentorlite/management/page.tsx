@@ -655,20 +655,6 @@ export default function ManagementPage() {
                 </CardHeader>
             </Link>
         </Card>
-        <Card>
-          <Link href="/mentorlite/management/users">
-            <CardHeader className="flex-row items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Users /> Usuários
-                </CardTitle>
-                <CardDescription className="mt-1">
-                  Gerencie os usuários cadastrados na plataforma.
-                </CardDescription>
-              </div>
-            </CardHeader>
-          </Link>
-        </Card>
       </div>
     </div>
   );
