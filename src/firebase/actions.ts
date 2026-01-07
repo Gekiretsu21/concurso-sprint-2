@@ -107,7 +107,7 @@ export async function importQuestions(
         createdAt: serverTimestamp(),
         questionIds: newQuestionIds,
         questionCount: newQuestionIds.length,
-        isPreviousExam: true, // <-- This was missing
+        isPreviousExam: true,
       };
 
       // Write to the user's private collection
@@ -115,10 +115,6 @@ export async function importQuestions(
         collection(firestore, `users/${userId}/simulatedExams`)
       );
       batch.set(userExamRef, examData);
-
-      // Write to the public community collection
-      const communityExamRef = doc(collection(firestore, 'communitySimulados'));
-      batch.set(communityExamRef, { ...examData, originalExamId: userExamRef.id });
   }
 
 
