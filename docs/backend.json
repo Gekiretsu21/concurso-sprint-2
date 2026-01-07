@@ -19,16 +19,80 @@
           "type": "string",
           "description": "User's full name."
         },
-        "dailyStreak": {
-          "type": "number",
-          "description": "The user's current daily login streak."
+        "stats": {
+            "type": "object",
+            "description": "Aggregated user statistics for performance and engagement.",
+            "properties": {
+              "dailyStreak": {
+                "type": "number",
+                "description": "The user's current daily login streak."
+              },
+              "lastLoginDate": {
+                "type": "string",
+                "format": "date",
+                "description": "The last date the user logged in, in YYYY-MM-DD format."
+              },
+              "performance": {
+                "type": "object",
+                "properties": {
+                  "questions": {
+                    "type": "object",
+                    "properties": {
+                      "totalAnswered": { "type": "number" },
+                      "totalCorrect": { "type": "number" },
+                      "bySubject": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "object",
+                          "properties": {
+                            "answered": { "type": "number" },
+                            "correct": { "type": "number" }
+                          },
+                          "required": ["answered", "correct"]
+                        }
+                      }
+                    }
+                  },
+                  "flashcards": {
+                    "type": "object",
+                    "properties": {
+                      "totalReviewed": { "type": "number" },
+                      "totalCorrect": { "type": "number" },
+                      "bySubject": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "object",
+                          "properties": {
+                            "reviewed": { "type": "number" },
+                            "correct": { "type": "number" }
+                          },
+                          "required": ["reviewed", "correct"]
+                        }
+                      }
+                    }
+                  },
+                  "simulatedExams": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "simuladoId": { "type": "string" },
+                        "name": { "type": "string" },
+                        "score": { "type": "number" },
+                        "date": { "type": "string", "format": "date-time" }
+                      },
+                      "required": ["simuladoId", "name", "score", "date"]
+                    }
+                  }
+                }
+              }
+            }
         }
       },
       "required": [
         "id",
         "email",
-        "name",
-        "dailyStreak"
+        "name"
       ]
     },
     "Question": {
@@ -435,6 +499,8 @@
         }
       }
     ],
-    "reasoning": "The Firestore data structure is designed to support the 'Concurso Sprint' app, focusing on secure, scalable, and debuggable data access. The structure leverages path-based ownership for user-specific data and denormalization to ensure authorization independence, eliminating the need for `get()` calls in security rules.\n\n1.  **Users (`/users/{userId}`):** Stores user profiles. This is the root for all user-owned data.\n2.  **Questions (`/questions/{questionId}`):**  Stores the question bank. Open for browsing to every authenticated user.\n3.  **Simulated Exams (`/users/{userId}/simulatedExams/{simulatedExamId}`):** Each simulated exam is stored as a subcollection under the user who created it, ensuring clear ownership.\n4.  **Community Simulados (`/communitySimulados/{simuladoId}`):**  A public collection where a copy of user-created simulados is stored for community access.\n5.  **Flashcards (`/flashcards/{flashcardId}`):** Public collection of all flashcards, readable by any authenticated user.\n6. **Flashcard Responses (`/users/{userId}/flashcardResponses/{flashcardId}`):** User-specific responses to flashcards to track correct/incorrect answers for review.\n7.  **Study Sessions (`/users/{userId}/studySessions/{studySessionId}`):** Study session data is stored under each user to track individual study habits and progress.\n8.  **AI Study Plans (`/users/{userId}/aiStudyPlans/{aiStudyPlanId}`):** AI study plans are nested under each user, providing personalized plans.\n\n**Authorization Independence and QAPs:**\n\n*   **Path-Based Ownership:**  Using paths like `/users/{userId}/...` directly encodes ownership into the data structure. Security rules can simply check if `request.auth.uid == userId` to grant access, eliminating the need to read parent documents. This directly addresses Authorization Independence.\n*   **Structural Segregation:**  Questions and Flashcards are stored in global collections, separate from user-specific data. This segregation allows for different security rules: open read access for all authenticated users, while user-specific collections are restricted to the owning user. This ensures that listing public content does not require complex filtering logic in rules (QAPs: Rules are Not Filters)."
+    "reasoning": "The Firestore data structure is designed to support the 'Concurso Sprint' app, focusing on secure, scalable, and debuggable data access. The structure leverages path-based ownership for user-specific data and denormalization to ensure authorization independence, eliminating the need for `get()` calls in security rules.\n\n1.  **Users (`/users/{userId}`):** Stores user profiles. This is the root for all user-owned data and now includes an aggregated `stats` object for performance tracking.\n2.  **Questions (`/questions/{questionId}`):**  Stores the question bank. Open for browsing to every authenticated user.\n3.  **Simulated Exams (`/users/{userId}/simulatedExams/{simulatedExamId}`):** Each simulated exam is stored as a subcollection under the user who created it, ensuring clear ownership.\n4.  **Community Simulados (`/communitySimulados/{simuladoId}`):**  A public collection where a copy of user-created simulados is stored for community access.\n5.  **Flashcards (`/flashcards/{flashcardId}`):** Public collection of all flashcards, readable by any authenticated user.\n6. **Flashcard Responses (`/users/{userId}/flashcardResponses/{flashcardId}`):** User-specific responses to flashcards to track correct/incorrect answers for review.\n7.  **Study Sessions (`/users/{userId}/studySessions/{studySessionId}`):** Study session data is stored under each user to track individual study habits and progress.\n8.  **AI Study Plans (`/users/{userId}/aiStudyPlans/{aiStudyPlanId}`):** AI study plans are nested under each user, providing personalized plans.\n\n**Authorization Independence and QAPs:**\n\n*   **Path-Based Ownership:**  Using paths like `/users/{userId}/...` directly encodes ownership into the data structure. Security rules can simply check if `request.auth.uid == userId` to grant access, eliminating the need to read parent documents. This directly addresses Authorization Independence.\n*   **Structural Segregation:**  Questions and Flashcards are stored in global collections, separate from user-specific data. This segregation allows for different security rules: open read access for all authenticated users, while user-specific collections are restricted to the owning user. This ensures that listing public content does not require complex filtering logic in rules (QAPs: Rules are Not Filters)."
   }
 }
+
+    

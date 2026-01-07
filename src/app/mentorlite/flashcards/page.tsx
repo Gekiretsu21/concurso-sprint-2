@@ -25,7 +25,7 @@ interface FlashcardResponse {
   status: 'correct' | 'incorrect';
 }
 
-function FlashcardViewer({ flashcards, onResponse }: { flashcards: Flashcard[], onResponse: (flashcardId: string, status: 'correct' | 'incorrect') => void }) {
+function FlashcardViewer({ flashcards, onResponse }: { flashcards: Flashcard[], onResponse: (flashcard: Flashcard, status: 'correct' | 'incorrect') => void }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
 
@@ -52,7 +52,7 @@ function FlashcardViewer({ flashcards, onResponse }: { flashcards: Flashcard[], 
 
   const handleResponseClick = (status: 'correct' | 'incorrect') => {
     const card = flashcards[currentIndex];
-    onResponse(card.id, status);
+    onResponse(card, status); // Pass the full flashcard object
     // Automatically move to the next card after responding
     setTimeout(() => handleNav('next'), 200);
   }
@@ -79,14 +79,14 @@ function FlashcardViewer({ flashcards, onResponse }: { flashcards: Flashcard[], 
               <p className="text-xl font-semibold">{card.front}</p>
             </CardContent>
           </Card>
-          <Card className="flashcard-back bg-primary text-primary-foreground">
+          <Card className="flashcard-back bg-primary text-primary-foreground" onClick={handleFlip}>
             <CardContent className="flex flex-col items-center justify-center text-center p-6 gap-6">
               <p className="text-lg">{card.back}</p>
               <div className="flex gap-4 mt-4">
-                <Button variant="destructive" size="lg" onClick={() => handleResponseClick('incorrect')}>
+                <Button variant="destructive" size="lg" onClick={(e) => { e.stopPropagation(); handleResponseClick('incorrect'); }}>
                     <ThumbsDown className="mr-2"/> Errei
                 </Button>
-                <Button variant="secondary" size="lg" onClick={() => handleResponseClick('correct')}>
+                <Button variant="secondary" size="lg" onClick={(e) => { e.stopPropagation(); handleResponseClick('correct'); }}>
                     <ThumbsUp className="mr-2"/> Acertei
                 </Button>
               </div>
@@ -172,13 +172,13 @@ export default function FlashcardsPage() {
   }, [firestore, user, allFlashcards]);
 
 
-  const handleFlashcardResponseCallback = useCallback((flashcardId: string, status: 'correct' | 'incorrect') => {
+  const handleFlashcardResponseCallback = useCallback((flashcard: Flashcard, status: 'correct' | 'incorrect') => {
     if (!firestore || !user) return;
-    handleFlashcardResponse(firestore, user.uid, flashcardId, status);
+    handleFlashcardResponse(firestore, user.uid, flashcard, status);
     
     // If we're in 'incorrect' mode and the answer is correct, remove it from the active session
     if (studyMode === 'incorrect' && status === 'correct') {
-        setActiveFlashcards(prev => prev.filter(fc => fc.id !== flashcardId));
+        setActiveFlashcards(prev => prev.filter(fc => fc.id !== flashcard.id));
     }
   }, [firestore, user, studyMode]);
 

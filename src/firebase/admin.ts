@@ -28,3 +28,5 @@ const adminAuth = getAuth(adminApp);
 const adminFirestore = getFirestore(adminApp);
 
 export { adminApp, adminAuth, adminFirestore };
+
+    

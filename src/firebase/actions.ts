@@ -18,6 +18,8 @@ import {
   documentId,
   and,
   getDoc,
+  increment,
+  arrayUnion,
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -170,30 +172,72 @@ export async function importFlashcards(
 export async function handleFlashcardResponse(
   firestore: Firestore,
   userId: string,
-  flashcardId: string,
+  flashcard: { id: string, subject: string },
   status: 'correct' | 'incorrect'
 ): Promise<void> {
   if (!userId) {
     throw new Error('Usuário não autenticado.');
   }
+  const { id: flashcardId, subject } = flashcard;
+  
+  const userRef = doc(firestore, `users/${userId}`);
   const responseRef = doc(firestore, `users/${userId}/flashcardResponses/${flashcardId}`);
+  
+  const batch = writeBatch(firestore);
+
+  // 1. Log the individual response
   const responseData = {
     userId,
     flashcardId,
     status,
     lastReviewed: serverTimestamp(),
   };
+  batch.set(responseRef, responseData, { merge: true });
 
-  setDoc(responseRef, responseData, { merge: true }).catch(serverError => {
-    console.error('Firestore setDoc error for flashcard response:', serverError);
-    const permissionError = new FirestorePermissionError({
-      path: responseRef.path,
-      operation: 'write',
-      requestResourceData: responseData,
-    });
-    errorEmitter.emit('permission-error', permissionError);
+  // 2. Atomically update the aggregated stats
+  const totalCorrectIncrement = status === 'correct' ? 1 : 0;
+  
+  // Using dot notation for nested fields
+  batch.update(userRef, {
+    'stats.performance.flashcards.totalReviewed': increment(1),
+    'stats.performance.flashcards.totalCorrect': increment(totalCorrectIncrement),
+    [`stats.performance.flashcards.bySubject.${subject}.reviewed`]: increment(1),
+    [`stats.performance.flashcards.bySubject.${subject}.correct`]: increment(totalCorrectIncrement),
+  });
+
+  batch.commit().catch(async (serverError) => {
+    // Check if the user document exists, if not, create it with initial stats.
+    const userDoc = await getDoc(userRef);
+    if (!userDoc.exists()) {
+      // The user document doesn't exist. Let's create it and then retry the batch.
+      const initialStats = {
+          stats: {
+              performance: {
+                  flashcards: {
+                      totalReviewed: 0,
+                      totalCorrect: 0,
+                      bySubject: {
+                          [subject]: { reviewed: 0, correct: 0 }
+                      }
+                  }
+              }
+          }
+      };
+      await setDoc(userRef, initialStats, { merge: true });
+      // Retry the original batch write
+      await handleFlashcardResponse(firestore, userId, flashcard, status);
+    } else {
+       const permissionError = new FirestorePermissionError({
+        path: userRef.path,
+        operation: 'update',
+        requestResourceData: { /* aggregated data */ },
+      });
+      errorEmitter.emit('permission-error', permissionError);
+      throw permissionError;
+    }
   });
 }
+
 
 export async function toggleQuestionStatus(
   firestore: Firestore,
@@ -431,3 +475,5 @@ export async function deleteCommunitySimulados(firestore: Firestore, simuladoIds
     throw permissionError;
   });
 }
+
+    
