@@ -1,13 +1,8 @@
 'use server';
 
 import { adminAuth } from '@/firebase/admin';
-import { Auth, UserRecord } from 'firebase-admin/auth';
-
-export interface UserData {
-  id: string;
-  name: string | undefined;
-  email: string | undefined;
-}
+import { UserRecord } from 'firebase-admin/auth';
+import type { UserData } from './page';
 
 export async function getAllUsers(): Promise<UserData[]> {
   try {
@@ -36,5 +31,3 @@ export async function getAllUsers(): Promise<UserData[]> {
     throw new Error('Failed to retrieve user list.');
   }
 }
-
-    

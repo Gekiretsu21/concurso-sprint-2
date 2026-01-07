@@ -9,9 +9,16 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
-import { getAllUsers, UserData } from './actions';
+import { getAllUsers } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
+// A interface UserData foi movida para cá, que é o local correto.
+export interface UserData {
+  id: string;
+  name: string | undefined;
+  email: string | undefined;
+}
 
 export default function UsersPage() {
   const [users, setUsers] = useState<UserData[]>([]);
