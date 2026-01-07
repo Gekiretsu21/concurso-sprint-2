@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect } from 'react';
 import { useDoc, useFirebase, useMemoFirebase } from '@/firebase';
-import { doc, getDoc, DocumentReference } from 'firebase/firestore';
+import { doc, getDoc, DocumentReference, collection } from 'firebase/firestore';
 import {
   Card,
   CardContent,
@@ -168,8 +168,7 @@ export default function SimulatedExamPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const examId = params.examId as string;
-  const examOwnerId = searchParams.get('userId');
-
+  const isFromPreviousExams = searchParams.get('from') === 'previous-exams';
 
   const { firestore, user } = useFirebase();
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -178,14 +177,15 @@ export default function SimulatedExamPage() {
   const examDocRef = useMemoFirebase(
     () => {
       if (!firestore || !user || !examId) return null;
-      const ownerId = examOwnerId || user.uid;
+
+      const collectionName = isFromPreviousExams ? 'previousExams' : `users/${user.uid}/simulatedExams`;
       return doc(
             firestore,
-            `users/${ownerId}/simulatedExams`,
+            collectionName,
             examId
           ) as DocumentReference<SimulatedExam>
     },
-    [firestore, user, examId, examOwnerId]
+    [firestore, user, examId, isFromPreviousExams]
   );
 
   const { data: exam, isLoading: isLoadingExam } = useDoc<SimulatedExam>(examDocRef);
@@ -196,16 +196,26 @@ export default function SimulatedExamPage() {
 
       setIsLoadingQuestions(true);
       const fetchedQuestions: Question[] = [];
-      for (const questionId of exam.questionIds) {
-        const questionRef = doc(firestore, 'questoes', questionId);
-        const questionSnap = await getDoc(questionRef);
-        if (questionSnap.exists()) {
-          fetchedQuestions.push({
-            id: questionSnap.id,
-            ...(questionSnap.data() as Omit<Question, 'id'>),
-          });
-        }
+      // Firestore 'in' query has a limit of 30 items. We need to fetch in batches if needed.
+      const questionIdsBatches: string[][] = [];
+      for (let i = 0; i < exam.questionIds.length; i += 30) {
+        questionIdsBatches.push(exam.questionIds.slice(i, i + 30));
       }
+
+      for (const batch of questionIdsBatches) {
+        const q = query(collection(firestore, 'questoes'), where('__name__', 'in', batch));
+        const questionSnapshots = await getDocs(q);
+        const questionsMap = new Map(questionSnapshots.docs.map(doc => [doc.id, { id: doc.id, ...doc.data() as Omit<Question, 'id'>}]));
+        
+        // Reorder questions to match the order in questionIds
+        batch.forEach(id => {
+          const question = questionsMap.get(id);
+          if (question) {
+            fetchedQuestions.push(question);
+          }
+        });
+      }
+
       setQuestions(fetchedQuestions);
       setIsLoadingQuestions(false);
     };
@@ -214,7 +224,7 @@ export default function SimulatedExamPage() {
   }, [exam, firestore]);
   
   const isLoading = isLoadingExam || isLoadingQuestions;
-  const backHref = searchParams.get('from') === 'previous-exams' ? '/mentorlite/previous-exams' : '/mentorlite/simulated-exams';
+  const backHref = isFromPreviousExams ? '/mentorlite/previous-exams' : '/mentorlite/simulated-exams';
 
   return (
     <div className="flex flex-col gap-8">

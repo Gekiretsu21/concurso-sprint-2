@@ -29,7 +29,7 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import Link from 'next/link';
-import { collection, DocumentData, query, where } from 'firebase/firestore';
+import { collection, DocumentData, query, where, getDocs } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -55,7 +55,7 @@ interface SubjectWithCount {
     count: number;
 }
 
-interface SimulatedExam {
+interface PreviousExam {
   id: string;
   name: string;
 }
@@ -70,12 +70,12 @@ function DeletePreviousExamsDialog() {
   const [selectedExams, setSelectedExams] = useState<string[]>([]);
   
   const examsQuery = useMemoFirebase(() =>
-      firestore && user
-        ? query(collection(firestore, `users/${user.uid}/simulatedExams`), where("isPreviousExam", "==", true))
+      firestore
+        ? query(collection(firestore, `previousExams`))
         : null,
-    [firestore, user]
+    [firestore]
   );
-  const { data: exams, isLoading } = useCollection<SimulatedExam>(examsQuery);
+  const { data: exams, isLoading } = useCollection<PreviousExam>(examsQuery);
 
   const handleCheckboxChange = (examId: string) => {
     setSelectedExams(prev => 
@@ -88,6 +88,7 @@ function DeletePreviousExamsDialog() {
     
     setIsDeleting(true);
     try {
+      // The user ID is passed for potential logging/auditing, but the action now targets a public collection.
       await deletePreviousExams(firestore, user.uid, selectedExams);
       toast({
         title: "Sucesso!",

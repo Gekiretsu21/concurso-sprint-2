@@ -10,11 +10,11 @@ import {
 } from '@/components/ui/card';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
-import { collection, query, where } from 'firebase/firestore';
+import { collection, query } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
-interface SimulatedExam {
+interface PreviousExam {
   id: string;
   name: string;
   questionCount: number;
@@ -22,19 +22,18 @@ interface SimulatedExam {
 
 export default function PreviousExamsPage() {
   const { firestore } = useFirebase();
-  const { user } = useUser();
 
-  // This query now looks for an `isPreviousExam` flag.
+  // This query now looks for exams in the top-level 'previousExams' collection.
   const examsQuery = useMemoFirebase(
     () =>
-      firestore && user
-        ? query(collection(firestore, `users/${user.uid}/simulatedExams`), where("isPreviousExam", "==", true))
+      firestore
+        ? query(collection(firestore, 'previousExams'))
         : null,
-    [firestore, user]
+    [firestore]
   );
 
   const { data: exams, isLoading } =
-    useCollection<SimulatedExam>(examsQuery);
+    useCollection<PreviousExam>(examsQuery);
 
   return (
     <div className="flex flex-col gap-8">

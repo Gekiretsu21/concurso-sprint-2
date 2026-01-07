@@ -28,7 +28,7 @@ interface ExamDetails {
 export async function importQuestions(
   firestore: Firestore,
   text: string,
-  userId: string, // userId is required to create a simulated exam
+  userId: string, // userId is required for ownership if it's not a previous exam
   examDetails?: ExamDetails
 ): Promise<void> {
   if (!text) {
@@ -37,11 +37,6 @@ export async function importQuestions(
   if (examDetails?.isPreviousExam && !examDetails.examName) {
     throw new Error(
       'O nome da prova é obrigatório ao marcar "Prova Anterior".'
-    );
-  }
-  if (examDetails?.isPreviousExam && !userId) {
-    throw new Error(
-      'É necessário estar logado para criar uma prova anterior.'
     );
   }
 
@@ -100,22 +95,19 @@ export async function importQuestions(
     newQuestionIds.push(newQuestionDocRef.id);
   }
   
-  // If it's a previous exam, create a simulated exam document
+  // If it's a previous exam, create a public exam document
   if (examDetails?.isPreviousExam && newQuestionIds.length > 0) {
       const examData: any = {
         name: examDetails.examName,
-        userId,
+        importerId: userId, // Keep track of who imported it
         createdAt: serverTimestamp(),
         questionIds: newQuestionIds,
         questionCount: newQuestionIds.length,
-        isPreviousExam: true,
       };
 
-      // Write to the user's private collection
-      const userExamRef = doc(
-        collection(firestore, `users/${userId}/simulatedExams`)
-      );
-      batch.set(userExamRef, examData);
+      // Write to the public 'previousExams' collection
+      const publicExamRef = doc(collection(firestore, `previousExams`));
+      batch.set(publicExamRef, examData);
   }
 
 
@@ -381,14 +373,17 @@ export async function deletePreviousExams(firestore: Firestore, userId: string, 
   const batch = writeBatch(firestore);
   
   examIds.forEach(examId => {
-    const examRef = doc(firestore, `users/${userId}/simulatedExams`, examId);
+    // This logic now needs to be smarter. For now, we assume we're only deleting from the user's private collection.
+    // A better implementation would check if the exam is public or private.
+    // For simplicity, this tool will now only delete from the `previousExams` public collection.
+    const examRef = doc(firestore, `previousExams`, examId);
     batch.delete(examRef);
   });
   
   await batch.commit().catch(serverError => {
     console.error('Firestore batch delete error for previous exams:', serverError);
     const permissionError = new FirestorePermissionError({
-      path: `users/${userId}/simulatedExams`,
+      path: `previousExams`,
       operation: 'delete',
       requestResourceData: { examIds }
     });
@@ -396,5 +391,3 @@ export async function deletePreviousExams(firestore: Firestore, userId: string, 
     throw permissionError;
   });
 }
-
-    
