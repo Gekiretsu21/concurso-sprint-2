@@ -166,6 +166,43 @@ function QuestionCard({
   );
 }
 
+function Timer() {
+    const [timeLeft, setTimeLeft] = useState(2 * 60 * 60); // 2 hours in seconds
+
+    useEffect(() => {
+        if (timeLeft <= 0) return;
+
+        const timerId = setInterval(() => {
+            setTimeLeft(timeLeft - 1);
+        }, 1000);
+
+        return () => clearInterval(timerId);
+    }, [timeLeft]);
+
+    const formatTime = (seconds: number) => {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = seconds % 60;
+        return [h, m, s].map(v => v.toString().padStart(2, '0')).join(':');
+    };
+
+    const timerColor = () => {
+        if (timeLeft <= 10 * 60) { // 10 minutes
+            return 'text-red-500';
+        }
+        if (timeLeft <= 30 * 60) { // 30 minutes
+            return 'text-yellow-500';
+        }
+        return 'text-green-500';
+    };
+
+    return (
+        <div className={cn("text-2xl font-bold font-mono tracking-wider", timerColor())}>
+            {formatTime(timeLeft)}
+        </div>
+    );
+}
+
 export default function SimulatedExamPage() {
   const params = useParams();
   const searchParams = useSearchParams();
@@ -243,21 +280,24 @@ export default function SimulatedExamPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <header className="flex items-center gap-4">
-        <Button asChild variant="outline" size="icon">
-          <Link href={backHref}>
-            <ChevronLeft />
-            <span className="sr-only">Voltar</span>
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {exam ? exam.name : 'Carregando Simulado...'}
-          </h1>
-          <p className="text-muted-foreground">
-            Resolva as questões do seu simulado.
-          </p>
+      <header className="flex items-start justify-between gap-4">
+        <div className="flex items-center gap-4">
+            <Button asChild variant="outline" size="icon">
+            <Link href={backHref}>
+                <ChevronLeft />
+                <span className="sr-only">Voltar</span>
+            </Link>
+            </Button>
+            <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+                {exam ? exam.name : 'Carregando Simulado...'}
+            </h1>
+            <p className="text-muted-foreground">
+                Resolva as questões do seu simulado.
+            </p>
+            </div>
         </div>
+        <Timer />
       </header>
 
       {isLoading ? (
