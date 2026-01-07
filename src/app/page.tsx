@@ -23,6 +23,8 @@ import { AuthButton } from '@/components/AuthButton';
 import {
   Sheet,
   SheetContent,
+  SheetHeader,
+  SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { useState } from 'react';
@@ -116,6 +118,9 @@ export default function LandingPage() {
                     </Button>
                   </SheetTrigger>
                   <SheetContent side="right">
+                    <SheetHeader>
+                      <SheetTitle className="sr-only">Navegação Principal</SheetTitle>
+                    </SheetHeader>
                     <nav className="flex flex-col gap-6 text-lg font-medium mt-8">
                       {navLinks.map(link => (
                         <Link
@@ -498,3 +503,5 @@ export default function LandingPage() {
     </div>
   );
 }
+
+    
