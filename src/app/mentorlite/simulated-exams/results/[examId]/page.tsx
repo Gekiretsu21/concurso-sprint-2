@@ -172,8 +172,6 @@ export default function ExamResultsPage() {
   
   const examId = params.examId as string;
   const examName = searchParams.get('examName');
-  const from = searchParams.get('from');
-  const isPreviousExamResult = from === 'previous-exams';
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [userAnswers, setUserAnswers] = useState<UserAnswers>({});
@@ -190,16 +188,26 @@ export default function ExamResultsPage() {
 
   const fetchAndSetQuestions = useCallback(async (questionIds: string[], storedAnswers: UserAnswers) => {
     if (!firestore) return;
-    
-    const fetchedQuestions: Question[] = [];
-    const q = query(collection(firestore, 'questoes'), where('__name__', 'in', questionIds));
-    const querySnapshot = await getDocs(q);
-    const questionsMap = new Map(querySnapshot.docs.map(doc => [doc.id, { id: doc.id, ...doc.data() as Omit<Question, 'id'> }]));
 
-    questionIds.forEach(id => {
-        const question = questionsMap.get(id);
-        if (question) fetchedQuestions.push(question);
-    });
+    const fetchedQuestions: Question[] = [];
+    const questionIdsBatches: string[][] = [];
+    
+    // Split question IDs into batches of 30
+    for (let i = 0; i < questionIds.length; i += 30) {
+      questionIdsBatches.push(questionIds.slice(i, i + 30));
+    }
+    
+    for (const batch of questionIdsBatches) {
+        if (batch.length === 0) continue;
+        const q = query(collection(firestore, 'questoes'), where('__name__', 'in', batch));
+        const querySnapshot = await getDocs(q);
+        const questionsMap = new Map(querySnapshot.docs.map(doc => [doc.id, { id: doc.id, ...doc.data() as Omit<Question, 'id'> }]));
+
+        batch.forEach(id => {
+            const question = questionsMap.get(id);
+            if (question) fetchedQuestions.push(question);
+        });
+    }
 
     setQuestions(fetchedQuestions);
     setUserAnswers(storedAnswers);
@@ -415,5 +423,3 @@ export default function ExamResultsPage() {
     </div>
   );
 }
-
-    

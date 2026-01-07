@@ -75,58 +75,28 @@ function QuestionCard({
   userAnswer?: string;
 }) {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(userAnswer || null);
-  const [isAnswered, setIsAnswered] = useState(false);
+  const isAnswered = false; // Always false in "exam mode"
 
   useEffect(() => {
-    // Sync local state if the parent's state changes
     setSelectedAnswer(userAnswer || null);
   }, [userAnswer]);
 
   const alternativesKeys: (keyof Question)[] = ['a', 'b', 'c', 'd', 'e'];
-  const selected = selectedAnswer;
-  const isCorrect = String(selected).toLowerCase() === String(question.correctAnswer).toLowerCase();
-  const userHasCorrectlyAnswered = isAnswered && isCorrect;
-  const userHasIncorrectlyAnswered = isAnswered && !isCorrect;
 
   const handleSelectAnswer = (answer: string) => {
-    if (isAnswered && !isPreviousExam) return;
+    if (!isPreviousExam) return; // Only allow selecting in previous exam mode
     
     const newAnswer = selectedAnswer === answer ? null : answer;
     setSelectedAnswer(newAnswer);
     onAnswerSelect(question.id, newAnswer || '');
   };
-
-  const handleConfirmAnswer = () => {
-    if (isPreviousExam) return; // This button is not for previous exams
-    setIsAnswered(true);
-  };
   
   const getAlternativeClassName = (alternativeKey: string) => {
+    const selectedNormalized = String(selectedAnswer).toLowerCase();
     const currentKeyNormalized = alternativeKey.toLowerCase();
-    const correctAnswerNormalized = String(question.correctAnswer).toLowerCase();
-    const selectedNormalized = String(selected).toLowerCase();
-
-    // For Previous Exams, we only highlight the selected one
-    if (isPreviousExam) {
-      if (selectedNormalized === currentKeyNormalized) return 'bg-secondary border-primary';
-      return 'hover:bg-secondary/80';
-    }
-
-    if (!isAnswered) {
-      if (selectedNormalized === currentKeyNormalized) return 'bg-secondary border-primary';
-      return 'hover:bg-secondary/80';
-    }
-
-    if (isCorrect) {
-      if (selectedNormalized === currentKeyNormalized) return 'bg-emerald-100 border-emerald-400 text-emerald-900 font-medium';
-      return 'opacity-60';
-    }
-
-    if (!isCorrect) {
-      if (currentKeyNormalized === correctAnswerNormalized) return 'bg-emerald-100 border-emerald-400 text-emerald-900 font-medium';
-      if (selectedNormalized === currentKeyNormalized) return 'bg-destructive/10 border-destructive/40 text-destructive';
-      return 'opacity-50';
-    }
+    
+    if (selectedNormalized === currentKeyNormalized) return 'bg-secondary border-primary';
+    return 'hover:bg-secondary/80';
   };
 
 
@@ -157,14 +127,13 @@ function QuestionCard({
                 onClick={() => handleSelectAnswer(alternativeKey)}
                 className={cn(
                   'flex items-start space-x-3 p-3 rounded-lg border transition-all duration-300',
-                  (isAnswered && !isPreviousExam) ? 'cursor-not-allowed' : 'cursor-pointer',
+                  isPreviousExam ? 'cursor-pointer' : 'cursor-default',
                   getAlternativeClassName(alternativeKey)
                 )}
               >
                 <div
                   className={cn(
-                    'flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full border text-sm font-bold',
-                     isAnswered && (isCorrect || !isCorrect) && alternativeKey.toLowerCase() === String(question.correctAnswer).toLowerCase() ? "bg-primary text-primary-foreground border-primary" : "bg-background border-muted-foreground"
+                    'flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full border text-sm font-bold bg-background border-muted-foreground'
                   )}
                 >
                   {String.fromCharCode(65 + optIndex)}
@@ -177,26 +146,7 @@ function QuestionCard({
       </CardContent>
        {!isPreviousExam && (
         <CardFooter className="flex-col items-stretch gap-4 sm:flex-row sm:justify-between sm:items-center">
-            <div className="text-sm min-h-[1.25rem]">
-            {userHasCorrectlyAnswered && (
-                <p className="text-emerald-600 font-medium">Parabéns, resposta correta.</p>
-            )}
-            {userHasIncorrectlyAnswered && (
-                <p className="text-destructive font-medium">
-                Você errou. Gabarito: Letra {String(question.correctAnswer).toUpperCase()}
-                </p>
-            )}
-            </div>
-            <div className="flex gap-2 self-end sm:self-auto">
-            <Button
-                variant="default"
-                onClick={handleConfirmAnswer}
-                disabled={!selectedAnswer || isAnswered}
-            >
-                {isAnswered ? 'Respondido' : 'Responder'}
-            </Button>
             <Button variant="outline">Comentários</Button>
-            </div>
         </CardFooter>
        )}
     </Card>
@@ -281,10 +231,13 @@ export default function SimulatedExamPage() {
       setIsLoadingQuestions(true);
       const fetchedQuestions: Question[] = [];
       const questionIdsBatches: string[][] = [];
+      
+      // Split question IDs into batches of 30
       for (let i = 0; i < exam.questionIds.length; i += 30) {
         questionIdsBatches.push(exam.questionIds.slice(i, i + 30));
       }
 
+      // Process each batch
       for (const batch of questionIdsBatches) {
          if (batch.length === 0) continue;
         const q = query(collection(firestore, 'questoes'), where('__name__', 'in', batch));
@@ -317,10 +270,6 @@ export default function SimulatedExamPage() {
         questions,
         userAnswers,
     };
-    // Use router state to pass complex data without polluting the URL
-    // A more robust solution might involve context or a state management library like Zustand/Redux.
-    // For this case, we'll rely on the user having the data in memory or re-fetching on the results page.
-    // Let's pass it via localStorage as a temporary solution for this context.
     localStorage.setItem('examResults', JSON.stringify(results));
     router.push(`/mentorlite/simulated-exams/results/${examId}?examName=${encodeURIComponent(exam?.name || '')}`);
   };
