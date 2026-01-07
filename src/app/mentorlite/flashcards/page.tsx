@@ -8,7 +8,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import './flashcard.css';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
-import { collection, query, where, orderBy, getDocs, Query, QueryConstraint, and } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, Query, QueryConstraint, and, documentId } from 'firebase/firestore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { handleFlashcardResponse } from '@/firebase/actions';
 import { cn } from '@/lib/utils';
@@ -23,12 +23,13 @@ interface Flashcard {
   targetRole: string;
 }
 
-interface FlashcardResponse {
+interface FlashcardProgress {
   id: string; // flashcardId
-  status: 'correct' | 'incorrect';
+  status: 'learned' | 'reviewing';
+  lastResult: 'correct' | 'incorrect';
 }
 
-function FlashcardViewer({ flashcards, onResponse }: { flashcards: Flashcard[], onResponse: (flashcard: Flashcard, status: 'correct' | 'incorrect') => void }) {
+function FlashcardViewer({ flashcards, onResponse }: { flashcards: Flashcard[], onResponse: (flashcard: Flashcard, result: 'correct' | 'incorrect') => void }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
 
@@ -53,11 +54,13 @@ function FlashcardViewer({ flashcards, onResponse }: { flashcards: Flashcard[], 
     }, 150); // wait for flip back animation
   };
 
-  const handleResponseClick = (status: 'correct' | 'incorrect') => {
+  const handleResponseClick = (result: 'correct' | 'incorrect') => {
     const card = flashcards[currentIndex];
-    onResponse(card, status); // Pass the full flashcard object
-    // Automatically move to the next card after responding
-    setTimeout(() => handleNav('next'), 200);
+    onResponse(card, result); // Pass the full flashcard object
+    // Automatically move to the next card after responding, but only if it's not the last card
+    if (currentIndex < flashcards.length -1) {
+        setTimeout(() => handleNav('next'), 200);
+    }
   }
 
   if (!flashcards || flashcards.length === 0) {
@@ -99,13 +102,13 @@ function FlashcardViewer({ flashcards, onResponse }: { flashcards: Flashcard[], 
       </div>
 
       <div className="flex items-center justify-between w-full max-w-2xl">
-        <Button variant="outline" size="icon" onClick={() => handleNav('prev')}>
+        <Button variant="outline" size="icon" onClick={() => handleNav('prev')} disabled={flashcards.length <= 1}>
           <ChevronLeft />
         </Button>
         <div className="text-sm text-muted-foreground">
           {currentIndex + 1} / {flashcards.length}
         </div>
-        <Button variant="outline" size="icon" onClick={() => handleNav('next')}>
+        <Button variant="outline" size="icon" onClick={() => handleNav('next')} disabled={flashcards.length <= 1}>
           <ChevronRight />
         </Button>
       </div>
@@ -147,9 +150,9 @@ export default function FlashcardsPage() {
     const targetRoles = new Set(filteredBySubject.map(fc => fc.targetRole));
 
     return {
-      subjects: Array.from(subjects),
-      topics: Array.from(topics),
-      targetRoles: Array.from(targetRoles),
+      subjects: Array.from(subjects).sort(),
+      topics: Array.from(topics).sort(),
+      targetRoles: Array.from(targetRoles).sort(),
     };
   }, [allFlashcards, filterSubject]);
 
@@ -170,8 +173,8 @@ export default function FlashcardsPage() {
 
     if (mode === 'incorrect') {
       const responsesQuery = query(
-        collection(firestore, `users/${user.uid}/flashcardResponses`),
-        where('status', '==', 'incorrect')
+        collection(firestore, `users/${user.uid}/flashcard_progress`),
+        where('lastResult', '==', 'incorrect')
       );
       const responsesSnapshot = await getDocs(responsesQuery);
       const incorrectFlashcardIds = responsesSnapshot.docs.map(doc => doc.data().flashcardId);
@@ -182,7 +185,10 @@ export default function FlashcardsPage() {
         return;
       }
       
-      flashcardsToStudy = allFlashcards?.filter(fc => incorrectFlashcardIds.includes(fc.id)) || [];
+      // Fetch the full flashcard objects for the incorrect ones
+      const incorrectCardsQuery = query(collection(firestore, 'flashcards'), where(documentId(), 'in', incorrectFlashcardIds));
+      const incorrectCardsSnapshot = await getDocs(incorrectCardsQuery);
+      flashcardsToStudy = incorrectCardsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Flashcard));
 
     } else { // mode is 'all'
         const constraints: QueryConstraint[] = [];
@@ -206,17 +212,17 @@ export default function FlashcardsPage() {
     setActiveFlashcards(flashcardsToStudy);
     setView('studying');
 
-  }, [firestore, user, allFlashcards, filterSubject, filterTopic, filterTargetRole]);
+  }, [firestore, user, filterSubject, filterTopic, filterTargetRole]);
 
 
-  const handleFlashcardResponseCallback = useCallback((flashcard: Flashcard, status: 'correct' | 'incorrect') => {
+  const handleFlashcardResponseCallback = useCallback((flashcard: Flashcard, result: 'correct' | 'incorrect') => {
     if (!firestore || !user) return;
-    handleFlashcardResponse(firestore, user.uid, flashcard, status);
+    handleFlashcardResponse(firestore, user.uid, flashcard, result);
     
-    if (studyMode === 'incorrect' && status === 'correct') {
-        setActiveFlashcards(prev => prev.filter(fc => fc.id !== flashcard.id));
-    }
-  }, [firestore, user, studyMode]);
+    // Optimistically remove the card from the current session's active list
+    setActiveFlashcards(prev => prev.filter(fc => fc.id !== flashcard.id));
+
+  }, [firestore, user]);
 
   if (isLoadingAll) {
     return (
@@ -257,8 +263,8 @@ export default function FlashcardsPage() {
         <div className="space-y-8">
             <Card>
                 <CardHeader>
-                <CardTitle>Iniciar Sessão de Estudo</CardTitle>
-                <CardDescription>Filtre por matéria, assunto e cargo para um estudo focado.</CardDescription>
+                <CardTitle>Estudo Focado</CardTitle>
+                <CardDescription>Filtre por matéria, assunto e cargo para aprender novos flashcards.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -299,7 +305,7 @@ export default function FlashcardsPage() {
 
             <Card>
                 <CardHeader>
-                <CardTitle>Revisar Flashcards Errados</CardTitle>
+                <CardTitle>Revisar Meus Erros</CardTitle>
                 <CardDescription>Estude apenas os flashcards que você marcou como "Errei" anteriormente.</CardDescription>
                 </CardHeader>
                 <CardContent>

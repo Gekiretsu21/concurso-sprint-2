@@ -225,34 +225,32 @@ export async function handleFlashcardResponse(
   firestore: Firestore,
   userId: string,
   flashcard: Flashcard, // Use the full, detailed Flashcard object
-  status: 'correct' | 'incorrect'
+  result: 'correct' | 'incorrect'
 ): Promise<void> {
   if (!userId) {
     throw new Error('Usuário não autenticado.');
   }
 
-  // Now we can use the detailed info from the flashcard object
-  const { id: flashcardId, subject, topic, targetRole } = flashcard;
+  const { id: flashcardId, subject } = flashcard;
   
   const userRef = doc(firestore, `users/${userId}`);
-  const responseRef = doc(firestore, `users/${userId}/flashcardResponses/${flashcardId}`);
+  const progressRef = doc(firestore, `users/${userId}/flashcard_progress/${flashcardId}`);
   
   const batch = writeBatch(firestore);
 
-  // 1. Log the individual response (includes new metadata)
-  const responseData = {
+  // 1. Log the individual progress
+  const progressData = {
     userId,
     flashcardId,
-    status,
-    subject, // Store for context
-    topic,
-    targetRole,
-    lastReviewed: serverTimestamp(),
+    status: 'learned', // First response means it's now 'learned'
+    lastResult: result,
+    reviewCount: increment(1),
+    lastReviewedAt: serverTimestamp(),
   };
-  batch.set(responseRef, responseData, { merge: true });
+  batch.set(progressRef, progressData, { merge: true });
 
   // 2. Atomically update the aggregated stats
-  const totalCorrectIncrement = status === 'correct' ? 1 : 0;
+  const totalCorrectIncrement = result === 'correct' ? 1 : 0;
   
   // Using dot notation for nested fields ensures atomicity
   const updatePayload: { [key: string]: any } = {
@@ -260,9 +258,6 @@ export async function handleFlashcardResponse(
     'stats.performance.flashcards.totalCorrect': increment(totalCorrectIncrement),
     [`stats.performance.flashcards.bySubject.${subject}.reviewed`]: increment(1),
     [`stats.performance.flashcards.bySubject.${subject}.correct`]: increment(totalCorrectIncrement),
-    // Future-proofing for topic-level stats
-    // [`stats.performance.flashcards.byTopic.${topic}.reviewed`]: increment(1),
-    // [`stats.performance.flashcards.byTopic.${topic}.correct`]: increment(totalCorrectIncrement),
   };
   batch.update(userRef, updatePayload);
 
@@ -270,7 +265,6 @@ export async function handleFlashcardResponse(
     const userDoc = await getDoc(userRef);
     if (!userDoc.exists()) {
       // If the user document doesn't exist, create it with initial stats.
-      // This is a crucial step for the first time a user interacts with a flashcard.
       const initialStats = {
           stats: {
               performance: {
@@ -285,10 +279,8 @@ export async function handleFlashcardResponse(
           }
       };
       await setDoc(userRef, initialStats, { merge: true });
-      // Retry the original batch write after creating the user doc
-      await handleFlashcardResponse(firestore, userId, flashcard, status);
+      await handleFlashcardResponse(firestore, userId, flashcard, result);
     } else {
-       // If the doc exists, the error is likely a permissions issue.
        const permissionError = new FirestorePermissionError({
         path: userRef.path,
         operation: 'update',
