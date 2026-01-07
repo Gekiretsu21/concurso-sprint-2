@@ -17,6 +17,7 @@ import {
   WriteBatch,
   documentId,
   and,
+  getDoc,
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -218,16 +219,13 @@ async function getRandomQuestions(
   count: number
 ): Promise<string[]> {
   const questionsCollection = collection(firestore, 'questoes');
-  const q = query(
-    questionsCollection,
-    and(
-      where('Materia', '==', subject),
-      where('status', '!=', 'hidden')
-    )
-  );
+  const q = query(questionsCollection, where('Materia', '==', subject));
 
   const snapshot = await getDocs(q);
-  const allQuestionIds = snapshot.docs.map(doc => doc.id);
+  
+  // Filter out hidden questions in the code
+  const activeQuestions = snapshot.docs.filter(doc => doc.data().status !== 'hidden');
+  const allQuestionIds = activeQuestions.map(doc => doc.id);
 
   const shuffled = allQuestionIds.sort(() => 0.5 - Math.random());
   return shuffled.slice(0, count);
