@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -118,6 +119,14 @@ export default function Home() {
         fetchStats();
 
     }, [user, isUserLoading]);
+    
+    const getFirstName = (displayName: string | null | undefined) => {
+        if (!displayName) return 'Concurseiro';
+        return displayName.split(' ')[0];
+    };
+
+    const welcomeName = isUserLoading ? 'Concurseiro' : getFirstName(user?.displayName);
+
 
   const statCards = [
     {
@@ -153,7 +162,7 @@ export default function Home() {
     <div className="flex flex-col gap-8">
       <section>
         <h1 className="text-3xl font-bold tracking-tight mb-4">
-          Seja bem-vindo, Concurseiro!
+          Seja bem-vindo, {welcomeName}!
         </h1>
         <p className="text-muted-foreground">O que você gostaria de fazer hoje?</p>
       </section>
