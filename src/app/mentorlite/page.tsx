@@ -131,7 +131,7 @@ export default function Home() {
         value: stats ? `${stats.overallAccuracy.toFixed(1)}% Acerto` : '0% Acerto',
         icon: BarChart2,
         href: '/mentorlite/analytics',
-        description: "Ver detalhes"
+        description: ""
     },
     {
         title: 'Strike de dias',
@@ -216,5 +216,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
