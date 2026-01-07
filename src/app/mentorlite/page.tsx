@@ -23,7 +23,6 @@ import {
 } from '@/components/ui/card';
 import { useUser } from '@/firebase';
 import { useEffect, useState } from 'react';
-import { getUserAnalytics } from '../actions/get-user-analytics';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const mainFeatures = [
@@ -82,43 +81,13 @@ function StatCardSkeleton() {
 
 export default function Home() {
     const { user, isUserLoading } = useUser();
-    const [stats, setStats] = useState<DashboardStats | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (isUserLoading) return;
-        if (!user) {
+        if (!isUserLoading) {
             setIsLoading(false);
-            // Set default stats for logged-out users
-             setStats({
-                totalStudyTime: '0h 0m',
-                overallAccuracy: 0,
-                dailyStreak: 0,
-                level: 1,
-            });
-            return;
         }
-
-        async function fetchStats() {
-            try {
-                const analytics = await getUserAnalytics(user!.uid);
-                setStats({
-                    totalStudyTime: analytics.totalStudyTime,
-                    overallAccuracy: analytics.overallAccuracy,
-                    dailyStreak: analytics.dailyStreak,
-                    level: analytics.level,
-                });
-            } catch (error) {
-                console.error("Failed to fetch dashboard stats:", error);
-                // Optionally set error state to show in UI
-            } finally {
-                setIsLoading(false);
-            }
-        }
-        
-        fetchStats();
-
-    }, [user, isUserLoading]);
+    }, [isUserLoading]);
     
     const getFirstName = (displayName: string | null | undefined) => {
         if (!displayName) return 'Concurseiro';
@@ -131,29 +100,28 @@ export default function Home() {
   const statCards = [
     {
         title: 'Tempo total de estudo',
-        value: stats?.totalStudyTime,
+        value: '0h 0m',
         icon: Timer,
-        description: "Atualizado em tempo real"
+        description: "Em desenvolvimento"
     },
     {
         title: 'Estatísticas Gerais',
-        value: stats ? `${stats.overallAccuracy.toFixed(1)}% Acerto` : '0% Acerto',
+        value: '0% Acerto',
         icon: BarChart2,
-        href: '/mentorlite/analytics',
-        description: ""
+        description: "Em desenvolvimento"
     },
     {
         title: 'Strike de dias',
-        value: `${stats?.dailyStreak || 0} dias`,
+        value: `0 dias`,
         icon: Flame,
         color: 'text-amber-500',
-        description: "Mantenha a chama acesa!"
+        description: "Em desenvolvimento"
     },
     {
         title: 'Nível',
-        value: `Nível ${stats?.level || 1}`,
+        value: `Nível 1`,
         icon: Gauge,
-        description: "Continue estudando para subir"
+        description: "Em desenvolvimento"
     },
   ];
 
@@ -186,13 +154,7 @@ export default function Home() {
                 <CardContent>
                 <div className="text-2xl font-bold">{stat.value}</div>
                 <p className="text-xs text-muted-foreground">
-                    {stat.href ? (
-                        <Link href={stat.href} className="hover:underline">
-                            {stat.description}
-                        </Link>
-                    ) : (
-                       stat.description
-                    )}
+                    {stat.description}
                 </p>
                 </CardContent>
             </Card>

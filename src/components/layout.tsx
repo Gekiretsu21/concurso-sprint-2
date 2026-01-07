@@ -54,7 +54,6 @@ const menuItems = [
   { href: '/mentorlite/community-simulados', icon: Shield, label: 'Simulados da Comunidade'},
   { href: '/mentorlite/previous-exams', icon: FileText, label: 'Provas Anteriores' },
   { href: '/mentorlite/flashcards', icon: Layers, label: 'Flashcards' },
-  { href: '/mentorlite/analytics', icon: BarChart2, label: 'Estatísticas' },
   { href: '/mentorlite/study-plan', icon: BrainCircuit, label: 'Plano de Estudo IA' },
 ];
 
