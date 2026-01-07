@@ -18,6 +18,8 @@ interface Flashcard {
   front: string;
   back: string;
   subject: string;
+  topic: string;
+  targetRole: string;
 }
 
 interface FlashcardResponse {
