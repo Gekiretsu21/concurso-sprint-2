@@ -1,3 +1,4 @@
+
 'use server';
 
 // Load environment variables from .env file for the server-side admin SDK
@@ -24,24 +25,18 @@ interface UserAnalytics {
 }
 
 function formatStudyTime(seconds: number): string {
-    if (isNaN(seconds) || seconds < 0) {
-        return '0h 0m';
-    }
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    return `${hours}h ${minutes}m`;
+  if (isNaN(seconds) || seconds < 0) {
+    return '0h 0m';
+  }
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  return `${hours}h ${minutes}m`;
 }
 
 function calculateLevel(questions: number, flashcards: number, exams: number): number {
-    // Each question answered is 1 point.
-    // Each flashcard reviewed is 2 points.
-    // Each simulated exam finished is 10 points.
-    const totalPoints = (questions * 1) + (flashcards * 2) + (exams * 10);
-    // Level up every 100 points.
-    const level = Math.floor(totalPoints / 100) + 1;
-    return level;
+  const totalPoints = questions * 1 + flashcards * 2 + exams * 10;
+  return Math.floor(totalPoints / 100) + 1;
 }
-
 
 export async function getUserAnalytics(userId: string): Promise<UserAnalytics> {
   if (!userId) {
@@ -53,14 +48,14 @@ export async function getUserAnalytics(userId: string): Promise<UserAnalytics> {
     const userDoc = await userDocRef.get();
 
     const emptyAnalytics: UserAnalytics = {
-        totalAnswered: 0,
-        overallAccuracy: 0,
-        simulatedExamsFinished: 0,
-        flashcardsTotal: 0,
-        totalStudyTime: '0h 0m',
-        dailyStreak: 0,
-        level: 1,
-        subjectPerformance: [],
+      totalAnswered: 0,
+      overallAccuracy: 0,
+      simulatedExamsFinished: 0,
+      flashcardsTotal: 0,
+      totalStudyTime: '0h 0m',
+      dailyStreak: 0,
+      level: 1,
+      subjectPerformance: [],
     };
 
     if (!userDoc.exists) {
@@ -71,10 +66,10 @@ export async function getUserAnalytics(userId: string): Promise<UserAnalytics> {
     if (!userData) {
       return emptyAnalytics;
     }
-    
+
     const stats = userData.stats || {};
     
-    // Safely access performance data
+    // Safely access nested performance data
     const performance = stats.performance || {};
     const questionsStats = performance.questions || {};
     const flashcardsStats = performance.flashcards || {};
@@ -85,9 +80,8 @@ export async function getUserAnalytics(userId: string): Promise<UserAnalytics> {
     const overallAccuracy = totalAnswered > 0 ? (totalCorrect / totalAnswered) * 100 : 0;
     
     const flashcardsTotal = flashcardsStats.totalReviewed || 0;
-    const simulatedExamsFinished = simulatedExamsStats.length || 0;
+    const simulatedExamsFinished = Array.isArray(simulatedExamsStats) ? simulatedExamsStats.length : 0;
 
-    // Calculate level based on safe values
     const level = calculateLevel(totalAnswered, flashcardsTotal, simulatedExamsFinished);
 
     const subjectPerformance: SubjectPerformance[] = [];
@@ -95,25 +89,18 @@ export async function getUserAnalytics(userId: string): Promise<UserAnalytics> {
     let worstSubject: { name: string; accuracy: number } | undefined;
 
     const bySubject = questionsStats.bySubject || {};
-    for (const [subject, data] of Object.entries(bySubject as any)) {
-      if (data && typeof data === 'object' && 'answered' in data && data.answered > 0) {
-        const accuracy = (data.correct / data.answered) * 100;
+    for (const [subject, data] of Object.entries(bySubject as Record<string, { answered?: number; correct?: number }>)) {
+      if (data && typeof data === 'object' && data.answered && data.answered > 0) {
+        const accuracy = ((data.correct || 0) / data.answered) * 100;
         subjectPerformance.push({ subject, accuracy });
-
-        if (!bestSubject || accuracy > bestSubject.accuracy) {
-          bestSubject = { name: subject, accuracy };
-        }
-        if (!worstSubject || accuracy < worstSubject.accuracy) {
-          worstSubject = { name: subject, accuracy };
-        }
       }
     }
     
-    if (subjectPerformance.length === 1 && bestSubject) {
-        worstSubject = bestSubject;
+    if (subjectPerformance.length > 0) {
+        subjectPerformance.sort((a, b) => b.accuracy - a.accuracy);
+        bestSubject = subjectPerformance[0];
+        worstSubject = subjectPerformance[subjectPerformance.length - 1];
     }
-    
-    subjectPerformance.sort((a, b) => b.accuracy - a.accuracy);
 
     return {
       totalAnswered,
@@ -134,4 +121,3 @@ export async function getUserAnalytics(userId: string): Promise<UserAnalytics> {
     throw new Error('Failed to fetch user analytics from the server.');
   }
 }
-    
