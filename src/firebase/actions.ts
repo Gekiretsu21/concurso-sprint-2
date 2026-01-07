@@ -530,6 +530,33 @@ export async function deleteCommunitySimulados(firestore: Firestore, simuladoIds
   });
 }
 
+
+export async function deleteFlashcards(firestore: Firestore, flashcardIds: string[]): Promise<void> {
+  if (!flashcardIds || flashcardIds.length === 0) {
+    throw new Error("Nenhum flashcard foi selecionado para exclusão.");
+  }
+  
+  const batch = writeBatch(firestore);
+  
+  for (const flashcardId of flashcardIds) {
+    const flashcardRef = doc(firestore, 'flashcards', flashcardId);
+    batch.delete(flashcardRef);
+  }
+  
+  await batch.commit().catch(serverError => {
+    console.error('Firestore batch delete error for flashcards:', serverError);
+    const representativePath = `flashcards/${flashcardIds[0]}`;
+    const permissionError = new FirestorePermissionError({
+      path: representativePath,
+      operation: 'delete',
+      requestResourceData: { flashcardIds }
+    });
+    errorEmitter.emit('permission-error', permissionError);
+    throw permissionError;
+  });
+}
+
+
 interface ExamResultPayload {
     examId: string;
     userId: string;
@@ -567,5 +594,3 @@ export async function savePreviousExamResult(firestore: Firestore, payload: Exam
         throw permissionError;
     });
 }
-
-    

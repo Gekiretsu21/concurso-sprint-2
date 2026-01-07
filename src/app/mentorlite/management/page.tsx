@@ -16,7 +16,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardPaste, FileText, Layers, Loader2, Users, Trash2, AlertCircle, ArchiveX } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
-import { importQuestions, importFlashcards, deleteDuplicateQuestions, deletePreviousExams, deleteCommunitySimulados } from '@/firebase/actions';
+import { importQuestions, importFlashcards, deleteDuplicateQuestions, deletePreviousExams, deleteCommunitySimulados, deleteFlashcards } from '@/firebase/actions';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
 import { SubjectCard } from '@/components/SubjectCard';
@@ -61,6 +61,12 @@ interface PreviousExam {
 interface CommunitySimulado {
     id: string;
     name: string;
+}
+
+interface Flashcard {
+  id: string;
+  front: string;
+  subject: string;
 }
 
 
@@ -235,6 +241,93 @@ function DeleteCommunitySimuladosDialog() {
           <Button variant="destructive" onClick={handleDelete} disabled={isDeleting || selectedSimulados.length === 0}>
             {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Excluir ({selectedSimulados.length})
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function DeleteFlashcardsDialog() {
+  const { firestore } = useFirebase();
+  const { toast } = useToast();
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedFlashcards, setSelectedFlashcards] = useState<string[]>([]);
+  
+  const flashcardsQuery = useMemoFirebase(() =>
+      firestore ? query(collection(firestore, `flashcards`)) : null,
+    [firestore]
+  );
+  const { data: flashcards, isLoading } = useCollection<Flashcard>(flashcardsQuery);
+
+  const handleCheckboxChange = (flashcardId: string) => {
+    setSelectedFlashcards(prev => 
+      prev.includes(flashcardId) ? prev.filter(id => id !== flashcardId) : [...prev, flashcardId]
+    );
+  };
+
+  const handleDelete = async () => {
+    if (!firestore || selectedFlashcards.length === 0) return;
+    
+    setIsDeleting(true);
+    try {
+      await deleteFlashcards(firestore, selectedFlashcards);
+      toast({
+        title: "Sucesso!",
+        description: `${selectedFlashcards.length} flashcard(s) foram excluídos.`
+      });
+      setSelectedFlashcards([]);
+      setIsOpen(false);
+    } catch (error) {
+       toast({
+        variant: 'destructive',
+        title: 'Erro ao Excluir',
+        description: 'Não foi possível excluir os flashcards selecionados.',
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button variant="destructive" size="sm" disabled={!firestore}>
+          <Layers />
+          Excluir Flashcards
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Excluir Flashcards</DialogTitle>
+          <DialogDescription>
+            Selecione os flashcards que você deseja excluir permanentemente.
+          </DialogDescription>
+        </DialogHeader>
+        <ScrollArea className="max-h-72 my-4">
+            <div className="space-y-4 pr-6">
+            {isLoading && <div className="flex items-center justify-center p-4"><Loader2 className="h-6 w-6 animate-spin"/></div>}
+            {!isLoading && flashcards && flashcards.length > 0 ? flashcards.map(flashcard => (
+                <div key={flashcard.id} className="flex items-center space-x-2 rounded-md border p-3">
+                    <Checkbox
+                        id={`flashcard-${flashcard.id}`}
+                        checked={selectedFlashcards.includes(flashcard.id)}
+                        onCheckedChange={() => handleCheckboxChange(flashcard.id)}
+                    />
+                    <Label htmlFor={`flashcard-${flashcard.id}`} className="flex-1 cursor-pointer truncate">
+                        {flashcard.front}
+                    </Label>
+                </div>
+            )) : !isLoading && <p className="text-sm text-muted-foreground text-center py-4">Nenhum flashcard encontrado.</p>}
+            </div>
+        </ScrollArea>
+        <DialogFooter>
+          <DialogClose asChild><Button variant="outline">Cancelar</Button></DialogClose>
+          <Button variant="destructive" onClick={handleDelete} disabled={isDeleting || selectedFlashcards.length === 0}>
+            {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Excluir ({selectedFlashcards.length})
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -573,7 +666,7 @@ export default function ManagementPage() {
                 <CardTitle>Ferramentas de Manutenção</CardTitle>
                 <CardDescription>Ações para organizar e limpar seus dados.</CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="flex flex-col justify-between p-4 rounded-lg border h-full">
                     <div>
                         <h4 className="font-semibold">Limpar Duplicatas</h4>
@@ -608,17 +701,24 @@ export default function ManagementPage() {
 
                 <div className="flex flex-col justify-between p-4 rounded-lg border h-full">
                     <div>
-                        <h4 className="font-semibold">Excluir Provas Anteriores</h4>
+                        <h4 className="font-semibold">Excluir Provas</h4>
                         <p className="text-sm text-muted-foreground mt-1">Gerencie as provas importadas.</p>
                     </div>
                     <DeletePreviousExamsDialog />
                 </div>
                  <div className="flex flex-col justify-between p-4 rounded-lg border h-full">
                     <div>
-                        <h4 className="font-semibold">Excluir Simulados da Comunidade</h4>
+                        <h4 className="font-semibold">Excluir Simulados</h4>
                         <p className="text-sm text-muted-foreground mt-1">Gerencie os simulados criados.</p>
                     </div>
                     <DeleteCommunitySimuladosDialog />
+                </div>
+                <div className="flex flex-col justify-between p-4 rounded-lg border h-full">
+                    <div>
+                        <h4 className="font-semibold">Excluir Flashcards</h4>
+                        <p className="text-sm text-muted-foreground mt-1">Gerencie os flashcards importados.</p>
+                    </div>
+                    <DeleteFlashcardsDialog />
                 </div>
             </CardContent>
         </Card>
