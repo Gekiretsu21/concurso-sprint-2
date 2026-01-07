@@ -17,7 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
-import { useParams, useSearchParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -75,7 +75,6 @@ function QuestionCard({
   userAnswer?: string;
 }) {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(userAnswer || null);
-  const isAnswered = false; // Always false in "exam mode"
 
   useEffect(() => {
     setSelectedAnswer(userAnswer || null);
@@ -84,8 +83,6 @@ function QuestionCard({
   const alternativesKeys: (keyof Question)[] = ['a', 'b', 'c', 'd', 'e'];
 
   const handleSelectAnswer = (answer: string) => {
-    if (!isPreviousExam) return; // Only allow selecting in previous exam mode
-    
     const newAnswer = selectedAnswer === answer ? null : answer;
     setSelectedAnswer(newAnswer);
     onAnswerSelect(question.id, newAnswer || '');
@@ -144,11 +141,6 @@ function QuestionCard({
           })}
         </div>
       </CardContent>
-       {!isPreviousExam && (
-        <CardFooter className="flex-col items-stretch gap-4 sm:flex-row sm:justify-between sm:items-center">
-            <Button variant="outline">Comentários</Button>
-        </CardFooter>
-       )}
     </Card>
   );
 }
@@ -190,13 +182,9 @@ function Timer() {
     );
 }
 
-export default function SimulatedExamPage() {
-  const params = useParams();
-  const searchParams = useSearchParams();
+
+function SimulatedExamContent({ examId, from }: { examId: string, from: string | null }) {
   const router = useRouter();
-  const examId = params.examId as string;
-  
-  const from = searchParams.get('from');
   const isPreviousExam = from === 'previous-exams';
   const isCommunitySimulado = from === 'community-simulados';
 
@@ -381,4 +369,10 @@ export default function SimulatedExamPage() {
       )}
     </div>
   );
+}
+
+export default function SimulatedExamPage({ params, searchParams }: { params: { examId: string }, searchParams: { [key: string]: string | string[] | undefined }}) {
+    const examId = params.examId;
+    const from = typeof searchParams.from === 'string' ? searchParams.from : null;
+    return <SimulatedExamContent examId={examId} from={from} />;
 }
