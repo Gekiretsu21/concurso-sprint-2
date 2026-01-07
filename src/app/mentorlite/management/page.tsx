@@ -235,33 +235,30 @@ export default function ManagementPage() {
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-start gap-4">
-                    <Label htmlFor="question-text" className="text-right pt-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="question-text">
                       Conteúdo
                     </Label>
                     <Textarea
                       id="question-text"
-                      className="col-span-3 min-h-[350px]"
+                      className="min-h-[350px]"
                       placeholder="Cole seu texto aqui..."
                       value={questionText}
                       onChange={e => setQuestionText(e.target.value)}
                     />
                   </div>
-                   <div className="col-span-4 grid grid-cols-4 items-center gap-4">
-                      <div/>
-                      <div className="col-span-3 space-y-4">
-                         <div className="flex items-center space-x-2">
-                            <Checkbox id="is-previous-exam" checked={isPreviousExam} onCheckedChange={(checked) => setIsPreviousExam(checked as boolean)} />
-                            <Label htmlFor="is-previous-exam">Prova Anterior</Label>
-                        </div>
-                        <div className={cn("transition-all duration-300 ease-in-out", isPreviousExam ? "max-h-40 opacity-100" : "max-h-0 opacity-0 overflow-hidden")}>
-                            {isPreviousExam && (
-                                <div className="space-y-2">
-                                <Label htmlFor="exam-name">Nome da Prova</Label>
-                                <Input id="exam-name" value={examName} onChange={(e) => setExamName(e.target.value)} placeholder="Ex: PMMG Soldado 2023"/>
-                                </div>
-                            )}
-                        </div>
+                   <div className="space-y-4">
+                      <div className="flex items-center space-x-2">
+                          <Checkbox id="is-previous-exam" checked={isPreviousExam} onCheckedChange={(checked) => setIsPreviousExam(checked as boolean)} />
+                          <Label htmlFor="is-previous-exam">Prova Anterior</Label>
+                      </div>
+                      <div className={cn("transition-all duration-300 ease-in-out", isPreviousExam ? "max-h-40 opacity-100" : "max-h-0 opacity-0 overflow-hidden")}>
+                          {isPreviousExam && (
+                              <div className="space-y-2">
+                              <Label htmlFor="exam-name">Nome da Prova</Label>
+                              <Input id="exam-name" value={examName} onChange={(e) => setExamName(e.target.value)} placeholder="Ex: PMMG Soldado 2023"/>
+                              </div>
+                          )}
                       </div>
                    </div>
                 </div>
@@ -340,13 +337,13 @@ export default function ManagementPage() {
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-start gap-4">
-                    <Label htmlFor="flashcard-text" className="text-right pt-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="flashcard-text">
                       Conteúdo
                     </Label>
                     <Textarea
                       id="flashcard-text"
-                      className="col-span-3 min-h-[350px]"
+                      className="min-h-[350px]"
                       placeholder="Ex: Direito Administrativo/Quais são os atributos do ato administrativo?/Presunção de legitimidade, autoexecutoriedade, tipicidade e imperatividade (P-A-T-I);"
                       value={flashcardText}
                       onChange={e => setFlashcardText(e.target.value)}
