@@ -45,7 +45,7 @@ export default function QuestionsPage() {
 
   const availableSubjects = useMemo(() => {
     if (!allQuestions) return [];
-    const subjects = new Set(allQuestions.map(q => q.Materia).filter(Boolean));
+    const subjects = new Set(allQuestions.map(q => q.Materia).filter(Boolean).filter(s => s.toLowerCase() !== 'matéria'));
     return Array.from(subjects).sort();
   }, [allQuestions]);
 
