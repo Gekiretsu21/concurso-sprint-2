@@ -110,7 +110,7 @@ export async function importQuestions(
   }
 
 
-  return batch.commit().catch(serverError => {
+  batch.commit().catch(serverError => {
     console.error('Firestore batch write error:', serverError);
     const permissionError = new FirestorePermissionError({
       path: questionsCollection.path,
@@ -219,12 +219,14 @@ async function getRandomQuestions(
   count: number
 ): Promise<string[]> {
   const questionsCollection = collection(firestore, 'questoes');
+  // Query only by subject to avoid composite index requirements.
   const q = query(questionsCollection, where('Materia', '==', subject));
 
   const snapshot = await getDocs(q);
   
-  // Filter out hidden questions in the code
+  // Manually filter out hidden questions from the results.
   const activeQuestions = snapshot.docs.filter(doc => doc.data().status !== 'hidden');
+  
   const allQuestionIds = activeQuestions.map(doc => doc.id);
 
   const shuffled = allQuestionIds.sort(() => 0.5 - Math.random());
