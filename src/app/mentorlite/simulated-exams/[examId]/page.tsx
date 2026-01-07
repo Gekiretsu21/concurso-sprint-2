@@ -89,14 +89,11 @@ function QuestionCard({
   const userHasIncorrectlyAnswered = isAnswered && !isCorrect;
 
   const handleSelectAnswer = (answer: string) => {
-    if (isAnswered) return;
+    if (isAnswered && !isPreviousExam) return;
     
     const newAnswer = selectedAnswer === answer ? null : answer;
     setSelectedAnswer(newAnswer);
-
-    if (isPreviousExam) {
-        onAnswerSelect(question.id, newAnswer || '');
-    }
+    onAnswerSelect(question.id, newAnswer || '');
   };
 
   const handleConfirmAnswer = () => {
@@ -160,7 +157,7 @@ function QuestionCard({
                 onClick={() => handleSelectAnswer(alternativeKey)}
                 className={cn(
                   'flex items-start space-x-3 p-3 rounded-lg border transition-all duration-300',
-                  isAnswered && !isPreviousExam ? 'cursor-not-allowed' : 'cursor-pointer',
+                  (isAnswered && !isPreviousExam) ? 'cursor-not-allowed' : 'cursor-pointer',
                   getAlternativeClassName(alternativeKey)
                 )}
               >
@@ -294,6 +291,7 @@ export default function SimulatedExamPage() {
         const questionSnapshots = await getDocs(q);
         const questionsMap = new Map(questionSnapshots.docs.map(doc => [doc.id, { id: doc.id, ...doc.data() as Omit<Question, 'id'>}]));
         
+        // Ensure the order of questions is the same as in the exam document
         batch.forEach(id => {
           const question = questionsMap.get(id);
           if (question) {
@@ -320,12 +318,11 @@ export default function SimulatedExamPage() {
         userAnswers,
     };
     // Use router state to pass complex data without polluting the URL
-    router.push(`/mentorlite/simulated-exams/results/${examId}?examName=${encodeURIComponent(exam?.name || '')}`);
-    // This is a common pattern, but Next.js doesn't have a built-in state passing like React Router.
     // A more robust solution might involve context or a state management library like Zustand/Redux.
     // For this case, we'll rely on the user having the data in memory or re-fetching on the results page.
     // Let's pass it via localStorage as a temporary solution for this context.
     localStorage.setItem('examResults', JSON.stringify(results));
+    router.push(`/mentorlite/simulated-exams/results/${examId}?examName=${encodeURIComponent(exam?.name || '')}`);
   };
 
 

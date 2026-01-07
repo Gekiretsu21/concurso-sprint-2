@@ -154,25 +154,24 @@ export default function ExamResultsPage() {
           <CardTitle>Seu Desempenho</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div className="space-y-1">
-                    <p className="text-4xl font-bold">{scorePercentage.toFixed(1)}%</p>
-                    <p className="text-muted-foreground">de acerto</p>
-                </div>
-                <div className="text-center">
+             <div className="flex items-center gap-4">
+                <span className="text-4xl font-bold text-primary">{scorePercentage.toFixed(1)}%</span>
+                <Progress value={scorePercentage} className="w-full h-3" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 text-center">
+                <div>
                     <p className="text-2xl font-semibold">{correctAnswersCount}</p>
                     <p className="text-sm text-muted-foreground">Respostas Corretas</p>
                 </div>
-                 <div className="text-center">
+                 <div>
                     <p className="text-2xl font-semibold">{totalQuestions - correctAnswersCount}</p>
                     <p className="text-sm text-muted-foreground">Respostas Erradas</p>
                 </div>
-                 <div className="text-center">
+                 <div>
                     <p className="text-2xl font-semibold">{totalQuestions}</p>
                     <p className="text-sm text-muted-foreground">Total de Questões</p>
                 </div>
             </div>
-            <Progress value={scorePercentage} className="w-full h-3 mt-4" />
         </CardContent>
       </Card>
 
