@@ -68,7 +68,7 @@ export function AuthButton() {
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            className="relative h-10 flex items-center justify-end gap-2 hover:bg-primary/90"
+            className="relative h-10 flex items-center justify-end gap-2 hover:bg-accent/80"
           >
             <span className="hidden md:block font-medium">
               Bem-vindo, {firstName}
