@@ -316,6 +316,29 @@ export default function SimulatedExamPage() {
                 userAnswer={userAnswers[q.id]}
             />
           ))}
+           <div className="flex justify-center pt-8">
+                <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button size="lg" disabled={!allAnswered}>
+                    Encerrar Teste
+                    </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                    <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Esta ação finalizará seu simulado e o levará para a página de resultados. Você não poderá alterar suas respostas.
+                    </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleFinishExam}>
+                        Confirmar e Ver Resultados
+                    </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+                </AlertDialog>
+            </div>
         </div>
       ) : (
         <Card className="flex flex-col items-center justify-center h-64">
@@ -334,3 +357,5 @@ export default function SimulatedExamPage() {
     </div>
   );
 }
+
+    

@@ -735,3 +735,5 @@ export async function savePreviousExamResult(firestore: Firestore, payload: Exam
         throw permissionError;
     });
 }
+
+    
