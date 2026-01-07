@@ -14,9 +14,9 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardPaste, FileText, Layers, Loader2, Users, Trash2, AlertCircle } from 'lucide-react';
+import { ClipboardPaste, FileText, Layers, Loader2, Users, Trash2, AlertCircle, ArchiveX } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
-import { importQuestions, importFlashcards, deleteDuplicateQuestions } from '@/firebase/actions';
+import { importQuestions, importFlashcards, deleteDuplicateQuestions, deletePreviousExams } from '@/firebase/actions';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
 import { SubjectCard } from '@/components/SubjectCard';
@@ -29,12 +29,13 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import Link from 'next/link';
-import { collection, DocumentData } from 'firebase/firestore';
+import { collection, DocumentData, query, where } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Helper to generate a URL-friendly slug from a subject name
 const createSubjectSlug = (subject: string) => {
@@ -52,6 +53,102 @@ interface SubjectWithCount {
     name: string;
     count: number;
 }
+
+interface SimulatedExam {
+  id: string;
+  name: string;
+}
+
+function DeletePreviousExamsDialog() {
+  const { firestore } = useFirebase();
+  const { user } = useUser();
+  const { toast } = useToast();
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedExams, setSelectedExams] = useState<string[]>([]);
+  
+  const examsQuery = useMemoFirebase(() =>
+      firestore && user
+        ? query(collection(firestore, `users/${user.uid}/simulatedExams`), where("isPreviousExam", "==", true))
+        : null,
+    [firestore, user]
+  );
+  const { data: exams, isLoading } = useCollection<SimulatedExam>(examsQuery);
+
+  const handleCheckboxChange = (examId: string) => {
+    setSelectedExams(prev => 
+      prev.includes(examId) ? prev.filter(id => id !== examId) : [...prev, examId]
+    );
+  };
+
+  const handleDelete = async () => {
+    if (!firestore || !user || selectedExams.length === 0) return;
+    
+    setIsDeleting(true);
+    try {
+      await deletePreviousExams(firestore, user.uid, selectedExams);
+      toast({
+        title: "Sucesso!",
+        description: `${selectedExams.length} prova(s) anterior(es) foram excluídas.`
+      });
+      setSelectedExams([]);
+      setIsOpen(false);
+    } catch (error) {
+       toast({
+        variant: 'destructive',
+        title: 'Erro ao Excluir',
+        description: 'Não foi possível excluir as provas selecionadas.',
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button variant="destructive" disabled={!user}>
+          <ArchiveX />
+          Excluir Provas
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Excluir Provas Anteriores</DialogTitle>
+          <DialogDescription>
+            Selecione as provas que você deseja excluir permanentemente. Esta ação não pode ser desfeita.
+          </DialogDescription>
+        </DialogHeader>
+        <ScrollArea className="max-h-72 my-4">
+            <div className="space-y-4 pr-6">
+            {isLoading && <div className="flex items-center justify-center p-4"><Loader2 className="h-6 w-6 animate-spin"/></div>}
+            {!isLoading && exams && exams.length > 0 ? exams.map(exam => (
+                <div key={exam.id} className="flex items-center space-x-2 rounded-md border p-3">
+                    <Checkbox
+                        id={`exam-${exam.id}`}
+                        checked={selectedExams.includes(exam.id)}
+                        onCheckedChange={() => handleCheckboxChange(exam.id)}
+                    />
+                    <Label htmlFor={`exam-${exam.id}`} className="flex-1 cursor-pointer">
+                        {exam.name}
+                    </Label>
+                </div>
+            )) : !isLoading && <p className="text-sm text-muted-foreground text-center py-4">Nenhuma prova anterior encontrada.</p>}
+            </div>
+        </ScrollArea>
+        <DialogFooter>
+          <DialogClose asChild><Button variant="outline">Cancelar</Button></DialogClose>
+          <Button variant="destructive" onClick={handleDelete} disabled={isDeleting || selectedExams.length === 0}>
+            {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Excluir ({selectedExams.length})
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 export default function ManagementPage() {
   const { toast } = useToast();
@@ -409,6 +506,17 @@ export default function ManagementPage() {
                 </p>
             </CardContent>
         </Card>
+         <Card className="bg-destructive/10 border-destructive/30">
+            <CardHeader className="flex-row items-center justify-between">
+                <CardTitle>Excluir Provas Anteriores</CardTitle>
+                <DeletePreviousExamsDialog />
+            </CardHeader>
+            <CardContent>
+                 <p className="text-sm text-destructive/80">
+                   Selecione e remova provas anteriores importadas que não são mais necessárias.
+                </p>
+            </CardContent>
+        </Card>
       </div>
 
       <div className="space-y-6">
@@ -460,3 +568,5 @@ export default function ManagementPage() {
     </div>
   );
 }
+
+    

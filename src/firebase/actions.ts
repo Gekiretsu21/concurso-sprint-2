@@ -15,6 +15,7 @@ import {
   setDoc,
   deleteDoc,
   WriteBatch,
+  documentId,
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -278,25 +279,15 @@ export async function createSimulatedExam(
     createdAt: serverTimestamp(),
     questionIds: allQuestionIds,
     questionCount: totalQuestions,
+    isPreviousExam: false,
   };
 
-  const batch = writeBatch(firestore);
-
-  // 1. Write to the user's private collection
-  const userExamRef = doc(
-    collection(firestore, `users/${userId}/simulatedExams`)
-  );
-  batch.set(userExamRef, examData);
-
-  // 2. Write to the public community collection
-  const communityExamRef = doc(collection(firestore, 'communitySimulados'));
-  batch.set(communityExamRef, { ...examData, originalExamId: userExamRef.id });
-
-  // Use non-blocking write with error handling for the batch
-  batch.commit().catch(serverError => {
-    console.error('Firestore batch write error for exam:', serverError);
+  const examRef = doc(collection(firestore, `users/${userId}/simulatedExams`));
+  
+  setDoc(examRef, examData).catch(serverError => {
+    console.error('Firestore setDoc error for exam:', serverError);
     const permissionError = new FirestorePermissionError({
-      path: `users/${userId}/simulatedExams and communitySimulados`,
+      path: examRef.path,
       operation: 'create',
       requestResourceData: examData,
     });
@@ -381,3 +372,29 @@ export async function deleteQuestionsBySubject(firestore: Firestore, subject: st
 
     return snapshot.size;
 }
+
+export async function deletePreviousExams(firestore: Firestore, userId: string, examIds: string[]): Promise<void> {
+  if (!examIds || examIds.length === 0) {
+    throw new Error("Nenhuma prova foi selecionada para exclusão.");
+  }
+  
+  const batch = writeBatch(firestore);
+  
+  examIds.forEach(examId => {
+    const examRef = doc(firestore, `users/${userId}/simulatedExams`, examId);
+    batch.delete(examRef);
+  });
+  
+  await batch.commit().catch(serverError => {
+    console.error('Firestore batch delete error for previous exams:', serverError);
+    const permissionError = new FirestorePermissionError({
+      path: `users/${userId}/simulatedExams`,
+      operation: 'delete',
+      requestResourceData: { examIds }
+    });
+    errorEmitter.emit('permission-error', permissionError);
+    throw permissionError;
+  });
+}
+
+    
