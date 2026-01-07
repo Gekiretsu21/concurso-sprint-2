@@ -101,12 +101,13 @@ export async function importQuestions(
   
   // If it's a previous exam, create a simulated exam document
   if (examDetails?.isPreviousExam && newQuestionIds.length > 0) {
-      const examData = {
+      const examData: any = {
         name: examDetails.examName,
         userId,
         createdAt: serverTimestamp(),
         questionIds: newQuestionIds,
         questionCount: newQuestionIds.length,
+        isPreviousExam: true, // <-- This was missing
       };
 
       // Write to the user's private collection
