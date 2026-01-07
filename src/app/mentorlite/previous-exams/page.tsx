@@ -119,12 +119,12 @@ export default function PreviousExamsPage() {
                     <CardFooter>
                        {isCompleted ? (
                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
-                               <Button asChild>
+                               <Button asChild className="h-auto whitespace-normal">
                                   <Link href={`/mentorlite/simulated-exams/results/${exam.id}?examName=${encodeURIComponent(exam.name)}`}>
                                     Conferir Desempenho
                                   </Link>
                                </Button>
-                               <Button variant="outline" onClick={(e) => handleRedo(e, exam.id)}>
+                               <Button variant="outline" onClick={(e) => handleRedo(e, exam.id)} className="h-auto whitespace-normal">
                                     <RefreshCw className="mr-2 h-4 w-4"/>
                                     Fazer Novamente
                                </Button>
