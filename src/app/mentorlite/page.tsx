@@ -137,37 +137,40 @@ export default function Home() {
 
   return (
     <div className="flex flex-col gap-8">
-      <section>
-        <h1 className="text-3xl font-bold tracking-tight mb-4">
-          Seja bem-vindo, {welcomeName}!
-        </h1>
-        <p className="text-muted-foreground">O que você gostaria de fazer hoje?</p>
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight">
+            Seja bem-vindo, {welcomeName}!
+          </h1>
+          <p className="text-muted-foreground">O que você gostaria de fazer hoje?</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {isLoading ? (
+                <>
+                    <StatCardSkeleton />
+                    <StatCardSkeleton />
+                </>
+            ) : (
+                statCards.map(stat => (
+                <Card key={stat.title}>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+                    <stat.icon
+                        className={`h-4 w-4 text-muted-foreground ${stat.color || ''}`}
+                    />
+                    </CardHeader>
+                    <CardContent>
+                    <div className="text-2xl font-bold">{stat.value}</div>
+                    <p className="text-xs text-muted-foreground">
+                        {stat.description}
+                    </p>
+                    </CardContent>
+                </Card>
+                ))
+            )}
+        </div>
       </section>
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {isLoading ? (
-            <>
-                <StatCardSkeleton />
-                <StatCardSkeleton />
-            </>
-        ) : (
-            statCards.map(stat => (
-            <Card key={stat.title}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                <stat.icon
-                    className={`h-4 w-4 text-muted-foreground ${stat.color || ''}`}
-                />
-                </CardHeader>
-                <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <p className="text-xs text-muted-foreground">
-                    {stat.description}
-                </p>
-                </CardContent>
-            </Card>
-            ))
-        )}
-      </section>
+      
       <section>
         <h2 className="text-2xl font-bold tracking-tight mb-4">
           Principais Ferramentas
