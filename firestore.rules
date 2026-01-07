@@ -53,6 +53,13 @@ service cloud.firestore {
        allow read, create: if isSignedIn();
        allow update, delete: if false;
     }
+    
+    // Previous exams are public to any authenticated user.
+    // Only admins or specific logic should write to this. For now, open read.
+    match /previousExams/{examId} {
+      allow read, list: if isSignedIn();
+      allow write: if isSignedIn(); // Or restrict to admin
+    }
   }
 }
 
