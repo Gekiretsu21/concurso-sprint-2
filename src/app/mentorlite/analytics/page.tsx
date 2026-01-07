@@ -9,6 +9,7 @@ import { useUser } from '@/firebase';
 import { getUserAnalytics } from '@/app/actions/get-user-analytics';
 import { Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import Link from 'next/link';
 
 interface SubjectPerformance {
   subject: string;
@@ -129,6 +130,9 @@ export default function AnalyticsPage() {
         <Card className="flex flex-col items-center justify-center h-64 border-dashed">
           <CardContent className="text-center p-6">
             <p className="text-destructive">{error}</p>
+             <Link href="/mentorlite" className="mt-4 inline-flex items-center text-sm font-medium text-primary hover:underline">
+                Voltar para o Dashboard
+            </Link>
           </CardContent>
         </Card>
     );
@@ -146,6 +150,9 @@ export default function AnalyticsPage() {
                 <p className="text-muted-foreground">
                 Você ainda não respondeu nenhuma questão. Comece a praticar para ver suas estatísticas!
                 </p>
+                 <Link href="/mentorlite/questions" className="mt-4 inline-flex items-center text-sm font-medium text-primary hover:underline">
+                    Ir para o Banco de Questões
+                </Link>
             </CardContent>
             </Card>
         </div>
@@ -211,7 +218,7 @@ export default function AnalyticsPage() {
                         <span className="font-bold">{analytics.simulatedExamsFinished}</span>
                     </div>
                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Flashcards Criados</span>
+                        <span className="text-muted-foreground">Flashcards Revisados</span>
                         <span className="font-bold">{analytics.flashcardsTotal}</span>
                     </div>
                 </CardContent>
