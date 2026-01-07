@@ -20,6 +20,7 @@ import {
   getDoc,
   increment,
   arrayUnion,
+  FieldValue,
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -27,6 +28,68 @@ import { FirestorePermissionError } from '@/firebase/errors';
 interface ExamDetails {
   isPreviousExam: boolean;
   examName: string;
+}
+
+export async function registerQuestionAnswer(
+  firestore: Firestore,
+  userId: string,
+  subject: string,
+  isCorrect: boolean
+) {
+  const userRef = doc(firestore, 'users', userId);
+
+  // Atomically update the aggregated stats
+  const correctIncrement = isCorrect ? 1 : 0;
+
+  const updatePayload = {
+    'stats.performance.questions.totalAnswered': increment(1),
+    'stats.performance.questions.totalCorrect': increment(correctIncrement),
+    [`stats.performance.questions.bySubject.${subject}.answered`]: increment(1),
+    [`stats.performance.questions.bySubject.${subject}.correct`]: increment(correctIncrement),
+  };
+
+  try {
+    await updateDoc(userRef, updatePayload);
+  } catch (error: any) {
+     if (error.code === 'not-found') {
+      // The user document or the nested stats object doesn't exist yet.
+      // We should create it.
+       const initialStats = {
+        stats: {
+          performance: {
+            questions: {
+              totalAnswered: 1,
+              totalCorrect: correctIncrement,
+              bySubject: {
+                [subject]: {
+                  answered: 1,
+                  correct: correctIncrement,
+                },
+              },
+            },
+          },
+        },
+      };
+      // Use setDoc with merge to safely create the document or path.
+      setDoc(userRef, initialStats, { merge: true }).catch(serverError => {
+         const permissionError = new FirestorePermissionError({
+            path: userRef.path,
+            operation: 'write',
+            requestResourceData: initialStats
+         });
+         errorEmitter.emit('permission-error', permissionError);
+         throw permissionError;
+      });
+    } else {
+      const permissionError = new FirestorePermissionError({
+        path: userRef.path,
+        operation: 'update',
+        requestResourceData: updatePayload,
+      });
+      errorEmitter.emit('permission-error', permissionError);
+      throw permissionError;
+    }
+  }
 }
 
 export async function importQuestions(
