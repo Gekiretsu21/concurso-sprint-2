@@ -63,7 +63,7 @@ export default function PreviousExamsPage() {
                     {exam.questionCount} questões
                   </p>
                    <Button asChild className="mt-4 w-full">
-                      <Link href={`/mentorlite/simulated-exams/${exam.id}`}>
+                      <Link href={`/mentorlite/simulated-exams/${exam.id}?from=previous-exams`}>
                         Iniciar Prova
                       </Link>
                   </Button>

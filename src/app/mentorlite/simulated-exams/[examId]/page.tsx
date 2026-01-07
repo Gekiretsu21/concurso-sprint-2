@@ -168,7 +168,6 @@ export default function SimulatedExamPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const examId = params.examId as string;
-  // If a userId is passed in the query, it's a community exam. Otherwise, it's the user's own.
   const examOwnerId = searchParams.get('userId');
 
 
@@ -179,8 +178,6 @@ export default function SimulatedExamPage() {
   const examDocRef = useMemoFirebase(
     () => {
       if (!firestore || !user || !examId) return null;
-      // If examOwnerId is present, we are viewing a community exam, so we use that ID.
-      // Otherwise, we default to the currently logged-in user's ID for "My Simulados".
       const ownerId = examOwnerId || user.uid;
       return doc(
             firestore,
@@ -217,7 +214,7 @@ export default function SimulatedExamPage() {
   }, [exam, firestore]);
   
   const isLoading = isLoadingExam || isLoadingQuestions;
-  const backHref = examOwnerId ? '/mentorlite/community-simulados' : '/mentorlite/simulated-exams';
+  const backHref = searchParams.get('from') === 'previous-exams' ? '/mentorlite/previous-exams' : '/mentorlite/simulated-exams';
 
   return (
     <div className="flex flex-col gap-8">

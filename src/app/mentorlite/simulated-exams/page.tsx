@@ -42,14 +42,13 @@ export default function SimulatedExamsPage() {
   return (
     <div className="flex flex-col gap-8">
       <header>
-        <h1 className="text-3xl font-bold tracking-tight">Meus Simulados</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Simulados</h1>
         <p className="text-muted-foreground">
           Crie e acesse seus simulados para testar seus conhecimentos.
         </p>
       </header>
 
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold tracking-tight">Meus Simulados</h2>
         {isLoading && (
           <div className="flex items-center justify-center h-40 rounded-lg border border-dashed">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -78,7 +77,7 @@ export default function SimulatedExamsPage() {
         ) : (
           !isLoading && (
             <Card className="flex flex-col items-center justify-center h-40 border-dashed">
-              <CardContent className="text-center">
+              <CardContent className="text-center p-6">
                 <p className="text-muted-foreground">
                   Nenhum simulado criado ainda.
                 </p>
