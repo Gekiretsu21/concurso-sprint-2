@@ -178,6 +178,7 @@ export default function AnalyticsPage() {
                                 tickFormatter={(value) => value.slice(0, 10)}
                             />
                             <YAxis
+                                domain={[0, 100]}
                                 tickFormatter={(value) => `${value}%`}
                             />
                             <ChartTooltip
