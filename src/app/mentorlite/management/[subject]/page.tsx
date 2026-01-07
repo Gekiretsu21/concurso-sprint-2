@@ -22,12 +22,17 @@ function SubjectPageContent() {
   if (subjectParam === 'legislacao-juridica') {
     subjectName = 'Legislação Jurídica';
   }
+  if (subjectParam === 'legislacao-institucional') {
+    subjectName = 'Legislação Institucional';
+  }
   
   // Special handling for variations
   const querySubjects = subjectParam === 'lingua-portuguesa' 
     ? ['Língua Portuguesa', 'Lingua Portuguesa']
     : subjectParam === 'legislacao-juridica'
     ? ['Legislação Jurídica', 'Legislacao Juridica']
+    : subjectParam === 'legislacao-institucional'
+    ? ['Legislação Institucional', 'Legislacao Institucional']
     : [subjectName];
 
   return (

@@ -62,10 +62,13 @@ export default function QuestionsPage() {
         .filter(q => q.status !== 'hidden' && q.Materia && q.Materia.trim().toLowerCase() !== 'materia')
         .forEach(q => {
             let subjectName = q.Materia.trim();
-            if (subjectName.toLowerCase() === 'lingua portuguesa') {
+            const subjectLower = subjectName.toLowerCase();
+            if (subjectLower === 'lingua portuguesa') {
                 subjectSet.add('Língua Portuguesa');
-            } else if (subjectName.toLowerCase() === 'legislacao juridica') {
+            } else if (subjectLower === 'legislacao juridica') {
                 subjectSet.add('Legislação Jurídica');
+            } else if (subjectLower === 'legislacao institucional') {
+                subjectSet.add('Legislação Institucional');
             } else {
                 subjectSet.add(subjectName);
             }
@@ -78,16 +81,24 @@ export default function QuestionsPage() {
     
     const isLinguaPortuguesa = filterSubject === 'Língua Portuguesa';
     const isLegislacaoJuridica = filterSubject === 'Legislação Jurídica';
+    const isLegislacaoInstitucional = filterSubject === 'Legislação Institucional';
     
     const topics = new Set(
       allQuestions
         .filter(q => {
             const subjectLower = q.Materia.toLowerCase();
-            const subjectMatch = isLinguaPortuguesa
-              ? subjectLower === 'língua portuguesa' || subjectLower === 'lingua portuguesa'
-              : isLegislacaoJuridica
-              ? subjectLower === 'legislação jurídica' || subjectLower === 'legislacao juridica'
-              : q.Materia === filterSubject;
+            let subjectMatch = false;
+
+            if (isLinguaPortuguesa) {
+              subjectMatch = subjectLower === 'língua portuguesa' || subjectLower === 'lingua portuguesa';
+            } else if (isLegislacaoJuridica) {
+              subjectMatch = subjectLower === 'legislação jurídica' || subjectLower === 'legislacao juridica';
+            } else if (isLegislacaoInstitucional) {
+              subjectMatch = subjectLower === 'legislação institucional' || subjectLower === 'legislacao institucional';
+            } else {
+              subjectMatch = q.Materia === filterSubject;
+            }
+
             return subjectMatch && q.Assunto;
         })
         .map(q => q.Assunto)
@@ -106,6 +117,8 @@ export default function QuestionsPage() {
         subjectQuery = ['Língua Portuguesa', 'Lingua Portuguesa'];
     } else if (filterSubject === 'Legislação Jurídica') {
         subjectQuery = ['Legislação Jurídica', 'Legislacao Juridica'];
+    } else if (filterSubject === 'Legislação Institucional') {
+        subjectQuery = ['Legislação Institucional', 'Legislacao Institucional'];
     }
     setActiveFilters({ subject: subjectQuery, topics: selectedTopics, status: filterStatus });
   };

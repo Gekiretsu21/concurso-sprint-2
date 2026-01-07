@@ -366,7 +366,7 @@ export default function ManagementPage() {
         if (subject && subject.trim() && !isHidden) {
             let subjectName = subject.trim();
             
-            if (subjectName !== 'materia') {
+            if (subjectName.toLowerCase() !== 'materia') {
                 if (!acc[subjectName]) {
                     acc[subjectName] = { name: subjectName, count: 0 };
                 }
@@ -381,8 +381,9 @@ export default function ManagementPage() {
     const portuguesSemAcento = subjectCounts['Lingua Portuguesa'];
     if (portuguesComAcento || portuguesSemAcento) {
         const total = (portuguesComAcento?.count || 0) + (portuguesSemAcento?.count || 0);
+        if (portuguesComAcento) delete subjectCounts['Lingua Portuguesa'];
+        if (portuguesSemAcento) delete subjectCounts['Língua Portuguesa'];
         subjectCounts['Língua Portuguesa'] = { name: 'Língua Portuguesa', count: total };
-        delete subjectCounts['Lingua Portuguesa'];
     }
 
     // Unify "Legislação Jurídica" variations
@@ -390,8 +391,19 @@ export default function ManagementPage() {
     const legislacaoSemAcento = subjectCounts['Legislacao Juridica'];
      if (legislacaoComAcento || legislacaoSemAcento) {
         const total = (legislacaoComAcento?.count || 0) + (legislacaoSemAcento?.count || 0);
+        if (legislacaoComAcento) delete subjectCounts['Legislacao Juridica'];
+        if (legislacaoSemAcento) delete subjectCounts['Legislação Jurídica'];
         subjectCounts['Legislação Jurídica'] = { name: 'Legislação Jurídica', count: total };
-        delete subjectCounts['Legislacao Juridica'];
+    }
+    
+    // Unify "Legislação Institucional" variations
+    const institucionalComAcento = subjectCounts['Legislação Institucional'];
+    const institucionalSemAcento = subjectCounts['Legislacao Institucional'];
+    if (institucionalComAcento || institucionalSemAcento) {
+        const total = (institucionalComAcento?.count || 0) + (institucionalSemAcento?.count || 0);
+        if (institucionalComAcento) delete subjectCounts['Legislacao Institucional'];
+        if (institucionalSemAcento) delete subjectCounts['Legislação Institucional'];
+        subjectCounts['Legislação Institucional'] = { name: 'Legislação Institucional', count: total };
     }
 
 
