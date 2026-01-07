@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import './flashcard.css';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
-import { collection, query, where, orderBy, getDocs, Query } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, Query, QueryConstraint, and } from 'firebase/firestore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { handleFlashcardResponse } from '@/firebase/actions';
 import { cn } from '@/lib/utils';
@@ -77,7 +78,7 @@ function FlashcardViewer({ flashcards, onResponse }: { flashcards: Flashcard[], 
         <div className={`flashcard-inner ${isFlipped ? 'is-flipped' : ''}`}>
           <Card className="flashcard-front" onClick={handleFlip}>
             <CardContent className="flex flex-col items-center justify-center text-center p-6">
-              <p className="text-sm text-muted-foreground mb-4">{card.subject}</p>
+              <p className="text-sm text-muted-foreground mb-4">{card.subject} &gt; {card.topic}</p>
               <p className="text-xl font-semibold">{card.front}</p>
             </CardContent>
           </Card>
@@ -117,24 +118,48 @@ export default function FlashcardsPage() {
   const { user } = useUser();
   
   const [view, setView] = useState<'initial' | 'loading' | 'studying'>('initial');
-  const [filterSubject, setFilterSubject] = useState<string>('');
+  const [filterSubject, setFilterSubject] = useState<string>('all');
+  const [filterTopic, setFilterTopic] = useState<string>('all');
+  const [filterTargetRole, setFilterTargetRole] = useState<string>('all');
+
   const [studyMode, setStudyMode] = useState<'all' | 'incorrect'>('all');
   const [activeFlashcards, setActiveFlashcards] = useState<Flashcard[]>([]);
 
-  // Query for ALL flashcards, used to populate subject filters
+  // Query for ALL flashcards, used to populate filters
   const allFlashcardsQuery = useMemoFirebase(() => (
     firestore ? query(collection(firestore, 'flashcards'), orderBy('subject')) : null
   ), [firestore]);
 
   const { data: allFlashcards, isLoading: isLoadingAll } = useCollection<Flashcard>(allFlashcardsQuery);
 
-  const availableSubjects = useMemo(() => {
-    if (!allFlashcards) return [];
-    const uniqueSubjects = new Set(allFlashcards.map(fc => fc.subject));
-    return Array.from(uniqueSubjects);
-  }, [allFlashcards]);
+  const filterOptions = useMemo(() => {
+    if (!allFlashcards) return { subjects: [], topics: [], targetRoles: [] };
+    
+    const subjects = new Set(allFlashcards.map(fc => fc.subject));
+    let filteredBySubject = allFlashcards;
 
-  const startStudySession = useCallback(async (subject: string, mode: 'all' | 'incorrect') => {
+    if (filterSubject !== 'all') {
+      filteredBySubject = allFlashcards.filter(fc => fc.subject === filterSubject);
+    }
+    
+    const topics = new Set(filteredBySubject.map(fc => fc.topic));
+    const targetRoles = new Set(filteredBySubject.map(fc => fc.targetRole));
+
+    return {
+      subjects: Array.from(subjects),
+      topics: Array.from(topics),
+      targetRoles: Array.from(targetRoles),
+    };
+  }, [allFlashcards, filterSubject]);
+
+  // Reset dependent filters when the main filter changes
+  useEffect(() => {
+    setFilterTopic('all');
+    setFilterTargetRole('all');
+  }, [filterSubject]);
+
+
+  const startStudySession = useCallback(async (mode: 'all' | 'incorrect') => {
     if (!firestore || !user) return;
 
     setView('loading');
@@ -156,29 +181,37 @@ export default function FlashcardsPage() {
         return;
       }
       
-      // Filter allFlashcards by the incorrect IDs
       flashcardsToStudy = allFlashcards?.filter(fc => incorrectFlashcardIds.includes(fc.id)) || [];
 
     } else { // mode is 'all'
-       let baseQuery: Query = collection(firestore, 'flashcards');
-        if (subject) {
-            baseQuery = query(baseQuery, where('subject', '==', subject));
+        const constraints: QueryConstraint[] = [];
+        if (filterSubject !== 'all') {
+            constraints.push(where('subject', '==', filterSubject));
         }
-        const snapshot = await getDocs(baseQuery);
+        if (filterTopic !== 'all') {
+            constraints.push(where('topic', '==', filterTopic));
+        }
+        if (filterTargetRole !== 'all') {
+            constraints.push(where('targetRole', '==', filterTargetRole));
+        }
+        
+        const baseQuery = collection(firestore, 'flashcards');
+        const finalQuery = constraints.length > 0 ? query(baseQuery, and(...constraints)) : baseQuery;
+
+        const snapshot = await getDocs(finalQuery);
         flashcardsToStudy = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Flashcard));
     }
 
     setActiveFlashcards(flashcardsToStudy);
     setView('studying');
 
-  }, [firestore, user, allFlashcards]);
+  }, [firestore, user, allFlashcards, filterSubject, filterTopic, filterTargetRole]);
 
 
   const handleFlashcardResponseCallback = useCallback((flashcard: Flashcard, status: 'correct' | 'incorrect') => {
     if (!firestore || !user) return;
     handleFlashcardResponse(firestore, user.uid, flashcard, status);
     
-    // If we're in 'incorrect' mode and the answer is correct, remove it from the active session
     if (studyMode === 'incorrect' && status === 'correct') {
         setActiveFlashcards(prev => prev.filter(fc => fc.id !== flashcard.id));
     }
@@ -221,55 +254,60 @@ export default function FlashcardsPage() {
 
       {view !== 'studying' && (
         <div className="space-y-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Revisar Flashcards Errados</CardTitle>
-              <CardDescription>Estude apenas os flashcards que você marcou como "Errei" anteriormente.</CardDescription>
-            </CardHeader>
-            <CardContent>
-               <Button onClick={() => startStudySession('', 'incorrect')} disabled={view === 'loading'}>
-                    {view === 'loading' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4"/>}
-                    Revisar Meus Erros
-               </Button>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Filtrar por Matéria</CardTitle>
-              <CardDescription>Selecione uma matéria para revisar todos os flashcards dela.</CardDescription>
-            </CardHeader>
-            <CardContent>
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Select value={filterSubject} onValueChange={setFilterSubject}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma Matéria" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableSubjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <Button onClick={() => startStudySession(filterSubject, 'all')} disabled={!filterSubject || view === 'loading'}>
-                    {view === 'loading' && filterSubject ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Estudar Matéria
-                 </Button>
-                </div>
-            </CardContent>
-          </Card>
-          
-           <Card>
-            <CardHeader>
-                <CardTitle>Estudo Rápido por Matéria</CardTitle>
-                <CardDescription>Clique em uma matéria para iniciar uma sessão com todos os flashcards dela.</CardDescription>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {availableSubjects.map(subject => (
-                    <Button key={subject} variant="secondary" onClick={() => startStudySession(subject, 'all')}>
-                        {subject}
+            <Card>
+                <CardHeader>
+                <CardTitle>Iniciar Sessão de Estudo</CardTitle>
+                <CardDescription>Filtre por matéria, assunto e cargo para um estudo focado.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                         <Select value={filterSubject} onValueChange={setFilterSubject}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Matéria" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todas as Matérias</SelectItem>
+                                {filterOptions.subjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                        <Select value={filterTopic} onValueChange={setFilterTopic} disabled={filterSubject === 'all' && filterOptions.topics.length === 0}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Assunto" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todos os Assuntos</SelectItem>
+                                {filterOptions.topics.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                         <Select value={filterTargetRole} onValueChange={setFilterTargetRole} disabled={filterSubject === 'all' && filterOptions.targetRoles.length === 0}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Cargo" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todos os Cargos</SelectItem>
+                                {filterOptions.targetRoles.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                     <Button onClick={() => startStudySession('all')} disabled={view === 'loading'}>
+                        {view === 'loading' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                        Iniciar Estudo
                     </Button>
-                ))}
-            </CardContent>
-        </Card>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                <CardTitle>Revisar Flashcards Errados</CardTitle>
+                <CardDescription>Estude apenas os flashcards que você marcou como "Errei" anteriormente.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                <Button onClick={() => startStudySession('incorrect')} disabled={view === 'loading'}>
+                        {view === 'loading' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4"/>}
+                        Revisar Meus Erros
+                </Button>
+                </CardContent>
+            </Card>
         </div>
       )}
 
@@ -293,5 +331,6 @@ export default function FlashcardsPage() {
     </div>
   );
 }
+
 
     
