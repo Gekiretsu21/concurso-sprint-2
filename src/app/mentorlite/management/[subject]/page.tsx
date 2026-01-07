@@ -14,7 +14,7 @@ function unslugify(slug: string) {
 
 export default function SubjectPage() {
   const params = useParams();
-  const subjectSlug = Array.isArray(params.subject) ? params.subject[0] : params.subject;
+  const subjectSlug = params.subject as string; // Treat subject as a string directly
   const subjectName = unslugify(subjectSlug);
 
   return (
