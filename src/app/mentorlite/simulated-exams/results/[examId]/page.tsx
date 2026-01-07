@@ -1,15 +1,19 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Home, XCircle } from 'lucide-react';
+import { CheckCircle, Home, Loader2, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { useFirebase, useUser, useDoc, useMemoFirebase } from '@/firebase';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { savePreviousExamResult } from '@/firebase/actions';
+
 
 // These types should ideally be in a shared types file
 interface Question {
@@ -40,6 +44,14 @@ interface ExamResultsData {
   questions: Question[];
   userAnswers: UserAnswers;
 }
+
+interface PreviousExamResult {
+    examId: string;
+    score: number;
+    userAnswers: UserAnswers;
+    performanceSummary: { [subjectName: string]: SubjectStats };
+}
+
 
 // Stats types
 interface PerformanceStats {
@@ -114,48 +126,22 @@ function ResultDetails({ question, userAnswer }: { question: Question, userAnswe
   )
 }
 
-export default function ExamResultsPage() {
-  const [results, setResults] = useState<ExamResultsData | null>(null);
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const examName = searchParams.get('examName');
-
-
-  useEffect(() => {
-    const resultsDataString = localStorage.getItem('examResults');
-    if (resultsDataString) {
-      setResults(JSON.parse(resultsDataString));
-      // Optional: Clean up localStorage after use
-      // localStorage.removeItem('examResults');
-    } else {
-      // Handle case where user navigates directly to this page
-      // Redirect or show an error
-      router.push('/mentorlite/simulated-exams');
-    }
-  }, [router]);
-
-  const performanceBySubject = useMemo((): { [subjectName: string]: SubjectStats } => {
-    if (!results) return {};
-
+function calculatePerformance(questions: Question[], userAnswers: UserAnswers): { [subjectName: string]: SubjectStats } {
     const stats: { [subjectName: string]: SubjectStats } = {};
 
-    for (const q of results.questions) {
+    for (const q of questions) {
       const subject = q.Materia;
       const topic = q.Assunto;
-      const userAnswer = results.userAnswers[q.id];
+      const userAnswer = userAnswers[q.id];
       const isCorrect = userAnswer && userAnswer.toLowerCase() === q.correctAnswer.toLowerCase();
 
-      // Initialize subject stats if not present
       if (!stats[subject]) {
         stats[subject] = { total: 0, correct: 0, incorrect: 0, percentage: 0, topics: {} };
       }
-      
-      // Initialize topic stats if not present
       if (!stats[subject].topics[topic]) {
         stats[subject].topics[topic] = { total: 0, correct: 0, incorrect: 0, percentage: 0 };
       }
       
-      // Update counts
       stats[subject].total++;
       stats[subject].topics[topic].total++;
       if (isCorrect) {
@@ -167,7 +153,6 @@ export default function ExamResultsPage() {
       }
     }
     
-    // Calculate percentages
     for (const subject in stats) {
       stats[subject].percentage = (stats[subject].correct / stats[subject].total) * 100;
       for (const topic in stats[subject].topics) {
@@ -177,35 +162,130 @@ export default function ExamResultsPage() {
     }
 
     return stats;
-  }, [results]);
+}
+
+export default function ExamResultsPage() {
+  const { firestore, user } = useFirebase();
+  const params = useParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  const examId = params.examId as string;
+  const examName = searchParams.get('examName');
+  const from = searchParams.get('from');
+  const isPreviousExamResult = from === 'previous-exams';
+
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [userAnswers, setUserAnswers] = useState<UserAnswers>({});
+  const [scorePercentage, setScorePercentage] = useState(0);
+  const [performanceBySubject, setPerformanceBySubject] = useState<{ [subjectName: string]: SubjectStats }>({});
+  const [isLoading, setIsLoading] = useState(true);
+
+  const resultDocRef = useMemoFirebase(() => {
+    if (!firestore || !user || !examId) return null;
+    return doc(firestore, `users/${user.uid}/previousExamResults/${examId}`);
+  }, [firestore, user, examId]);
+
+  const { data: savedResult, isLoading: isLoadingResult } = useDoc<PreviousExamResult>(resultDocRef);
+
+  const fetchAndSetQuestions = useCallback(async (questionIds: string[], storedAnswers: UserAnswers) => {
+    if (!firestore) return;
+    
+    const fetchedQuestions: Question[] = [];
+    const q = query(collection(firestore, 'questoes'), where('__name__', 'in', questionIds));
+    const querySnapshot = await getDocs(q);
+    const questionsMap = new Map(querySnapshot.docs.map(doc => [doc.id, { id: doc.id, ...doc.data() as Omit<Question, 'id'> }]));
+
+    questionIds.forEach(id => {
+        const question = questionsMap.get(id);
+        if (question) fetchedQuestions.push(question);
+    });
+
+    setQuestions(fetchedQuestions);
+    setUserAnswers(storedAnswers);
+    
+    const calculatedPerformance = calculatePerformance(fetchedQuestions, storedAnswers);
+    setPerformanceBySubject(calculatedPerformance);
+
+    const correctCount = fetchedQuestions.reduce((acc, q) => 
+        (storedAnswers[q.id] && storedAnswers[q.id].toLowerCase() === q.correctAnswer.toLowerCase()) ? acc + 1 : acc, 0);
+    const total = fetchedQuestions.length;
+    setScorePercentage(total > 0 ? (correctCount / total) * 100 : 0);
+    
+    setIsLoading(false);
+  }, [firestore]);
 
 
-  if (!results) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <p>Carregando resultados...</p>
-      </div>
-    );
-  }
+  useEffect(() => {
+    const fromLocalStorage = localStorage.getItem('examResults');
+    
+    if (fromLocalStorage) {
+      const data: ExamResultsData = JSON.parse(fromLocalStorage);
+      setQuestions(data.questions);
+      setUserAnswers(data.userAnswers);
+      
+      const perf = calculatePerformance(data.questions, data.userAnswers);
+      setPerformanceBySubject(perf);
+      
+      const correct = data.questions.reduce((acc, q) => (data.userAnswers[q.id] && data.userAnswers[q.id].toLowerCase() === q.correctAnswer.toLowerCase() ? acc + 1 : 0), 0);
+      const total = data.questions.length;
+      const score = total > 0 ? (correct / total) * 100 : 0;
+      setScorePercentage(score);
 
-  const { questions, userAnswers } = results;
+      if (firestore && user) {
+          savePreviousExamResult(firestore, {
+              userId: user.uid,
+              examId: data.exam.id,
+              score,
+              userAnswers: data.userAnswers,
+              performanceSummary: perf,
+          });
+      }
+      localStorage.removeItem('examResults');
+      setIsLoading(false);
 
-  const correctAnswersCount = questions.reduce((acc, q) => {
-    const userAnswer = userAnswers[q.id];
-    if (userAnswer && userAnswer.toLowerCase() === q.correctAnswer.toLowerCase()) {
+    } else if (savedResult) {
+       const fetchExamAndQuestions = async () => {
+         if (!firestore) return;
+         const examRef = doc(firestore, 'previousExams', savedResult.examId);
+         const examSnap = await getDoc(examRef);
+         if (examSnap.exists()) {
+           const examData = examSnap.data() as SimulatedExam;
+           fetchAndSetQuestions(examData.questionIds, savedResult.userAnswers);
+         }
+       };
+       fetchExamAndQuestions();
+    } else if (!isLoadingResult) {
+        // No local storage, no saved result, and not loading. Probably direct navigation.
+        // router.push('/mentorlite/previous-exams');
+    }
+
+  }, [savedResult, isLoadingResult, firestore, user, fetchAndSetQuestions, router]);
+
+  const correctAnswersCount = useMemo(() => Object.keys(userAnswers).reduce((acc, qId) => {
+    const question = questions.find(q => q.id === qId);
+    const userAnswer = userAnswers[qId];
+    if (question && userAnswer && userAnswer.toLowerCase() === question.correctAnswer.toLowerCase()) {
       return acc + 1;
     }
     return acc;
-  }, 0);
-  
-  const totalQuestions = questions.length;
-  const scorePercentage = totalQuestions > 0 ? (correctAnswersCount / totalQuestions) * 100 : 0;
+  }, 0), [questions, userAnswers]);
+
+
+  if (isLoading || isLoadingResult) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <p className="ml-4">Carregando resultados...</p>
+      </div>
+    );
+  }
   
   return (
     <div className="flex flex-col gap-8">
       <header>
         <h1 className="text-3xl font-bold tracking-tight">Resultado do Simulado</h1>
-        <p className="text-muted-foreground">{examName || results.exam.name}</p>
+        <p className="text-muted-foreground">{examName || 'Prova Anterior'}</p>
       </header>
 
       <Card>
@@ -223,11 +303,11 @@ export default function ExamResultsPage() {
                     <p className="text-sm text-muted-foreground">Respostas Corretas</p>
                 </div>
                  <div>
-                    <p className="text-2xl font-semibold">{totalQuestions - correctAnswersCount}</p>
+                    <p className="text-2xl font-semibold">{questions.length - correctAnswersCount}</p>
                     <p className="text-sm text-muted-foreground">Respostas Erradas</p>
                 </div>
                  <div>
-                    <p className="text-2xl font-semibold">{totalQuestions}</p>
+                    <p className="text-2xl font-semibold">{questions.length}</p>
                     <p className="text-sm text-muted-foreground">Total de Questões</p>
                 </div>
             </div>
@@ -241,7 +321,7 @@ export default function ExamResultsPage() {
         </CardHeader>
         <CardContent>
           <Accordion type="single" collapsible className="w-full">
-            {Object.entries(performanceBySubject).map(([subject, stats]) => (
+            {Object.entries(performanceBySubject).sort((a,b) => a[0].localeCompare(b[0])).map(([subject, stats]) => (
               <AccordionItem key={subject} value={subject}>
                 <AccordionTrigger className="hover:no-underline">
                   <div className="flex flex-1 items-center justify-between pr-4">
@@ -272,42 +352,44 @@ export default function ExamResultsPage() {
                         </div>
                       </div>
                   </div>
-                  <Accordion type="single" collapsible className="w-full pl-4">
-                     {Object.entries(stats.topics).map(([topic, topicStats]) => (
-                       <AccordionItem key={topic} value={topic}>
-                         <AccordionTrigger className="py-2 text-sm hover:no-underline">
-                            <div className="flex flex-1 items-center justify-between pr-4">
-                                <span>{topic}</span>
-                                <Badge variant={topicStats.percentage >= 70 ? 'secondary' : 'destructive'} className="font-normal">
-                                {topicStats.percentage.toFixed(1)}%
-                                </Badge>
-                            </div>
-                         </AccordionTrigger>
-                         <AccordionContent className="pt-2 pb-0">
-                           <div className="rounded-lg border p-3">
-                               <div className="grid grid-cols-4 gap-2 text-center text-xs">
-                                  <div>
-                                    <p className="font-semibold">{topicStats.total}</p>
-                                    <p className="text-muted-foreground">Total</p>
-                                  </div>
-                                  <div>
-                                    <p className="font-semibold text-emerald-600">{topicStats.correct}</p>
-                                    <p className="text-muted-foreground">Acertos</p>
-                                  </div>
-                                  <div>
-                                    <p className="font-semibold text-destructive">{topicStats.incorrect}</p>
-                                    <p className="text-muted-foreground">Erros</p>
-                                  </div>
-                                   <div>
-                                    <p className="font-semibold text-primary">{topicStats.percentage.toFixed(1)}%</p>
-                                    <p className="text-muted-foreground">Aproveitamento</p>
-                                  </div>
+                  {Object.keys(stats.topics).length > 0 && (
+                    <Accordion type="single" collapsible className="w-full pl-4">
+                        {Object.entries(stats.topics).sort((a,b) => a[0].localeCompare(b[0])).map(([topic, topicStats]) => (
+                        <AccordionItem key={topic} value={topic}>
+                            <AccordionTrigger className="py-2 text-sm hover:no-underline">
+                                <div className="flex flex-1 items-center justify-between pr-4">
+                                    <span>{topic}</span>
+                                    <Badge variant={topicStats.percentage >= 70 ? 'secondary' : 'destructive'} className="font-normal">
+                                    {topicStats.percentage.toFixed(1)}%
+                                    </Badge>
                                 </div>
-                            </div>
-                         </AccordionContent>
-                       </AccordionItem>
-                     ))}
-                   </Accordion>
+                            </AccordionTrigger>
+                            <AccordionContent className="pt-2 pb-0">
+                            <div className="rounded-lg border p-3">
+                                <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                                    <div>
+                                        <p className="font-semibold">{topicStats.total}</p>
+                                        <p className="text-muted-foreground">Total</p>
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-emerald-600">{topicStats.correct}</p>
+                                        <p className="text-muted-foreground">Acertos</p>
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-destructive">{topicStats.incorrect}</p>
+                                        <p className="text-muted-foreground">Erros</p>
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-primary">{topicStats.percentage.toFixed(1)}%</p>
+                                        <p className="text-muted-foreground">Aproveitamento</p>
+                                    </div>
+                                    </div>
+                                </div>
+                            </AccordionContent>
+                        </AccordionItem>
+                        ))}
+                    </Accordion>
+                  )}
                 </AccordionContent>
               </AccordionItem>
             ))}
@@ -317,19 +399,21 @@ export default function ExamResultsPage() {
 
       <div className="space-y-6">
         <h2 className="text-2xl font-bold">Gabarito Detalhado</h2>
-        {questions.map((q) => (
+        {questions.sort((a, b) => a.Materia.localeCompare(b.Materia) || a.Assunto.localeCompare(b.Assunto)).map((q) => (
           <ResultDetails key={q.id} question={q} userAnswer={userAnswers[q.id]} />
         ))}
       </div>
       
       <div className="flex justify-center mt-8">
         <Button asChild size="lg">
-            <Link href="/mentorlite">
+            <Link href="/mentorlite/previous-exams">
                 <Home className="mr-2" />
-                Voltar para o Dashboard
+                Voltar para Provas Anteriores
             </Link>
         </Button>
       </div>
     </div>
   );
 }
+
+    

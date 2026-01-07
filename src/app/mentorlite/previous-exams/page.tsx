@@ -11,8 +11,11 @@ import {
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
 import { collection, query } from 'firebase/firestore';
-import { Loader2 } from 'lucide-react';
+import { Check, Loader2, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
+import { useMemo } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface PreviousExam {
   id: string;
@@ -20,12 +23,17 @@ interface PreviousExam {
   questionCount: number;
 }
 
+interface PreviousExamResult {
+    examId: string;
+    score: number;
+    completedAt: any;
+}
+
+
 export default function PreviousExamsPage() {
   const { firestore } = useFirebase();
   const { user } = useUser();
 
-  // This query now looks for exams in the top-level 'previousExams' collection.
-  // It will only run if firestore and user are available.
   const examsQuery = useMemoFirebase(
     () =>
       firestore && user
@@ -33,9 +41,35 @@ export default function PreviousExamsPage() {
         : null,
     [firestore, user]
   );
+  
+  const resultsQuery = useMemoFirebase(
+      () => 
+        firestore && user 
+            ? collection(firestore, `users/${user.uid}/previousExamResults`)
+            : null,
+      [firestore, user]
+  )
 
-  const { data: exams, isLoading } =
+  const { data: exams, isLoading: isLoadingExams } =
     useCollection<PreviousExam>(examsQuery);
+    
+  const { data: results, isLoading: isLoadingResults } = useCollection<PreviousExamResult>(resultsQuery);
+
+  const resultsMap = useMemo(() => {
+      if (!results) return new Map();
+      return new Map(results.map(r => [r.examId, r]));
+  }, [results]);
+
+  const isLoading = isLoadingExams || isLoadingResults;
+
+  const handleRedo = (event: React.MouseEvent, examId: string) => {
+    event.preventDefault(); // Prevent Link navigation
+    // Here you could add logic to clear the previous result if needed,
+    // or just navigate to start the exam again.
+    // For now, we'll just navigate.
+    window.location.href = `/mentorlite/simulated-exams/${examId}?from=previous-exams`;
+  };
+
 
   return (
     <div className="flex flex-col gap-8">
@@ -54,23 +88,57 @@ export default function PreviousExamsPage() {
         )}
         {!isLoading && exams && exams.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {exams.map(exam => (
-              <Card key={exam.id}>
-                <CardHeader>
-                  <CardTitle>{exam.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                   <p className="text-sm text-muted-foreground">
-                    {exam.questionCount} questões
-                  </p>
-                   <Button asChild className="mt-4 w-full">
-                      <Link href={`/mentorlite/simulated-exams/${exam.id}?from=previous-exams`}>
-                        Iniciar Prova
-                      </Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+            {exams.map(exam => {
+              const result = resultsMap.get(exam.id);
+              const isCompleted = !!result;
+
+              return (
+                <Card key={exam.id} className={cn("flex flex-col", isCompleted && "bg-muted/40")}>
+                    <CardHeader>
+                        <div className="flex items-center justify-between">
+                            <CardTitle>{exam.name}</CardTitle>
+                            {isCompleted && (
+                                <Badge variant="secondary" className="flex items-center gap-1">
+                                    <Check className="h-4 w-4"/>
+                                    Resolvida
+                                </Badge>
+                            )}
+                        </div>
+                    </CardHeader>
+                    <CardContent className="flex-grow">
+                        <p className="text-sm text-muted-foreground">
+                            {exam.questionCount} questões
+                        </p>
+                         {isCompleted && (
+                            <p className="text-sm font-semibold text-primary mt-2">
+                                Seu aproveitamento: {result.score.toFixed(1)}%
+                            </p>
+                        )}
+                    </CardContent>
+                    <CardContent>
+                       {isCompleted ? (
+                           <div className="flex flex-col sm:flex-row gap-2">
+                               <Button asChild className="flex-1">
+                                  <Link href={`/mentorlite/simulated-exams/results/${exam.id}?examName=${encodeURIComponent(exam.name)}`}>
+                                    Conferir Desempenho
+                                  </Link>
+                               </Button>
+                               <Button variant="outline" onClick={(e) => handleRedo(e, exam.id)} className="flex-1">
+                                    <RefreshCw className="mr-2 h-4 w-4"/>
+                                    Fazer Novamente
+                               </Button>
+                           </div>
+                       ) : (
+                           <Button asChild className="mt-4 w-full">
+                              <Link href={`/mentorlite/simulated-exams/${exam.id}?from=previous-exams`}>
+                                Iniciar Prova
+                              </Link>
+                          </Button>
+                       )}
+                    </CardContent>
+                </Card>
+              );
+            })}
           </div>
         ) : (
           !isLoading && (
@@ -87,3 +155,5 @@ export default function PreviousExamsPage() {
     </div>
   );
 }
+
+    

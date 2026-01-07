@@ -529,3 +529,43 @@ export async function deleteCommunitySimulados(firestore: Firestore, simuladoIds
     throw permissionError;
   });
 }
+
+interface ExamResultPayload {
+    examId: string;
+    userId: string;
+    score: number;
+    userAnswers: { [key: string]: string };
+    performanceSummary: { [key: string]: any };
+}
+
+
+export async function savePreviousExamResult(firestore: Firestore, payload: ExamResultPayload): Promise<void> {
+    const { userId, examId, score, userAnswers, performanceSummary } = payload;
+    
+    if (!userId || !examId) {
+        throw new Error("User ID and Exam ID are required.");
+    }
+
+    const resultRef = doc(firestore, `users/${userId}/previousExamResults/${examId}`);
+
+    const resultData = {
+        userId,
+        examId,
+        score,
+        userAnswers,
+        performanceSummary,
+        completedAt: serverTimestamp(),
+    };
+
+    setDoc(resultRef, resultData, { merge: true }).catch(serverError => {
+        const permissionError = new FirestorePermissionError({
+            path: resultRef.path,
+            operation: 'write',
+            requestResourceData: resultData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw permissionError;
+    });
+}
+
+    
