@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/card';
 import Link from 'next/link';
 import { collection } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Helper to generate a URL-friendly slug from a subject name
 const createSubjectSlug = (subject: string) => {
