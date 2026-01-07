@@ -307,3 +307,30 @@ export async function deleteDuplicateQuestions(firestore: Firestore): Promise<nu
 
   return deletedCount;
 }
+
+export async function deleteQuestionsBySubject(firestore: Firestore, subject: string): Promise<number> {
+    const questionsRef = collection(firestore, 'questoes');
+    const q = query(questionsRef, where('Materia', '==', subject));
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+        return 0;
+    }
+
+    const batch = writeBatch(firestore);
+    snapshot.docs.forEach(doc => {
+        batch.delete(doc.ref);
+    });
+
+    await batch.commit().catch(serverError => {
+        console.error('Firestore batch delete error for subject:', serverError);
+        const permissionError = new FirestorePermissionError({
+            path: `questoes (subject: ${subject})`,
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw permissionError;
+    });
+
+    return snapshot.size;
+}
