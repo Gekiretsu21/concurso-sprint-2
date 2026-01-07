@@ -49,7 +49,6 @@ import { signOut } from 'firebase/auth';
 const menuItems = [
   { href: '/mentorlite', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/mentorlite/questions', icon: ClipboardList, label: 'Questões' },
-  { href: '/mentorlite/simulated-exams', icon: FileText, label: 'Meus Simulados' },
   { href: '/mentorlite/community-simulados', icon: Shield, label: 'Simulados da Comunidade'},
   { href: '/mentorlite/previous-exams', icon: FileText, label: 'Provas Anteriores' },
   { href: '/mentorlite/flashcards', icon: Layers, label: 'Flashcards' },
