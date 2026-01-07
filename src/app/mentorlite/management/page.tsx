@@ -96,19 +96,19 @@ export default function ManagementPage() {
   }, [allQuestions]);
 
   const handleImportQuestions = async () => {
-    if (!firestore) {
+    if (!firestore || !user) {
       toast({
         variant: 'destructive',
         title: 'Erro de Conexão',
         description:
-          'Não foi possível conectar ao banco de dados. Tente novamente mais tarde.',
+          'Não foi possível conectar ao banco de dados ou você não está logado.',
       });
       return;
     }
     setIsImportingQuestions(true);
     try {
         const examDetails = isPreviousExam ? { isPreviousExam, examName } : undefined;
-        await importQuestions(firestore, questionText, examDetails);
+        await importQuestions(firestore, questionText, user.uid, examDetails);
         toast({
             title: 'Importação Concluída',
             description: 'As questões foram importadas com sucesso!',
@@ -226,7 +226,7 @@ export default function ManagementPage() {
                   Importar
                 </Button>
               )}
-              <DialogContent className="sm:max-w-6xl">
+              <DialogContent className="sm:max-w-4xl">
                 <DialogHeader>
                   <DialogTitle>Importar Questões por Texto</DialogTitle>
                   <DialogDescription>

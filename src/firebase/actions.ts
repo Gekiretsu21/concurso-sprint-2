@@ -14,34 +14,44 @@ import {
   updateDoc,
   setDoc,
   deleteDoc,
+  WriteBatch,
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
 interface ExamDetails {
-    isPreviousExam: boolean;
-    examName: string;
+  isPreviousExam: boolean;
+  examName: string;
 }
 
 export async function importQuestions(
   firestore: Firestore,
   text: string,
+  userId: string, // userId is required to create a simulated exam
   examDetails?: ExamDetails
 ): Promise<void> {
   if (!text) {
     throw new Error('O texto não pode estar vazio.');
   }
   if (examDetails?.isPreviousExam && !examDetails.examName) {
-      throw new Error('O nome da prova é obrigatório ao marcar "Prova Anterior".');
+    throw new Error(
+      'O nome da prova é obrigatório ao marcar "Prova Anterior".'
+    );
+  }
+  if (examDetails?.isPreviousExam && !userId) {
+    throw new Error(
+      'É necessário estar logado para criar uma prova anterior.'
+    );
   }
 
   const questionsStr = text.trim().split(';');
   const questionsCollection = collection(firestore, 'questoes');
+  const batch = writeBatch(firestore);
+  const newQuestionIds: string[] = [];
 
   for (const qStr of questionsStr) {
     if (qStr.trim() === '') continue;
 
-    // Format: Materia/Ano/Assunto/Cargo/Enunciado/a/b/c/d/e/correctAnswer
     const parts = qStr.split('/');
     if (parts.length < 11) {
       console.warn(
@@ -65,6 +75,7 @@ export async function importQuestions(
       correctAnswer,
     ] = parts;
 
+    const newQuestionDocRef = doc(questionsCollection); // Create a new doc reference
     const newQuestion: any = {
       Materia: Materia.trim(),
       Ano: Ano.trim(),
@@ -77,24 +88,50 @@ export async function importQuestions(
       d: d.trim(),
       e: e.trim(),
       correctAnswer: correctAnswer.trim(),
-      status: 'active', // Default status
+      status: 'active',
     };
-    
-    if (examDetails?.isPreviousExam) {
-        newQuestion.Prova = examDetails.examName.trim();
-    }
 
-    // Use non-blocking write with error handling
-    addDoc(questionsCollection, newQuestion).catch(serverError => {
-      console.error('Firestore addDoc error:', serverError);
-      const permissionError = new FirestorePermissionError({
-        path: questionsCollection.path,
-        operation: 'create',
-        requestResourceData: newQuestion,
-      });
-      errorEmitter.emit('permission-error', permissionError);
-    });
+    if (examDetails?.isPreviousExam) {
+      newQuestion.Prova = examDetails.examName.trim();
+    }
+    
+    batch.set(newQuestionDocRef, newQuestion);
+    newQuestionIds.push(newQuestionDocRef.id);
   }
+  
+  // If it's a previous exam, create a simulated exam document
+  if (examDetails?.isPreviousExam && newQuestionIds.length > 0) {
+      const examData = {
+        name: examDetails.examName,
+        userId,
+        createdAt: serverTimestamp(),
+        questionIds: newQuestionIds,
+        questionCount: newQuestionIds.length,
+      };
+
+      // Write to the user's private collection
+      const userExamRef = doc(
+        collection(firestore, `users/${userId}/simulatedExams`)
+      );
+      batch.set(userExamRef, examData);
+
+      // Write to the public community collection
+      const communityExamRef = doc(collection(firestore, 'communitySimulados'));
+      batch.set(communityExamRef, { ...examData, originalExamId: userExamRef.id });
+  }
+
+
+  // Commit the batch
+  await batch.commit().catch(serverError => {
+    console.error('Firestore batch write error:', serverError);
+    const permissionError = new FirestorePermissionError({
+      path: questionsCollection.path,
+      operation: 'write',
+      requestResourceData: 'Batch operation for question import',
+    });
+    errorEmitter.emit('permission-error', permissionError);
+    throw permissionError; // Re-throw to be caught by the calling function
+  });
 }
 
 export async function importFlashcards(

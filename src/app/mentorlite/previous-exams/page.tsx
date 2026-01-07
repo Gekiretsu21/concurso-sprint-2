@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/card';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
-import { collection, query, where, or } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -20,18 +20,15 @@ interface SimulatedExam {
   questionCount: number;
 }
 
-export default function SimulatedExamsPage() {
+export default function PreviousExamsPage() {
   const { firestore } = useFirebase();
   const { user } = useUser();
 
+  // This query now looks for an `isPreviousExam` flag.
   const examsQuery = useMemoFirebase(
     () =>
       firestore && user
-        ? query(
-            collection(firestore, `users/${user.uid}/simulatedExams`),
-            // This condition ensures that exams created via import are not shown here.
-            or(where('isPreviousExam', '==', false), where('isPreviousExam', '==', null))
-          )
+        ? query(collection(firestore, `users/${user.uid}/simulatedExams`), where("isPreviousExam", "==", true))
         : null,
     [firestore, user]
   );
@@ -42,14 +39,13 @@ export default function SimulatedExamsPage() {
   return (
     <div className="flex flex-col gap-8">
       <header>
-        <h1 className="text-3xl font-bold tracking-tight">Meus Simulados</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Provas Anteriores</h1>
         <p className="text-muted-foreground">
-          Crie e acesse seus simulados para testar seus conhecimentos.
+          Acesse os simulados que você importou de provas anteriores.
         </p>
       </header>
 
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold tracking-tight">Meus Simulados</h2>
         {isLoading && (
           <div className="flex items-center justify-center h-40 rounded-lg border border-dashed">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -68,7 +64,7 @@ export default function SimulatedExamsPage() {
                   </p>
                    <Button asChild className="mt-4 w-full">
                       <Link href={`/mentorlite/simulated-exams/${exam.id}`}>
-                        Iniciar Simulado
+                        Iniciar Prova
                       </Link>
                   </Button>
                 </CardContent>
@@ -78,13 +74,13 @@ export default function SimulatedExamsPage() {
         ) : (
           !isLoading && (
             <Card className="flex flex-col items-center justify-center h-40 border-dashed">
-              <CardContent className="text-center">
+              <CardContent className="text-center p-6">
                 <p className="text-muted-foreground">
-                  Nenhum simulado criado ainda.
+                  Nenhuma prova anterior importada ainda.
                 </p>
                 <Button variant="link" asChild>
                   <Link href="/mentorlite/management">
-                    Crie seu primeiro simulado
+                    Importe sua primeira prova
                   </Link>
                 </Button>
               </CardContent>
