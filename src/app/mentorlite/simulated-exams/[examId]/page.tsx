@@ -371,8 +371,8 @@ function SimulatedExamContent({ examId, from }: { examId: string, from: string |
   );
 }
 
-export default function SimulatedExamPage({ params, searchParams }: { params: { examId: string }, searchParams: { [key: string]: string | string[] | undefined }}) {
-    const examId = params.examId;
-    const from = typeof searchParams.from === 'string' ? searchParams.from : null;
-    return <SimulatedExamContent examId={examId} from={from} />;
+export default function SimulatedExamPage({ params, searchParams }: { params: { examId: string }, searchParams: { from?: string }}) {
+    const { examId } = params;
+    const { from } = searchParams;
+    return <SimulatedExamContent examId={examId} from={from || null} />;
 }
