@@ -1,9 +1,9 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
-import { collection, query, where, QueryConstraint, and } from 'firebase/firestore';
-import { toggleQuestionStatus } from '@/firebase/actions';
+import { useMemo, useState, useEffect } from 'react';
+import { useCollection, useFirebase, useMemoFirebase, useUser } from '@/firebase';
+import { collection, query, where, QueryConstraint, and, getDocs } from 'firebase/firestore';
+import { saveQuestionAttempt, toggleQuestionStatus } from '@/firebase/actions';
 import {
   Card,
   CardContent,
@@ -22,6 +22,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import type { StatusFilter } from '@/app/mentorlite/questions/page';
+
+type AttemptStatus = 'correct' | 'incorrect' | null;
 
 interface Question {
   id: string;
@@ -37,6 +40,12 @@ interface Question {
   e?: string;
   correctAnswer: string;
   status?: 'active' | 'hidden';
+  lastAttemptStatus?: AttemptStatus;
+}
+
+interface QuestionAttempt {
+    id: string;
+    isCorrect: boolean;
 }
 
 function formatEnunciado(text: string) {
@@ -47,38 +56,78 @@ function formatEnunciado(text: string) {
 interface QuestionListProps {
   subject: string;
   topics?: string[];
+  statusFilter?: StatusFilter;
 }
 
-export function QuestionList({ subject, topics }: QuestionListProps) {
+export function QuestionList({ subject, topics, statusFilter = 'all' }: QuestionListProps) {
   const { firestore } = useFirebase();
+  const { user } = useUser();
+
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [answeredQuestions, setAnsweredQuestions] = useState<Record<string, boolean>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const questionsPerPage = 10;
+  
+  const [userAttempts, setUserAttempts] = useState<Map<string, QuestionAttempt>>(new Map());
 
+  // 1. Fetch base questions based on subject and topics
   const questionsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-
     const constraints: QueryConstraint[] = [where('Materia', '==', subject)];
-    
     if (topics && topics.length > 0) {
-        constraints.push(where('Assunto', 'in', topics));
+      constraints.push(where('Assunto', 'in', topics));
     }
-
     return query(collection(firestore, 'questoes'), and(...constraints));
   }, [firestore, subject, topics]);
+  const { data: questions, isLoading: isLoadingQuestions } = useCollection<Question>(questionsQuery);
+  
+  // 2. Fetch user's attempts for the current subject
+  const attemptsQuery = useMemoFirebase(() => {
+      if(!firestore || !user) return null;
+      return query(collection(firestore, `users/${user.uid}/question_attempts`), where('subject', '==', subject));
+  }, [firestore, user, subject]);
+  const { data: attempts, isLoading: isLoadingAttempts } = useCollection<QuestionAttempt>(attemptsQuery);
+  
+  // 3. Create a map of attempts for quick lookup
+  useEffect(() => {
+    if (attempts) {
+      const attemptsMap = new Map(attempts.map(att => [att.id, att]));
+      setUserAttempts(attemptsMap);
+    }
+  }, [attempts]);
 
-  const { data: questions, isLoading } = useCollection<Question>(questionsQuery);
 
-  const activeQuestions = useMemo(() => {
-    return questions?.filter(q => q.status !== 'hidden') || [];
-  }, [questions]);
+  const processedQuestions = useMemo(() => {
+    if (!questions) return [];
+    
+    // Add attempt status to each question
+    const questionsWithStatus = questions.map(q => ({
+      ...q,
+      lastAttemptStatus: userAttempts.has(q.id)
+        ? userAttempts.get(q.id)!.isCorrect ? 'correct' : 'incorrect'
+        : null,
+    })).filter(q => q.status !== 'hidden');
+    
+    // Apply the status filter
+    if (statusFilter === 'resolved') {
+      return questionsWithStatus.filter(q => q.lastAttemptStatus !== null);
+    }
+    if (statusFilter === 'unresolved') {
+      return questionsWithStatus.filter(q => q.lastAttemptStatus === null);
+    }
+    return questionsWithStatus; // 'all'
+  }, [questions, userAttempts, statusFilter]);
 
   // Pagination logic
   const indexOfLastQuestion = currentPage * questionsPerPage;
   const indexOfFirstQuestion = indexOfLastQuestion - questionsPerPage;
-  const currentQuestions = activeQuestions.slice(indexOfFirstQuestion, indexOfLastQuestion);
-  const totalPages = Math.ceil(activeQuestions.length / questionsPerPage);
+  const currentQuestions = processedQuestions.slice(indexOfFirstQuestion, indexOfLastQuestion);
+  const totalPages = Math.ceil(processedQuestions.length / questionsPerPage);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [subject, topics, statusFilter]);
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
@@ -92,17 +141,25 @@ export function QuestionList({ subject, topics }: QuestionListProps) {
     }));
   };
 
-  const handleConfirmAnswer = (questionId: string) => {
-    setAnsweredQuestions(prev => ({
-      ...prev,
-      [questionId]: true,
-    }));
+  const handleConfirmAnswer = (question: Question) => {
+    if (!user || !firestore) return;
+
+    const selectedOption = selectedAnswers[question.id];
+    if (!selectedOption) return;
+
+    const isCorrect = selectedOption.toLowerCase() === question.correctAnswer.toLowerCase();
+    
+    setAnsweredQuestions(prev => ({ ...prev, [question.id]: true }));
+    saveQuestionAttempt(firestore, user.uid, question.id, isCorrect, selectedOption, question.Materia);
   };
+
 
   const handleToggleStatus = (questionId: string, currentStatus: 'active' | 'hidden' = 'active') => {
     if (!firestore) return;
     toggleQuestionStatus(firestore, questionId, currentStatus);
   };
+
+  const isLoading = isLoadingQuestions || isLoadingAttempts;
 
   if (isLoading) {
     return (
@@ -112,10 +169,10 @@ export function QuestionList({ subject, topics }: QuestionListProps) {
     );
   }
 
-  if (!questions || questions.length === 0) {
+  if (processedQuestions.length === 0) {
     return (
       <Card className="flex flex-col items-center justify-center h-64">
-        <CardContent className="text-center">
+        <CardContent className="text-center p-6">
           <p className="text-muted-foreground">
             Nenhuma questão encontrada para os critérios selecionados.
           </p>
@@ -133,14 +190,22 @@ export function QuestionList({ subject, topics }: QuestionListProps) {
             const selected = selectedAnswers[q.id];
             const isHidden = q.status === 'hidden';
 
-            const isCorrect = String(selected).toLowerCase() === String(q.correctAnswer).toLowerCase();
+            const isAttemptCorrect = String(selected).toLowerCase() === String(q.correctAnswer).toLowerCase();
 
-            const userHasCorrectlyAnswered = isAnswered && isCorrect;
-            const userHasIncorrectlyAnswered = isAnswered && !isCorrect;
+            const userHasCorrectlyAnswered = isAnswered && isAttemptCorrect;
+            const userHasIncorrectlyAnswered = isAnswered && !isAttemptCorrect;
 
             return (
-              <Card key={q.id} className={cn(isHidden && 'opacity-50 bg-secondary')}>
-                <CardHeader>
+              <Card key={q.id} className={cn("relative overflow-hidden", isHidden && 'opacity-50 bg-secondary')}>
+                {q.lastAttemptStatus && (
+                   <Badge className={cn(
+                       "absolute top-2 left-2 text-xs",
+                       q.lastAttemptStatus === 'correct' ? 'bg-green-100 text-green-800 border-green-300' : 'bg-red-100 text-red-800 border-red-300'
+                   )}>
+                       {q.lastAttemptStatus === 'correct' ? 'Você acertou anteriormente' : 'Você errou anteriormente'}
+                   </Badge>
+                )}
+                <CardHeader className="pt-10">
                   <div className="flex items-center justify-between">
                     <CardTitle>Questão {indexOfFirstQuestion + index + 1}</CardTitle>
                     <div className="flex items-center gap-4">
@@ -186,12 +251,12 @@ export function QuestionList({ subject, topics }: QuestionListProps) {
                           return 'hover:bg-secondary/80';
                         }
 
-                        if (isCorrect) {
+                        if (isAttemptCorrect) {
                           if (selectedNormalized === currentKeyNormalized) return 'bg-emerald-100 border-emerald-400 text-emerald-900 font-medium';
                           return 'opacity-60';
                         }
 
-                        if (!isCorrect) {
+                        if (!isAttemptCorrect) {
                           if (currentKeyNormalized === correctAnswerNormalized) return 'bg-emerald-100 border-emerald-400 text-emerald-900 font-medium';
                           if (selectedNormalized === currentKeyNormalized) return 'bg-destructive/10 border-destructive/40 text-destructive';
                           return 'opacity-50';
@@ -210,7 +275,7 @@ export function QuestionList({ subject, topics }: QuestionListProps) {
                         >
                           <div className={cn(
                             "flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full border bg-background text-sm font-bold",
-                            isAnswered && (isCorrect || !isCorrect) && alternativeKey.toLowerCase() === String(q.correctAnswer).toLowerCase() ? "bg-primary text-primary-foreground border-primary" : "border-muted-foreground"
+                            isAnswered && (isAttemptCorrect || !isAttemptCorrect) && alternativeKey.toLowerCase() === String(q.correctAnswer).toLowerCase() ? "bg-primary text-primary-foreground border-primary" : "border-muted-foreground"
                           )}>
                             {String.fromCharCode(65 + optIndex)}
                           </div>
@@ -238,7 +303,7 @@ export function QuestionList({ subject, topics }: QuestionListProps) {
                   <div className="flex gap-2 self-end sm:self-auto">
                     <Button
                       variant="default"
-                      onClick={() => handleConfirmAnswer(q.id)}
+                      onClick={() => handleConfirmAnswer(q)}
                       disabled={!selected || isAnswered || isHidden}
                     >
                       {isAnswered ? "Respondido" : "Responder"}

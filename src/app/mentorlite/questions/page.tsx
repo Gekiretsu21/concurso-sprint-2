@@ -29,17 +29,23 @@ import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { QuestionList } from '@/components/QuestionList';
 
+export type StatusFilter = 'all' | 'resolved' | 'unresolved';
+
 export default function QuestionsPage() {
   const { firestore } = useFirebase();
 
   const [filterSubject, setFilterSubject] = useState('');
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  const [filterStatus, setFilterStatus] = useState<StatusFilter>('all');
+  
   const [activeFilters, setActiveFilters] = useState<{
     subject: string;
     topics: string[];
+    status: StatusFilter;
   }>({
     subject: '',
     topics: [],
+    status: 'all',
   });
 
   const subjectsQuery = useMemoFirebase(
@@ -75,7 +81,7 @@ export default function QuestionsPage() {
   }, [filterSubject]);
 
   const handleFilterSubmit = () => {
-    setActiveFilters({ subject: filterSubject, topics: selectedTopics });
+    setActiveFilters({ subject: filterSubject, topics: selectedTopics, status: filterStatus });
   };
   
   const getTopicButtonLabel = () => {
@@ -106,7 +112,7 @@ export default function QuestionsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Select value={filterSubject} onValueChange={setFilterSubject}>
               <SelectTrigger>
                 <SelectValue placeholder="Matéria" />
@@ -154,6 +160,17 @@ export default function QuestionsPage() {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as StatusFilter)} disabled={!filterSubject}>
+              <SelectTrigger>
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent position="popper">
+                <SelectItem value="all">Todas as Questões</SelectItem>
+                <SelectItem value="resolved">Apenas Resolvidas</SelectItem>
+                <SelectItem value="unresolved">Apenas Não Resolvidas</SelectItem>
+              </SelectContent>
+            </Select>
+
             <Button onClick={handleFilterSubmit} disabled={!filterSubject}>
               Buscar Questões
             </Button>
@@ -165,6 +182,7 @@ export default function QuestionsPage() {
         <QuestionList
           subject={activeFilters.subject}
           topics={activeFilters.topics}
+          statusFilter={activeFilters.status}
         />
       ) : (
         <Card className="flex items-center justify-center h-40 border-dashed">

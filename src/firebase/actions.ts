@@ -92,6 +92,40 @@ export async function registerQuestionAnswer(
   }
 }
 
+export async function saveQuestionAttempt(
+  firestore: Firestore,
+  userId: string,
+  questionId: string,
+  isCorrect: boolean,
+  selectedOption: string,
+  subject: string
+) {
+  if (!userId || !questionId) return;
+
+  const attemptRef = doc(firestore, `users/${userId}/question_attempts/${questionId}`);
+  const attemptData = {
+    questionId,
+    isCorrect,
+    selectedOption,
+    subject,
+    timestamp: serverTimestamp(),
+  };
+
+  setDoc(attemptRef, attemptData, { merge: true }).catch(serverError => {
+    const permissionError = new FirestorePermissionError({
+      path: attemptRef.path,
+      operation: 'write',
+      requestResourceData: attemptData
+    });
+    errorEmitter.emit('permission-error', permissionError);
+    // Don't rethrow, just log and emit. The UI can proceed.
+  });
+
+  // Also update the aggregated stats
+  await registerQuestionAnswer(firestore, userId, subject, isCorrect);
+}
+
+
 export async function importQuestions(
   firestore: Firestore,
   text: string,
