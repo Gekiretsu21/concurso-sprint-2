@@ -4,9 +4,11 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
 import { QuestionList } from '@/components/QuestionList';
+import { useParams } from 'next/navigation';
 
-function SubjectPageContent({ params }: { params: { subject: string } }) {
-  const subjectParam = params.subject;
+function SubjectPageContent() {
+  const params = useParams();
+  const subjectParam = params.subject as string;
 
   // This will handle URL-encoded characters (like %C3%A7 for ç) and reconstruct the name.
   let subjectName = subjectParam
@@ -47,6 +49,6 @@ function SubjectPageContent({ params }: { params: { subject: string } }) {
 }
 
 
-export default function SubjectPage({ params }: { params: { subject: string } }) {
-  return <SubjectPageContent params={params} />;
+export default function SubjectPage() {
+  return <SubjectPageContent />;
 }
