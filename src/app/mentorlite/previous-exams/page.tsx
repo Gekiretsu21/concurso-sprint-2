@@ -22,14 +22,16 @@ interface PreviousExam {
 
 export default function PreviousExamsPage() {
   const { firestore } = useFirebase();
+  const { user } = useUser();
 
   // This query now looks for exams in the top-level 'previousExams' collection.
+  // It will only run if firestore and user are available.
   const examsQuery = useMemoFirebase(
     () =>
-      firestore
+      firestore && user
         ? query(collection(firestore, 'previousExams'))
         : null,
-    [firestore]
+    [firestore, user]
   );
 
   const { data: exams, isLoading } =
