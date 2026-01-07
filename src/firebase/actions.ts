@@ -108,7 +108,7 @@ export async function importQuestions(
   }
 
 
-  await batch.commit().catch(serverError => {
+  return batch.commit().catch(serverError => {
     console.error('Firestore batch write error:', serverError);
     const permissionError = new FirestorePermissionError({
       path: questionsCollection.path,
@@ -116,6 +116,7 @@ export async function importQuestions(
       requestResourceData: 'Batch operation for question import',
     });
     errorEmitter.emit('permission-error', permissionError);
+    // Propagate the error so the calling function's catch block can handle it
     throw permissionError;
   });
 }

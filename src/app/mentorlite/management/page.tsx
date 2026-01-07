@@ -194,40 +194,43 @@ export default function ManagementPage() {
 
   }, [allQuestions]);
 
-  const handleImportQuestions = async () => {
+  const handleImportQuestions = () => {
     if (!firestore || !user) {
       toast({
         variant: 'destructive',
         title: 'Erro de Conexão',
-        description:
-          'Não foi possível conectar ao banco de dados ou você não está logado.',
+        description: 'Não foi possível conectar ao banco de dados ou você não está logado.',
       });
       return;
     }
     setIsImportingQuestions(true);
-    try {
-        const examDetails = isPreviousExam ? { isPreviousExam, examName } : undefined;
-        await importQuestions(firestore, questionText, user.uid, examDetails);
+    
+    const examDetails = isPreviousExam ? { isPreviousExam, examName } : undefined;
+    
+    importQuestions(firestore, questionText, user.uid, examDetails)
+      .then(() => {
         toast({
-            title: 'Importação Concluída',
-            description: 'As questões foram importadas com sucesso!',
+            title: 'Importação Iniciada',
+            description: 'As questões estão sendo importadas em segundo plano.',
         });
         setQuestionText('');
         setExamName('');
         setIsPreviousExam(false);
-    } catch (error) {
-      let message = 'Ocorreu um erro ao importar as questões.';
-      if (error instanceof Error) {
-        message = error.message;
-      }
-      toast({
-        variant: 'destructive',
-        title: 'Erro na Importação',
-        description: message,
+      })
+      .catch((error) => {
+        let message = 'Ocorreu um erro ao importar as questões.';
+        if (error instanceof Error) {
+          message = error.message;
+        }
+        toast({
+          variant: 'destructive',
+          title: 'Erro na Importação',
+          description: message,
+        });
+      })
+      .finally(() => {
+        setIsImportingQuestions(false);
       });
-    } finally {
-      setIsImportingQuestions(false);
-    }
   };
 
   const handleImportFlashcards = async () => {
