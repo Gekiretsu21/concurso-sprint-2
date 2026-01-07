@@ -14,9 +14,9 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardPaste, FileText, Layers, Loader2, Users, Trash2, AlertCircle, ArchiveX } from 'lucide-react';
+import { ClipboardPaste, FileText, Layers, Loader2, Trash2, AlertCircle, ArchiveX } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
-import { importQuestions, importFlashcards, deleteDuplicateQuestions, deletePreviousExams, deleteCommunitySimulados, deleteFlashcards } from '@/firebase/actions';
+import { importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteFlashcards } from '@/firebase/actions';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
 import { SubjectCard } from '@/components/SubjectCard';
@@ -29,14 +29,13 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import Link from 'next/link';
-import { collection, DocumentData, query, where, getDocs } from 'firebase/firestore';
+import { collection, DocumentData, query } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 
 // Helper to generate a URL-friendly slug from a subject name
 const createSubjectSlug = (subject: string) => {
@@ -98,7 +97,6 @@ function DeletePreviousExamsDialog() {
     
     setIsDeleting(true);
     try {
-      // The user ID is passed for potential logging/auditing, but the action now targets a public collection.
       await deletePreviousExams(firestore, user.uid, selectedExams);
       toast({
         title: "Sucesso!",
@@ -344,7 +342,6 @@ export default function ManagementPage() {
   const [flashcardText, setFlashcardText] = useState('');
   const [isImportingQuestions, setIsImportingQuestions] = useState(false);
   const [isImportingFlashcards, setIsImportingFlashcards] = useState(false);
-  const [isCleaning, setIsCleaning] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [isPreviousExam, setIsPreviousExam] = useState(false);
   const [examName, setExamName] = useState('');
@@ -367,11 +364,12 @@ export default function ManagementPage() {
         const isHidden = q.status === 'hidden';
 
         if (subject && subject.trim() && !isHidden) {
-            // Normalize the subject name to handle case variations
             const normalizedSubject = subject.trim().toLowerCase();
             if(normalizedSubject !== 'materia') {
                 if (!acc[normalizedSubject]) {
-                    acc[normalizedSubject] = { name: subject.trim(), count: 0 };
+                    // Capitalize the first letter for consistent display
+                    const displayName = subject.trim().charAt(0).toUpperCase() + subject.trim().slice(1);
+                    acc[normalizedSubject] = { name: displayName, count: 0 };
                 }
                 acc[normalizedSubject].count++;
             }
@@ -454,37 +452,6 @@ export default function ManagementPage() {
       setIsImportingFlashcards(false);
     }
   };
-  
-    const handleCleanDuplicates = async () => {
-    if (!firestore) {
-      toast({ variant: 'destructive', title: 'Erro de Conexão' });
-      return;
-    }
-    setIsCleaning(true);
-    try {
-      const deletedCount = await deleteDuplicateQuestions(firestore);
-      if (deletedCount > 0) {
-        toast({
-          title: 'Limpeza Concluída',
-          description: `${deletedCount} questões duplicadas foram removidas.`,
-        });
-      } else {
-        toast({
-          title: 'Nenhuma Duplicata Encontrada',
-          description: 'Seu banco de questões já está limpo.',
-        });
-      }
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Erro na Limpeza',
-        description: 'Não foi possível remover as questões duplicadas.',
-      });
-    } finally {
-      setIsCleaning(false);
-    }
-  };
-
 
   const isButtonDisabled = !user || isUserLoading;
 
@@ -673,39 +640,7 @@ Português | Crase | Analista Judiciário | Quando a crase é facultativa antes 
                 <CardTitle>Ferramentas de Manutenção</CardTitle>
                 <CardDescription>Ações para organizar e limpar seus dados.</CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="flex flex-col justify-between p-4 rounded-lg border h-full">
-                    <div>
-                        <h4 className="font-semibold">Limpar Duplicatas</h4>
-                        <p className="text-sm text-muted-foreground mt-1">Remove questões com o mesmo enunciado.</p>
-                    </div>
-                     <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                             <Button variant="destructive" size="sm" disabled={isButtonDisabled} className="mt-4">
-                                {isCleaning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 />}
-                                Limpar
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle className="flex items-center gap-2">
-                                    <AlertCircle className="text-destructive"/>
-                                    Tem certeza que deseja continuar?
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    Esta ação é irreversível. Ela irá verificar todas as questões no banco de dados e remover permanentemente as que tiverem o mesmo enunciado, mantendo apenas uma cópia de cada.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleCleanDuplicates} className="bg-destructive hover:bg-destructive/90">
-                                    Sim, remover duplicatas
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                </div>
-
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="flex flex-col justify-between p-4 rounded-lg border h-full">
                     <div>
                         <h4 className="font-semibold">Excluir Provas</h4>
@@ -766,5 +701,3 @@ Português | Crase | Analista Judiciário | Quando a crase é facultativa antes 
     </div>
   );
 }
-
-    
