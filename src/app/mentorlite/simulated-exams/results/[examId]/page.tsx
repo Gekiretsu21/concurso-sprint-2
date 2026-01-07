@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useFirebase, useUser, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, documentId } from 'firebase/firestore';
 import { savePreviousExamResult } from '@/firebase/actions';
 
 
@@ -70,7 +70,7 @@ function formatEnunciado(text: string) {
   return text.replace(/\b(I|II|III|IV|V|VI|VII|VIII|IX|X)[\s-]/g, '\n$&');
 }
 
-function ResultDetails({ question, userAnswer }: { question: Question, userAnswer: string | undefined }) {
+function ResultDetails({ question, userAnswer, index }: { question: Question, userAnswer: string | undefined, index: number }) {
   const alternativesKeys: (keyof Question)[] = ['a', 'b', 'c', 'd', 'e'];
   const isCorrect = userAnswer && userAnswer.toLowerCase() === question.correctAnswer.toLowerCase();
   
@@ -80,12 +80,12 @@ function ResultDetails({ question, userAnswer }: { question: Question, userAnswe
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">
             {isCorrect ? <CheckCircle className="text-emerald-500" /> : <XCircle className="text-destructive" />}
-            Questão sobre {question.Assunto}
+            Questão {index + 1}
           </CardTitle>
           <Badge variant="outline">{question.Materia}</Badge>
         </div>
         <CardDescription className="pt-4 text-base text-foreground whitespace-pre-line">
-            {formatEnunciado(question.Enunciado)}
+            ({question.Assunto}) {formatEnunciado(question.Enunciado)}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -187,37 +187,37 @@ export default function ExamResultsPage() {
   const { data: savedResult, isLoading: isLoadingResult } = useDoc<PreviousExamResult>(resultDocRef);
 
   const fetchAndSetQuestions = useCallback(async (questionIds: string[], storedAnswers: UserAnswers) => {
-    if (!firestore) return;
+    if (!firestore || questionIds.length === 0) return;
 
-    const fetchedQuestions: Question[] = [];
+    const fetchedQuestionsData: Question[] = [];
+    // Firestore `in` query has a limit of 30 items per query
     const questionIdsBatches: string[][] = [];
-    
-    // Split question IDs into batches of 30
     for (let i = 0; i < questionIds.length; i += 30) {
       questionIdsBatches.push(questionIds.slice(i, i + 30));
     }
     
     for (const batch of questionIdsBatches) {
         if (batch.length === 0) continue;
-        const q = query(collection(firestore, 'questoes'), where('__name__', 'in', batch));
+        const q = query(collection(firestore, 'questoes'), where(documentId(), 'in', batch));
         const querySnapshot = await getDocs(q);
-        const questionsMap = new Map(querySnapshot.docs.map(doc => [doc.id, { id: doc.id, ...doc.data() as Omit<Question, 'id'> }]));
-
-        batch.forEach(id => {
-            const question = questionsMap.get(id);
-            if (question) fetchedQuestions.push(question);
+        querySnapshot.docs.forEach(doc => {
+            fetchedQuestionsData.push({ id: doc.id, ...doc.data() as Omit<Question, 'id'> });
         });
     }
 
-    setQuestions(fetchedQuestions);
+    // CRITICAL: Re-order the fetched questions according to the original questionIds array
+    const questionsMap = new Map(fetchedQuestionsData.map(q => [q.id, q]));
+    const orderedQuestions = questionIds.map(id => questionsMap.get(id)).filter((q): q is Question => !!q);
+    
+    setQuestions(orderedQuestions);
     setUserAnswers(storedAnswers);
     
-    const calculatedPerformance = calculatePerformance(fetchedQuestions, storedAnswers);
+    const calculatedPerformance = calculatePerformance(orderedQuestions, storedAnswers);
     setPerformanceBySubject(calculatedPerformance);
 
-    const correctCount = fetchedQuestions.reduce((acc, q) => 
+    const correctCount = orderedQuestions.reduce((acc, q) => 
         (storedAnswers[q.id] && storedAnswers[q.id].toLowerCase() === q.correctAnswer.toLowerCase()) ? acc + 1 : acc, 0);
-    const total = fetchedQuestions.length;
+    const total = orderedQuestions.length;
     setScorePercentage(total > 0 ? (correctCount / total) * 100 : 0);
     
     setIsLoading(false);
@@ -229,14 +229,19 @@ export default function ExamResultsPage() {
     
     if (fromLocalStorage) {
       const data: ExamResultsData = JSON.parse(fromLocalStorage);
-      setQuestions(data.questions);
+
+      // CRITICAL: Reorder questions from localStorage data as well.
+      const questionsMap = new Map(data.questions.map(q => [q.id, q]));
+      const orderedQuestions = data.exam.questionIds.map(id => questionsMap.get(id)).filter((q): q is Question => !!q);
+
+      setQuestions(orderedQuestions);
       setUserAnswers(data.userAnswers);
       
-      const perf = calculatePerformance(data.questions, data.userAnswers);
+      const perf = calculatePerformance(orderedQuestions, data.userAnswers);
       setPerformanceBySubject(perf);
       
-      const correct = data.questions.reduce((acc, q) => (data.userAnswers[q.id] && data.userAnswers[q.id].toLowerCase() === q.correctAnswer.toLowerCase() ? acc + 1 : 0), 0);
-      const total = data.questions.length;
+      const correct = orderedQuestions.reduce((acc, q) => (data.userAnswers[q.id] && data.userAnswers[q.id].toLowerCase() === q.correctAnswer.toLowerCase() ? acc + 1 : acc), 0);
+      const total = orderedQuestions.length;
       const score = total > 0 ? (correct / total) * 100 : 0;
       setScorePercentage(score);
 
@@ -255,17 +260,28 @@ export default function ExamResultsPage() {
     } else if (savedResult) {
        const fetchExamAndQuestions = async () => {
          if (!firestore) return;
+         // Determine if it's a community or previous exam based on URL/existing data if needed
+         // For now, assuming it's a previousExam as it's the main use case for re-viewing
          const examRef = doc(firestore, 'previousExams', savedResult.examId);
          const examSnap = await getDoc(examRef);
          if (examSnap.exists()) {
            const examData = examSnap.data() as SimulatedExam;
            fetchAndSetQuestions(examData.questionIds, savedResult.userAnswers);
+         } else {
+             // Fallback for community simulado if needed
+             const communityExamRef = doc(firestore, 'communitySimulados', savedResult.examId);
+             const communityExamSnap = await getDoc(communityExamRef);
+             if (communityExamSnap.exists()) {
+                const examData = communityExamSnap.data() as SimulatedExam;
+                fetchAndSetQuestions(examData.questionIds, savedResult.userAnswers);
+             }
          }
        };
        fetchExamAndQuestions();
     } else if (!isLoadingResult) {
         // No local storage, no saved result, and not loading. Probably direct navigation.
-        // router.push('/mentorlite/previous-exams');
+        // Prevent showing an empty page by redirecting
+        router.push('/mentorlite/previous-exams');
     }
 
   }, [savedResult, isLoadingResult, firestore, user, fetchAndSetQuestions, router]);
@@ -407,8 +423,8 @@ export default function ExamResultsPage() {
 
       <div className="space-y-6">
         <h2 className="text-2xl font-bold">Gabarito Detalhado</h2>
-        {questions.sort((a, b) => a.Materia.localeCompare(b.Materia) || a.Assunto.localeCompare(b.Assunto)).map((q) => (
-          <ResultDetails key={q.id} question={q} userAnswer={userAnswers[q.id]} />
+        {questions.map((q, index) => (
+          <ResultDetails key={q.id} question={q} userAnswer={userAnswers[q.id]} index={index}/>
         ))}
       </div>
       
