@@ -145,7 +145,6 @@ export default function FlashcardsPage() {
       filteredBySubject = allFlashcards.filter(fc => fc.subject === filterSubject);
     }
     
-    // Use Set to ensure unique values for topics and targetRoles
     const topics = new Set(filteredBySubject.map(fc => fc.topic));
     const targetRoles = new Set(filteredBySubject.map(fc => fc.targetRole));
 
@@ -185,7 +184,6 @@ export default function FlashcardsPage() {
         return;
       }
       
-      // Fetch the full flashcard objects for the incorrect ones
       const incorrectCardsQuery = query(collection(firestore, 'flashcards'), where(documentId(), 'in', incorrectFlashcardIds));
       const incorrectCardsSnapshot = await getDocs(incorrectCardsQuery);
       flashcardsToStudy = incorrectCardsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Flashcard));
@@ -338,3 +336,5 @@ export default function FlashcardsPage() {
     </div>
   );
 }
+
+    
