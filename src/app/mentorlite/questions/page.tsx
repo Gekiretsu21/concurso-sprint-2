@@ -90,7 +90,7 @@ export default function QuestionsPage() {
               <SelectTrigger>
                 <SelectValue placeholder="Matéria" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper">
                 {isLoadingSubjects ? (
                   <div className="flex items-center justify-center p-4">
                     <Loader2 className="h-5 w-5 animate-spin" />
@@ -113,7 +113,7 @@ export default function QuestionsPage() {
               <SelectTrigger>
                 <SelectValue placeholder="Assunto" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper">
                 <SelectItem value={ALL_TOPICS}>Todos os Assuntos</SelectItem>
                 {availableTopics.map(t => (
                   <SelectItem key={t} value={t}>
