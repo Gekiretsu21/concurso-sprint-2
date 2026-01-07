@@ -45,7 +45,7 @@ export default function QuestionsPage() {
 
   const availableSubjects = useMemo(() => {
     if (!allQuestions) return [];
-    const subjects = new Set(allQuestions.map(q => q.Materia).filter(Boolean).filter(s => s.toLowerCase() !== 'matéria'));
+    const subjects = new Set(allQuestions.map(q => q.Materia).filter(Boolean).filter(s => s.toLowerCase() !== 'materia'));
     return Array.from(subjects).sort();
   }, [allQuestions]);
 
@@ -111,7 +111,7 @@ export default function QuestionsPage() {
               disabled={!filterSubject}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Assunto" />
+                <SelectValue placeholder="Assuntos" />
               </SelectTrigger>
               <SelectContent position="popper">
                 <SelectItem value={ALL_TOPICS}>Todos os Assuntos</SelectItem>
