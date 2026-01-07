@@ -316,42 +316,6 @@ export default function SimulatedExamPage() {
                 userAnswer={userAnswers[q.id]}
             />
           ))}
-          <div className="flex justify-end mt-8">
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                  <Button size="lg">Encerrar Simulado</Button>
-              </AlertDialogTrigger>
-              { allAnswered ? (
-                  <AlertDialogContent>
-                      <AlertDialogHeader>
-                          <AlertDialogTitle>Finalizar Simulado?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                              Você respondeu todas as questões. Deseja ver seu resultado agora?
-                          </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                          <AlertDialogCancel>Voltar</AlertDialogCancel>
-                          <AlertDialogAction onClick={handleFinishExam}>Ver Resultado</AlertDialogAction>
-                      </AlertDialogFooter>
-                  </AlertDialogContent>
-              ) : (
-                  <AlertDialogContent>
-                      <AlertDialogHeader>
-                          <AlertDialogTitle>Atenção</AlertDialogTitle>
-                          <AlertDialogDescription>
-                              Você não respondeu todas as questões ({answeredCount}/{totalCount}). As questões não respondidas serão contadas como erradas. Deseja mesmo encerrar o simulado?
-                          </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                          <AlertDialogCancel>Continuar Simulado</AlertDialogCancel>
-                          <AlertDialogAction onClick={handleFinishExam} className="bg-destructive hover:bg-destructive/90">
-                              Encerrar Mesmo Assim
-                          </AlertDialogAction>
-                      </AlertDialogFooter>
-                  </AlertDialogContent>
-              )}
-            </AlertDialog>
-          </div>
         </div>
       ) : (
         <Card className="flex flex-col items-center justify-center h-64">
