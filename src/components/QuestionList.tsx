@@ -46,6 +46,7 @@ interface Question {
 interface QuestionAttempt {
     id: string;
     isCorrect: boolean;
+    subject: string;
 }
 
 function formatEnunciado(text: string) {
@@ -54,7 +55,7 @@ function formatEnunciado(text: string) {
 }
 
 interface QuestionListProps {
-  subject: string;
+  subject: string | string[];
   topics?: string[];
   statusFilter?: StatusFilter;
 }
@@ -73,19 +74,29 @@ export function QuestionList({ subject, topics, statusFilter = 'all' }: Question
   // 1. Fetch base questions based on subject and topics
   const questionsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    const constraints: QueryConstraint[] = [where('Materia', '==', subject)];
+    const subjectConstraint = Array.isArray(subject) 
+      ? where('Materia', 'in', subject) 
+      : where('Materia', '==', subject);
+      
+    const constraints: QueryConstraint[] = [subjectConstraint];
     if (topics && topics.length > 0) {
       constraints.push(where('Assunto', 'in', topics));
     }
     return query(collection(firestore, 'questoes'), and(...constraints));
   }, [firestore, subject, topics]);
+
   const { data: questions, isLoading: isLoadingQuestions } = useCollection<Question>(questionsQuery);
   
   // 2. Fetch user's attempts for the current subject
   const attemptsQuery = useMemoFirebase(() => {
       if(!firestore || !user) return null;
-      return query(collection(firestore, `users/${user.uid}/question_attempts`), where('subject', '==', subject));
+      // Fetch for one or multiple subjects
+      const subjectConstraint = Array.isArray(subject)
+        ? where('subject', 'in', subject)
+        : where('subject', '==', subject);
+      return query(collection(firestore, `users/${user.uid}/question_attempts`), subjectConstraint);
   }, [firestore, user, subject]);
+
   const { data: attempts, isLoading: isLoadingAttempts } = useCollection<QuestionAttempt>(attemptsQuery);
   
   // 3. Create a map of attempts for quick lookup
@@ -127,7 +138,10 @@ export function QuestionList({ subject, topics, statusFilter = 'all' }: Question
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [subject, topics, statusFilter]);
+    // When the questions themselves change, also clear local answer state
+    setSelectedAnswers({});
+    setAnsweredQuestions({});
+  }, [subject, topics, statusFilter, questions]);
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 

@@ -358,20 +358,23 @@ export default function ManagementPage() {
 
   const availableSubjects = useMemo((): SubjectWithCount[] => {
     if (!allQuestions) return [];
-    
+
     const subjectCounts = allQuestions.reduce((acc, q) => {
         const subject = q.Materia;
         const isHidden = q.status === 'hidden';
 
         if (subject && subject.trim() && !isHidden) {
-            const normalizedSubject = subject.trim().toLowerCase();
-            if(normalizedSubject !== 'materia') {
-                if (!acc[normalizedSubject]) {
-                    // Capitalize the first letter for consistent display
-                    const displayName = subject.trim().charAt(0).toUpperCase() + subject.trim().slice(1);
-                    acc[normalizedSubject] = { name: displayName, count: 0 };
+            let subjectName = subject.trim();
+            // Standardize "Língua Portuguesa" variations
+            if (subjectName.toLowerCase() === 'língua portuguesa' || subjectName.toLowerCase() === 'lingua portuguesa') {
+                subjectName = 'Lingua Portuguesa';
+            }
+            
+            if (subjectName !== 'materia') { // Filter out header row
+                if (!acc[subjectName]) {
+                    acc[subjectName] = { name: subjectName, count: 0 };
                 }
-                acc[normalizedSubject].count++;
+                acc[subjectName].count++;
             }
         }
         return acc;
@@ -379,7 +382,6 @@ export default function ManagementPage() {
 
     return Object.values(subjectCounts)
         .sort((a, b) => a.name.localeCompare(b.name));
-
   }, [allQuestions]);
 
   const handleImportQuestions = () => {

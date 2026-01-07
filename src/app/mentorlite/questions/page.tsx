@@ -39,7 +39,7 @@ export default function QuestionsPage() {
   const [filterStatus, setFilterStatus] = useState<StatusFilter>('all');
   
   const [activeFilters, setActiveFilters] = useState<{
-    subject: string;
+    subject: string | string[];
     topics: string[];
     status: StatusFilter;
   }>({
@@ -57,19 +57,33 @@ export default function QuestionsPage() {
 
   const availableSubjects = useMemo(() => {
     if (!allQuestions) return [];
-    const subjects = new Set(
-      allQuestions
+    const subjectSet = new Set<string>();
+    allQuestions
         .filter(q => q.status !== 'hidden' && q.Materia && q.Materia.trim().toLowerCase() !== 'materia')
-        .map(q => q.Materia)
-    );
-    return Array.from(subjects).sort();
+        .forEach(q => {
+            let subjectName = q.Materia.trim();
+            if (subjectName.toLowerCase() === 'língua portuguesa' || subjectName.toLowerCase() === 'lingua portuguesa') {
+                subjectSet.add('Lingua Portuguesa');
+            } else {
+                subjectSet.add(subjectName);
+            }
+        });
+    return Array.from(subjectSet).sort();
   }, [allQuestions]);
 
   const availableTopics = useMemo(() => {
     if (!allQuestions || !filterSubject) return [];
+    
+    const isLinguaPortuguesa = filterSubject === 'Lingua Portuguesa';
+    
     const topics = new Set(
       allQuestions
-        .filter(q => q.Materia === filterSubject && q.Assunto)
+        .filter(q => {
+            const subjectMatch = isLinguaPortuguesa
+              ? q.Materia.toLowerCase() === 'língua portuguesa' || q.Materia.toLowerCase() === 'lingua portuguesa'
+              : q.Materia === filterSubject;
+            return subjectMatch && q.Assunto;
+        })
         .map(q => q.Assunto)
     );
     return Array.from(topics).sort();
@@ -81,7 +95,12 @@ export default function QuestionsPage() {
   }, [filterSubject]);
 
   const handleFilterSubmit = () => {
-    setActiveFilters({ subject: filterSubject, topics: selectedTopics, status: filterStatus });
+    let subjectQuery: string | string[] = filterSubject;
+    // If the selected subject is the standardized "Lingua Portuguesa", search for both variations.
+    if (filterSubject === 'Lingua Portuguesa') {
+        subjectQuery = ['Lingua Portuguesa', 'Língua Portuguesa'];
+    }
+    setActiveFilters({ subject: subjectQuery, topics: selectedTopics, status: filterStatus });
   };
   
   const getTopicButtonLabel = () => {

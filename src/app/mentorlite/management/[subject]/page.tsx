@@ -5,7 +5,14 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
 import { QuestionList } from '@/components/QuestionList';
 
-function SubjectPageContent({ subjectName }: { subjectName: string }) {
+function SubjectPageContent({ subjectName, subjectParam }: { subjectName: string, subjectParam: string }) {
+  
+  // Special handling for 'Lingua Portuguesa' to query variations
+  const querySubjects = subjectParam === 'lingua-portuguesa' 
+    ? ['Lingua Portuguesa', 'Língua Portuguesa']
+    : [subjectName];
+
+
   return (
     <div className="flex flex-col gap-8">
       <header className="flex items-center gap-4">
@@ -24,16 +31,18 @@ function SubjectPageContent({ subjectName }: { subjectName: string }) {
           </p>
         </div>
       </header>
-      <QuestionList subject={subjectName} />
+      <QuestionList subject={querySubjects} />
     </div>
   );
 }
 
 export default function SubjectPage({ params }: { params: { subject: string } }) {
+  const subjectSlug = params.subject;
+
   // This will handle URL-encoded characters (like %C3%A7 for ç) and reconstruct the name.
-  const subjectName = params.subject
-    ? decodeURIComponent(params.subject).split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+  const subjectName = subjectSlug
+    ? decodeURIComponent(subjectSlug).split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
     : '';
 
-  return <SubjectPageContent subjectName={subjectName} />;
+  return <SubjectPageContent subjectName={subjectName} subjectParam={subjectSlug}/>;
 }
