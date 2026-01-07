@@ -30,11 +30,9 @@ function SubjectPageContent({ subjectName }: { subjectName: string }) {
 }
 
 export default function SubjectPage({ params }: { params: { subject: string } }) {
-  const subjectSlug = params.subject;
-
   // This will handle URL-encoded characters (like %C3%A7 for ç) and reconstruct the name.
-  const subjectName = subjectSlug
-    ? decodeURIComponent(subjectSlug).split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+  const subjectName = params.subject
+    ? decodeURIComponent(params.subject).split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
     : '';
 
   return <SubjectPageContent subjectName={subjectName} />;
