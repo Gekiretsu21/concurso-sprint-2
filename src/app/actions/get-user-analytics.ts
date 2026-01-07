@@ -87,23 +87,14 @@ export async function getUserAnalytics(userId: string): Promise<UserAnalytics> {
 
     const bySubject = questionsStats.bySubject ?? {};
 
-    for (const subject in bySubject) {
-      // Check if the property is directly on the object to avoid iterating over inherited properties
-      if (Object.prototype.hasOwnProperty.call(bySubject, subject)) {
-        const data = bySubject[subject];
-        // Safely access properties and provide fallbacks
-        if (data && typeof data === 'object') {
-            const answered = data.answered ?? 0;
-            const correct = data.correct ?? 0;
-            
-            if (answered > 0) {
-                const accuracy = (correct / answered) * 100;
-                subjectPerformance.push({ subject, accuracy });
-            }
-        } else {
-           // Log malformed data for debugging purposes
-           console.warn(`Invalid performance data for subject "${subject}":`, data);
-        }
+    for (const [subject, data] of Object.entries(bySubject)) {
+      if (data && typeof data === 'object' && 'answered' in data && (data as any).answered > 0) {
+        const answered = (data as any).answered ?? 0;
+        const correct = (data as any).correct ?? 0;
+        const accuracy = (correct / answered) * 100;
+        subjectPerformance.push({ subject, accuracy });
+      } else {
+         console.warn(`Dados de desempenho inválidos ou vazios para a matéria "${subject}":`, data);
       }
     }
     
