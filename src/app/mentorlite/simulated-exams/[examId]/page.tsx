@@ -17,7 +17,19 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+
 
 interface Question {
   id: string;
@@ -42,6 +54,8 @@ interface SimulatedExam {
   originalExamId?: string; // For community exams
 }
 
+type UserAnswers = { [questionId: string]: string };
+
 function formatEnunciado(text: string) {
   if (!text) return '';
   return text.replace(/\b(I|II|III|IV|V|VI|VII|VIII|IX|X)[\s-]/g, '\n$&');
@@ -51,13 +65,22 @@ function QuestionCard({
   question,
   index,
   isPreviousExam = false,
+  onAnswerSelect,
+  userAnswer
 }: {
   question: Question;
   index: number;
   isPreviousExam?: boolean;
+  onAnswerSelect: (questionId: string, answer: string) => void;
+  userAnswer?: string;
 }) {
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(userAnswer || null);
   const [isAnswered, setIsAnswered] = useState(false);
+
+  useEffect(() => {
+    // Sync local state if the parent's state changes
+    setSelectedAnswer(userAnswer || null);
+  }, [userAnswer]);
 
   const alternativesKeys: (keyof Question)[] = ['a', 'b', 'c', 'd', 'e'];
   const selected = selectedAnswer;
@@ -66,11 +89,18 @@ function QuestionCard({
   const userHasIncorrectlyAnswered = isAnswered && !isCorrect;
 
   const handleSelectAnswer = (answer: string) => {
-    if (isAnswered || isPreviousExam) return;
-    setSelectedAnswer(prev => (prev === answer ? null : answer));
+    if (isAnswered) return;
+    
+    const newAnswer = selectedAnswer === answer ? null : answer;
+    setSelectedAnswer(newAnswer);
+
+    if (isPreviousExam) {
+        onAnswerSelect(question.id, newAnswer || '');
+    }
   };
 
   const handleConfirmAnswer = () => {
+    if (isPreviousExam) return; // This button is not for previous exams
     setIsAnswered(true);
   };
   
@@ -79,7 +109,11 @@ function QuestionCard({
     const correctAnswerNormalized = String(question.correctAnswer).toLowerCase();
     const selectedNormalized = String(selected).toLowerCase();
 
-    if (isPreviousExam) return 'cursor-default';
+    // For Previous Exams, we only highlight the selected one
+    if (isPreviousExam) {
+      if (selectedNormalized === currentKeyNormalized) return 'bg-secondary border-primary';
+      return 'hover:bg-secondary/80';
+    }
 
     if (!isAnswered) {
       if (selectedNormalized === currentKeyNormalized) return 'bg-secondary border-primary';
@@ -126,7 +160,7 @@ function QuestionCard({
                 onClick={() => handleSelectAnswer(alternativeKey)}
                 className={cn(
                   'flex items-start space-x-3 p-3 rounded-lg border transition-all duration-300',
-                  (isAnswered || isPreviousExam) ? 'cursor-not-allowed' : 'cursor-pointer',
+                  isAnswered && !isPreviousExam ? 'cursor-not-allowed' : 'cursor-pointer',
                   getAlternativeClassName(alternativeKey)
                 )}
               >
@@ -212,6 +246,7 @@ function Timer() {
 export default function SimulatedExamPage() {
   const params = useParams();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const examId = params.examId as string;
   
   const from = searchParams.get('from');
@@ -221,6 +256,7 @@ export default function SimulatedExamPage() {
   const { firestore, user } = useFirebase();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(true);
+  const [userAnswers, setUserAnswers] = useState<UserAnswers>({});
 
   const examDocRef = useMemoFirebase(
     () => {
@@ -273,11 +309,35 @@ export default function SimulatedExamPage() {
     fetchQuestions();
   }, [exam, firestore]);
   
+  const handleAnswerSelect = (questionId: string, answer: string) => {
+    setUserAnswers(prev => ({ ...prev, [questionId]: answer }));
+  };
+
+  const handleFinishExam = () => {
+    const results = {
+        exam,
+        questions,
+        userAnswers,
+    };
+    // Use router state to pass complex data without polluting the URL
+    router.push(`/mentorlite/simulated-exams/results/${examId}?examName=${encodeURIComponent(exam?.name || '')}`);
+    // This is a common pattern, but Next.js doesn't have a built-in state passing like React Router.
+    // A more robust solution might involve context or a state management library like Zustand/Redux.
+    // For this case, we'll rely on the user having the data in memory or re-fetching on the results page.
+    // Let's pass it via localStorage as a temporary solution for this context.
+    localStorage.setItem('examResults', JSON.stringify(results));
+  };
+
+
   const getBackHref = () => {
     if (isPreviousExam) return '/mentorlite/previous-exams';
     if (isCommunitySimulado) return '/mentorlite/community-simulados';
     return '/mentorlite/simulated-exams';
   };
+
+  const answeredCount = Object.values(userAnswers).filter(Boolean).length;
+  const totalCount = questions.length;
+  const allAnswered = answeredCount === totalCount;
 
   const isLoading = isLoadingExam || isLoadingQuestions;
   const backHref = getBackHref();
@@ -311,11 +371,51 @@ export default function SimulatedExamPage() {
       ) : questions.length > 0 ? (
         <div className="space-y-6">
           {questions.map((q, index) => (
-            <QuestionCard key={q.id} question={q} index={index} isPreviousExam={isPreviousExam} />
+            <QuestionCard 
+                key={q.id} 
+                question={q} 
+                index={index} 
+                isPreviousExam={isPreviousExam}
+                onAnswerSelect={handleAnswerSelect}
+                userAnswer={userAnswers[q.id]}
+            />
           ))}
           {isPreviousExam && (
             <div className="flex justify-end mt-8">
-              <Button size="lg">Encerrar Simulado</Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button size="lg">Encerrar Prova</Button>
+                </AlertDialogTrigger>
+                { allAnswered ? (
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Finalizar Prova?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Você respondeu todas as questões. Deseja ver seu resultado agora?
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Voltar</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleFinishExam}>Ver Resultado</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                ) : (
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Atenção</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Você não respondeu todas as questões ({answeredCount}/{totalCount}). As questões não respondidas serão contadas como erradas. Deseja mesmo encerrar a prova?
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Continuar Prova</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleFinishExam} className="bg-destructive hover:bg-destructive/90">
+                                Encerrar Mesmo Assim
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                )}
+              </AlertDialog>
             </div>
           )}
         </div>
