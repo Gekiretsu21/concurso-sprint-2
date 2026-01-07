@@ -228,7 +228,7 @@ function SimulatedExamContent({ examId, from }: { examId: string, from: string |
       // Process each batch
       for (const batch of questionIdsBatches) {
          if (batch.length === 0) continue;
-        const q = query(collection(firestore, 'questoes'), where('__name__', 'in', batch));
+        const q = query(collection(firestore, 'questoes'), where(documentId(), 'in', batch));
         const questionSnapshots = await getDocs(q);
         const questionsMap = new Map(questionSnapshots.docs.map(doc => [doc.id, { id: doc.id, ...doc.data() as Omit<Question, 'id'>}]));
         
@@ -372,7 +372,7 @@ function SimulatedExamContent({ examId, from }: { examId: string, from: string |
 }
 
 export default function SimulatedExamPage({ params, searchParams }: { params: { examId: string }, searchParams: { from?: string }}) {
-    const { examId } = params;
-    const { from } = searchParams;
-    return <SimulatedExamContent examId={examId} from={from || null} />;
+    const examId = params.examId;
+    const from = searchParams?.from || null;
+    return <SimulatedExamContent examId={examId} from={from} />;
 }
