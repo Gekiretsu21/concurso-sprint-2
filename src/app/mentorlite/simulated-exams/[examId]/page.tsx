@@ -50,9 +50,11 @@ function formatEnunciado(text: string) {
 function QuestionCard({
   question,
   index,
+  isPreviousExam = false,
 }: {
   question: Question;
   index: number;
+  isPreviousExam?: boolean;
 }) {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
@@ -64,7 +66,7 @@ function QuestionCard({
   const userHasIncorrectlyAnswered = isAnswered && !isCorrect;
 
   const handleSelectAnswer = (answer: string) => {
-    if (isAnswered) return;
+    if (isAnswered || isPreviousExam) return;
     setSelectedAnswer(prev => (prev === answer ? null : answer));
   };
 
@@ -76,6 +78,8 @@ function QuestionCard({
     const currentKeyNormalized = alternativeKey.toLowerCase();
     const correctAnswerNormalized = String(question.correctAnswer).toLowerCase();
     const selectedNormalized = String(selected).toLowerCase();
+
+    if (isPreviousExam) return 'cursor-default';
 
     if (!isAnswered) {
       if (selectedNormalized === currentKeyNormalized) return 'bg-secondary border-primary';
@@ -122,7 +126,7 @@ function QuestionCard({
                 onClick={() => handleSelectAnswer(alternativeKey)}
                 className={cn(
                   'flex items-start space-x-3 p-3 rounded-lg border transition-all duration-300',
-                  isAnswered ? 'cursor-not-allowed' : 'cursor-pointer',
+                  (isAnswered || isPreviousExam) ? 'cursor-not-allowed' : 'cursor-pointer',
                   getAlternativeClassName(alternativeKey)
                 )}
               >
@@ -140,28 +144,30 @@ function QuestionCard({
           })}
         </div>
       </CardContent>
-       <CardFooter className="flex-col items-stretch gap-4 sm:flex-row sm:justify-between sm:items-center">
-        <div className="text-sm min-h-[1.25rem]">
-          {userHasCorrectlyAnswered && (
-            <p className="text-emerald-600 font-medium">Parabéns, resposta correta.</p>
-          )}
-          {userHasIncorrectlyAnswered && (
-            <p className="text-destructive font-medium">
-              Você errou. Gabarito: Letra {String(question.correctAnswer).toUpperCase()}
-            </p>
-          )}
-        </div>
-        <div className="flex gap-2 self-end sm:self-auto">
-          <Button
-            variant="default"
-            onClick={handleConfirmAnswer}
-            disabled={!selectedAnswer || isAnswered}
-          >
-            {isAnswered ? 'Respondido' : 'Responder'}
-          </Button>
-          <Button variant="outline">Comentários</Button>
-        </div>
-      </CardFooter>
+       {!isPreviousExam && (
+        <CardFooter className="flex-col items-stretch gap-4 sm:flex-row sm:justify-between sm:items-center">
+            <div className="text-sm min-h-[1.25rem]">
+            {userHasCorrectlyAnswered && (
+                <p className="text-emerald-600 font-medium">Parabéns, resposta correta.</p>
+            )}
+            {userHasIncorrectlyAnswered && (
+                <p className="text-destructive font-medium">
+                Você errou. Gabarito: Letra {String(question.correctAnswer).toUpperCase()}
+                </p>
+            )}
+            </div>
+            <div className="flex gap-2 self-end sm:self-auto">
+            <Button
+                variant="default"
+                onClick={handleConfirmAnswer}
+                disabled={!selectedAnswer || isAnswered}
+            >
+                {isAnswered ? 'Respondido' : 'Responder'}
+            </Button>
+            <Button variant="outline">Comentários</Button>
+            </div>
+        </CardFooter>
+       )}
     </Card>
   );
 }
@@ -208,9 +214,7 @@ export default function SimulatedExamPage() {
   const searchParams = useSearchParams();
   const examId = params.examId as string;
   
-  // Determine which collection to use based on URL params
   const from = searchParams.get('from');
-  const userId = searchParams.get('userId'); // For community simulados
   const isPreviousExam = from === 'previous-exams';
   const isCommunitySimulado = from === 'community-simulados';
 
@@ -222,7 +226,7 @@ export default function SimulatedExamPage() {
     () => {
       if (!firestore || !examId) return null;
 
-      let collectionName = `users/${user?.uid}/simulatedExams`; // Default to user's private exams
+      let collectionName = `users/${user?.uid}/simulatedExams`; 
 
       if (isPreviousExam) {
         collectionName = 'previousExams';
@@ -232,7 +236,7 @@ export default function SimulatedExamPage() {
       
       return doc(firestore, collectionName, examId) as DocumentReference<SimulatedExam>;
     },
-    [firestore, user, examId, isPreviousExam, isCommunitySimulado]
+    [firestore, user?.uid, examId, isPreviousExam, isCommunitySimulado]
   );
 
   const { data: exam, isLoading: isLoadingExam } = useDoc<SimulatedExam>(examDocRef);
@@ -307,8 +311,13 @@ export default function SimulatedExamPage() {
       ) : questions.length > 0 ? (
         <div className="space-y-6">
           {questions.map((q, index) => (
-            <QuestionCard key={q.id} question={q} index={index} />
+            <QuestionCard key={q.id} question={q} index={index} isPreviousExam={isPreviousExam} />
           ))}
+          {isPreviousExam && (
+            <div className="flex justify-end mt-8">
+              <Button size="lg">Encerrar Simulado</Button>
+            </div>
+          )}
         </div>
       ) : (
         <Card className="flex flex-col items-center justify-center h-64">
