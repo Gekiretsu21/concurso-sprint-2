@@ -219,8 +219,10 @@ async function getRandomQuestions(
   count: number
 ): Promise<string[]> {
   const questionsCollection = collection(firestore, 'questoes');
-  // Query only by subject to avoid composite index requirements.
-  const q = query(questionsCollection, where('Materia', '==', subject));
+  const q = query(
+    questionsCollection,
+    where('Materia', '==', subject)
+  );
 
   const snapshot = await getDocs(q);
   
@@ -228,6 +230,10 @@ async function getRandomQuestions(
   const activeQuestions = snapshot.docs.filter(doc => doc.data().status !== 'hidden');
   
   const allQuestionIds = activeQuestions.map(doc => doc.id);
+
+  if (allQuestionIds.length < count) {
+      throw new Error(`Não há questões suficientes para a matéria '${subject}'. Encontradas: ${allQuestionIds.length}, Solicitadas: ${count}.`);
+  }
 
   const shuffled = allQuestionIds.sort(() => 0.5 - Math.random());
   return shuffled.slice(0, count);
@@ -249,11 +255,6 @@ export async function createSimulatedExam(
   for (const [subject, count] of Object.entries(dto.subjects)) {
     if (count > 0) {
       const questionIds = await getRandomQuestions(firestore, subject, count);
-      if (questionIds.length < count) {
-        throw new Error(
-          `Não há questões suficientes para a matéria '${subject}'. Encontradas: ${questionIds.length}, Solicitadas: ${count}.`
-        );
-      }
       allQuestionIds.push(...questionIds);
       totalQuestions += count;
     }
@@ -263,7 +264,13 @@ export async function createSimulatedExam(
     throw new Error('Nenhuma questão foi selecionada para o simulado.');
   }
 
+  const communityExamCollection = collection(firestore, `communitySimulados`);
+  // Generate a new document reference with an auto-generated ID
+  const examDocRef = doc(communityExamCollection);
+
   const examData = {
+    id: examDocRef.id,
+    originalExamId: examDocRef.id, // Set it directly
     name: dto.name,
     userId,
     createdAt: serverTimestamp(),
@@ -271,39 +278,20 @@ export async function createSimulatedExam(
     questionCount: totalQuestions,
   };
 
-  const communityExamCollection = collection(firestore, `communitySimulados`);
-  
-  // This is now a non-blocking operation from the caller's perspective
-  const examDocPromise = addDoc(communityExamCollection, examData).catch(serverError => {
+  // Use setDoc with the new ref to create the document in one operation
+  setDoc(examDocRef, examData).catch(serverError => {
     const permissionError = new FirestorePermissionError({
-      path: communityExamCollection.path,
-      operation: 'create',
+      path: examDocRef.path,
+      operation: 'create', // It's a create operation with a specific ID
       requestResourceData: examData,
     });
     errorEmitter.emit('permission-error', permissionError);
-    // Re-throw to allow specific UI error handling if needed, though the global handler will catch it.
     throw permissionError;
   });
 
-  // The function can now resolve faster, while the write happens in the background.
-  // We await here to get the ID, but the error is handled in the catch block.
-  const examDocRef = await examDocPromise;
-
-  const originalExamId = examDocRef.id;
-
-  // This is a quick follow-up write, can also be non-blocking
-  updateDoc(examDocRef, { originalExamId: originalExamId }).catch(serverError => {
-     // A separate error handler for the update might be useful for detailed logging
-     const permissionError = new FirestorePermissionError({
-        path: examDocRef.path,
-        operation: 'update',
-        requestResourceData: { originalExamId: originalExamId },
-      });
-      errorEmitter.emit('permission-error', permissionError);
-  });
-
-  return originalExamId;
+  return examDocRef.id;
 }
+
 
 export async function deleteDuplicateQuestions(firestore: Firestore): Promise<number> {
     const questionsRef = collection(firestore, 'questoes');
