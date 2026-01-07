@@ -15,9 +15,9 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardPaste, FileText, Layers, Loader2, Users } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { importQuestions, importFlashcards } from '@/firebase/actions';
-import { useFirebase } from '@/firebase';
+import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
 import { SubjectCard } from '@/components/SubjectCard';
 import { SimulatedExamDialog } from '@/components/SimulatedExamDialog';
@@ -29,6 +29,19 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import Link from 'next/link';
+import { collection } from 'firebase/firestore';
+
+// Helper to generate a URL-friendly slug from a subject name
+const createSubjectSlug = (subject: string) => {
+  return subject
+    .toLowerCase()
+    .normalize('NFD') // Normalize accents
+    .replace(/[\u0300-\u036f]/g, '') // Remove accents
+    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+    .trim()
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-'); // Remove duplicate hyphens
+};
 
 export default function ManagementPage() {
   const { toast } = useToast();
@@ -43,6 +56,18 @@ export default function ManagementPage() {
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  const questionsQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'questoes') : null),
+    [firestore]
+  );
+  const { data: allQuestions, isLoading: isLoadingSubjects } = useCollection(questionsQuery);
+
+  const availableSubjects = useMemo(() => {
+    if (!allQuestions) return [];
+    const subjects = new Set(allQuestions.map(q => q.Materia).filter(Boolean).filter(s => s.toLowerCase() !== 'matéria'));
+    return Array.from(subjects).sort();
+  }, [allQuestions]);
 
   const handleImportQuestions = async () => {
     if (!firestore) {
@@ -279,22 +304,22 @@ export default function ManagementPage() {
 
       <div className="space-y-6">
         <h3 className="text-2xl font-bold tracking-tight">Recursos</h3>
-        <SubjectCard
-          subject="Direito Administrativo"
-          href="/mentorlite/management/administrative-law"
-        />
-        <SubjectCard
-          subject="Direito Constitucional"
-          href="/mentorlite/management/constitutional-law"
-        />
-        <SubjectCard
-          subject="Direito Penal"
-          href="/mentorlite/management/penal-law"
-        />
-         <SubjectCard
-          subject="Português"
-          href="/mentorlite/management/portuguese"
-        />
+        {isLoadingSubjects ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+          </div>
+        ) : (
+          availableSubjects.map(subject => (
+            <SubjectCard 
+              key={subject}
+              subject={subject}
+              href={`/mentorlite/management/${createSubjectSlug(subject)}`}
+            />
+          ))
+        )}
         <Card>
             <Link href="/mentorlite/flashcards">
                 <CardHeader className="flex-row items-center justify-between">
