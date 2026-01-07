@@ -6,17 +6,7 @@ import { ChevronLeft } from 'lucide-react';
 import { QuestionList } from '@/components/QuestionList';
 import { useParams } from 'next/navigation';
 
-function unslugify(slug: string) {
-    if (!slug) return '';
-    const words = slug.split('-');
-    return words.map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-}
-
-export default function SubjectPage() {
-  const params = useParams();
-  const subjectSlug = params.subject as string; // Treat subject as a string directly
-  const subjectName = unslugify(subjectSlug);
-
+function SubjectPageContent({ subjectName }: { subjectName: string }) {
   return (
     <div className="flex flex-col gap-8">
       <header className="flex items-center gap-4">
@@ -38,4 +28,20 @@ export default function SubjectPage() {
       <QuestionList subject={subjectName} />
     </div>
   );
+}
+
+export default function SubjectPage() {
+  const params = useParams();
+  const subjectSlug = params.subject as string;
+
+  // Decode the URL component to handle special characters correctly
+  // e.g., lingua-portuguesa -> lingua-portuguesa (no change)
+  // but if it were 'L%C3%ADngua%20Portuguesa', it would become 'Língua Portuguesa'
+  // The logic in createSubjectSlug normalizes it, so we need to reconstruct the likely name.
+  const subjectName = subjectSlug
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+
+  return <SubjectPageContent subjectName={subjectName} />;
 }

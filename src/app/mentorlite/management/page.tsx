@@ -42,12 +42,10 @@ import { Separator } from '@/components/ui/separator';
 const createSubjectSlug = (subject: string) => {
   return subject
     .toLowerCase()
-    .normalize('NFD') // Normalize accents
-    .replace(/[\u0300-\u036f]/g, '') // Remove accents
-    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
-    .trim()
-    .replace(/\s+/g, '-') // Replace spaces with hyphens
-    .replace(/-+/g, '-'); // Remove duplicate hyphens
+    .replace(/ /g, '-') // Replace spaces with hyphens for URL
+    .normalize('NFD') // Normalize accents to separate them from letters
+    .replace(/[\u0300-\u036f]/g, '') // Remove the accents
+    .replace(/[^a-z0-9-]/g, ''); // Remove any remaining special characters
 };
 
 interface SubjectWithCount {
