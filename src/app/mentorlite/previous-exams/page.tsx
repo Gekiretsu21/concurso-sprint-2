@@ -5,6 +5,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -105,19 +106,19 @@ export default function PreviousExamsPage() {
                             )}
                         </div>
                     </CardHeader>
-                    <CardContent className="flex-grow">
+                    <CardContent className="flex-grow space-y-2">
                         <p className="text-sm text-muted-foreground">
                             {exam.questionCount} questões
                         </p>
                          {isCompleted && (
-                            <p className="text-sm font-semibold text-primary mt-2">
+                            <p className="text-sm font-semibold text-primary">
                                 Seu aproveitamento: {result.score.toFixed(1)}%
                             </p>
                         )}
                     </CardContent>
-                    <CardContent>
+                    <CardFooter>
                        {isCompleted ? (
-                           <div className="flex flex-col sm:flex-row gap-2">
+                           <div className="flex flex-col sm:flex-row gap-2 w-full">
                                <Button asChild className="flex-1">
                                   <Link href={`/mentorlite/simulated-exams/results/${exam.id}?examName=${encodeURIComponent(exam.name)}`}>
                                     Conferir Desempenho
@@ -129,13 +130,13 @@ export default function PreviousExamsPage() {
                                </Button>
                            </div>
                        ) : (
-                           <Button asChild className="mt-4 w-full">
+                           <Button asChild className="w-full">
                               <Link href={`/mentorlite/simulated-exams/${exam.id}?from=previous-exams`}>
                                 Iniciar Prova
                               </Link>
                           </Button>
                        )}
-                    </CardContent>
+                    </CardFooter>
                 </Card>
               );
             })}
@@ -155,5 +156,3 @@ export default function PreviousExamsPage() {
     </div>
   );
 }
-
-    
