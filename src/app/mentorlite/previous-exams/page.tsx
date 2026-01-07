@@ -118,13 +118,13 @@ export default function PreviousExamsPage() {
                     </CardContent>
                     <CardFooter>
                        {isCompleted ? (
-                           <div className="flex flex-col sm:flex-row gap-2 w-full">
-                               <Button asChild className="flex-1">
+                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
+                               <Button asChild>
                                   <Link href={`/mentorlite/simulated-exams/results/${exam.id}?examName=${encodeURIComponent(exam.name)}`}>
                                     Conferir Desempenho
                                   </Link>
                                </Button>
-                               <Button variant="outline" onClick={(e) => handleRedo(e, exam.id)} className="flex-1">
+                               <Button variant="outline" onClick={(e) => handleRedo(e, exam.id)}>
                                     <RefreshCw className="mr-2 h-4 w-4"/>
                                     Fazer Novamente
                                </Button>
