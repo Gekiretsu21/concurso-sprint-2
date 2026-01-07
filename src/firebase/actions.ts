@@ -16,6 +16,7 @@ import {
   deleteDoc,
   WriteBatch,
   documentId,
+  and,
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -219,7 +220,10 @@ async function getRandomQuestions(
   const questionsCollection = collection(firestore, 'questoes');
   const q = query(
     questionsCollection,
-    where('Materia', '==', subject)
+    and(
+      where('Materia', '==', subject),
+      where('status', '!=', 'hidden')
+    )
   );
 
   const snapshot = await getDocs(q);
