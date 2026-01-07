@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
-import { useDoc, useFirebase, useMemoFirebase } from '@/firebase';
-import { doc, getDoc, DocumentReference, collection, getDocs, query, where } from 'firebase/firestore';
+import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useDoc, useFirebase, useMemoFirebase, useUser } from '@/firebase';
+import { doc, getDoc, DocumentReference, collection, getDocs, query, where, documentId } from 'firebase/firestore';
 import {
   Card,
   CardContent,
@@ -17,7 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -183,8 +183,14 @@ function Timer() {
 }
 
 
-function SimulatedExamContent({ examId, from }: { examId: string, from: string | null }) {
+export default function SimulatedExamPage() {
   const router = useRouter();
+  const params = useParams();
+  const searchParams = useSearchParams();
+
+  const examId = params.examId as string;
+  const from = searchParams.get('from');
+
   const isPreviousExam = from === 'previous-exams';
   const isCommunitySimulado = from === 'community-simulados';
 
@@ -369,10 +375,4 @@ function SimulatedExamContent({ examId, from }: { examId: string, from: string |
       )}
     </div>
   );
-}
-
-export default function SimulatedExamPage({ params, searchParams }: { params: { examId: string }, searchParams: { from?: string }}) {
-    const examId = params.examId;
-    const from = searchParams?.from || null;
-    return <SimulatedExamContent examId={examId} from={from} />;
 }
