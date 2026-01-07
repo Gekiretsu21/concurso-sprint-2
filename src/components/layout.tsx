@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  BarChart2,
   BrainCircuit,
   ClipboardList,
   FileText,
@@ -12,9 +11,8 @@ import {
   LayoutDashboard,
   LogOut,
   Settings,
-  Users,
-  User as UserIcon,
   Shield,
+  User as UserIcon,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import {

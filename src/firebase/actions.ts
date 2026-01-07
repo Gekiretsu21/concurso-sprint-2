@@ -41,7 +41,7 @@ export async function updateStudyTime(firestore: Firestore, userId: string, seco
   try {
     await updateDoc(userRef, updatePayload);
   } catch (error: any) {
-    if (error.code === 'not-found') {
+    if (error.code === 'not-found' || error.code === 'invalid-argument') {
       // User document or stats object doesn't exist, create it.
       const initialData = { stats: { totalStudyTime: seconds } };
       setDoc(userRef, initialData, { merge: true }).catch(serverError => {
@@ -85,7 +85,7 @@ export async function registerQuestionAnswer(
   try {
     await updateDoc(userRef, updatePayload);
   } catch (error: any) {
-     if (error.code === 'not-found') {
+     if (error.code === 'not-found' || error.code === 'invalid-argument') {
       // The user document or the nested stats object doesn't exist yet.
       // We should create it.
        const initialStats = {
@@ -390,27 +390,25 @@ export async function handleFlashcardResponse(
     [`stats.performance.flashcards.bySubject.${subject}.reviewed`]: increment(1),
     [`stats.performance.flashcards.bySubject.${subject}.correct`]: increment(totalCorrectIncrement),
   };
-  batch.update(userRef, updatePayload);
-
-  batch.commit().catch(async (serverError) => {
-    const userDoc = await getDoc(userRef);
-    if (!userDoc.exists()) {
-      // If the user document doesn't exist, create it with initial stats.
+  
+  try {
+    await updateDoc(userRef, updatePayload);
+  } catch (error: any) {
+    if (error.code === 'not-found' || error.code === 'invalid-argument') {
       const initialStats = {
           stats: {
               performance: {
                   flashcards: {
-                      totalReviewed: 0,
-                      totalCorrect: 0,
+                      totalReviewed: 1,
+                      totalCorrect: totalCorrectIncrement,
                       bySubject: {
-                          [subject]: { reviewed: 0, correct: 0 }
+                          [subject]: { reviewed: 1, correct: totalCorrectIncrement }
                       }
                   }
               }
           }
       };
       await setDoc(userRef, initialStats, { merge: true });
-      await handleFlashcardResponse(firestore, userId, flashcard, result);
     } else {
        const permissionError = new FirestorePermissionError({
         path: userRef.path,
@@ -420,6 +418,18 @@ export async function handleFlashcardResponse(
       errorEmitter.emit('permission-error', permissionError);
       throw permissionError;
     }
+  }
+
+  await batch.commit().catch(serverError => {
+    // This might be redundant if the updateDoc above handles the initial creation,
+    // but it's a safe fallback for the progressRef itself.
+    const permissionError = new FirestorePermissionError({
+        path: progressRef.path,
+        operation: 'write',
+        requestResourceData: progressData,
+    });
+    errorEmitter.emit('permission-error', permissionError);
+    throw permissionError;
   });
 }
 

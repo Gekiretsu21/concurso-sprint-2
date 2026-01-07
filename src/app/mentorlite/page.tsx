@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -21,9 +20,11 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
-import { useUser } from '@/firebase';
+import { useUser, useDoc, useFirebase, useMemoFirebase } from '@/firebase';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { doc } from 'firebase/firestore';
+import { updateDailyStreak } from '../actions/update-user-stats';
 
 const mainFeatures = [
   {
@@ -34,10 +35,10 @@ const mainFeatures = [
     cta: 'Começar a praticar',
   },
   {
-    title: 'Simulados',
-    href: '/mentorlite/simulated-exams',
+    title: 'Simulados da Comunidade',
+    href: '/mentorlite/community-simulados',
     icon: FileText,
-    description: 'Crie e realize simulados personalizados.',
+    description: 'Resolva simulados criados por outros usuários.',
     cta: 'Escolher um Simulado',
   },
   {
@@ -56,13 +57,17 @@ const mainFeatures = [
   },
 ];
 
-interface DashboardStats {
-  totalStudyTime: string;
-  overallAccuracy: number;
-  dailyStreak: number;
-  level: number;
+interface UserStats {
+  totalStudyTime?: number;
+  dailyStreak?: number;
+  level?: number;
+  performance?: {
+    questions?: {
+        totalAnswered?: number;
+        totalCorrect?: number;
+    }
+  }
 }
-
 
 function StatCardSkeleton() {
     return (
@@ -79,15 +84,33 @@ function StatCardSkeleton() {
     );
 }
 
+function formatStudyTime(totalSeconds: number = 0) {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    return `${hours}h ${minutes}m`;
+}
+
+
 export default function Home() {
     const { user, isUserLoading } = useUser();
-    const [isLoading, setIsLoading] = useState(true);
+    const { firestore } = useFirebase();
+
+    const userDocRef = useMemoFirebase(() => 
+        (user && firestore) ? doc(firestore, `users/${user.uid}`) : null,
+    [user, firestore]);
+
+    const { data: userData, isLoading: isStatsLoading } = useDoc<{stats?: UserStats}>(userDocRef);
+    const [dailyStreak, setDailyStreak] = useState(userData?.stats?.dailyStreak ?? 0);
 
     useEffect(() => {
-        if (!isUserLoading) {
-            setIsLoading(false);
+        if (user && !isUserLoading) {
+            updateDailyStreak(user.uid).then(result => {
+                setDailyStreak(result.dailyStreak);
+            });
         }
-    }, [isUserLoading]);
+    }, [user, isUserLoading]);
+
+    const isLoading = isUserLoading || isStatsLoading;
     
     const getFirstName = (displayName: string | null | undefined) => {
         if (!displayName) return 'Concurseiro';
@@ -96,30 +119,34 @@ export default function Home() {
 
     const welcomeName = isUserLoading ? 'Concurseiro' : getFirstName(user?.displayName);
 
+    const stats = userData?.stats;
+    const overallAccuracy = (stats?.performance?.questions?.totalAnswered ?? 0) > 0
+        ? ((stats?.performance?.questions?.totalCorrect ?? 0) / (stats.performance.questions.totalAnswered)) * 100
+        : 0;
 
   const statCards = [
     {
         title: 'Tempo total de estudo',
-        value: '0h 0m',
+        value: formatStudyTime(stats?.totalStudyTime),
         icon: Timer,
-        description: "Em desenvolvimento"
+        description: "Seu tempo de foco na plataforma."
     },
     {
         title: 'Estatísticas Gerais',
-        value: '0% Acerto',
+        value: `${overallAccuracy.toFixed(1)}% Acerto`,
         icon: BarChart2,
-        description: "Em desenvolvimento"
+        description: "Em questões resolvidas"
     },
     {
         title: 'Strike de dias',
-        value: `0 dias`,
+        value: `${dailyStreak} dias`,
         icon: Flame,
         color: 'text-amber-500',
-        description: "Em desenvolvimento"
+        description: "Sua sequência de estudos diários."
     },
     {
         title: 'Nível',
-        value: `Nível 1`,
+        value: `Nível ${stats?.level || 1}`,
         icon: Gauge,
         description: "Em desenvolvimento"
     },

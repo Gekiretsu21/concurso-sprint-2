@@ -46,11 +46,11 @@ export function useStudyTimeTracker(userId: string | undefined, firestore: Fires
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [userId, time]); // Rerun if userId or time changes to save correctly
+  }, [userId, time, firestore]);
 
   // Effect to manage the timer and periodic updates
   useEffect(() => {
-    if (userId) {
+    if (userId && firestore) {
       // Start timer
       if (!intervalRef.current) {
         intervalRef.current = setInterval(() => {
@@ -82,12 +82,14 @@ export function useStudyTimeTracker(userId: string | undefined, firestore: Fires
         setTime(0);
       }
     };
-  }, [userId, time]);
+  }, [userId, time, firestore]);
 
   // Save any remaining time when the user navigates away
   useEffect(() => {
     return () => {
-      saveTime(time);
+      if (time > 0) {
+        saveTime(time);
+      }
     };
-  }, [time]); // Depends on the final value of time
+  }, [time, saveTime]);
 }
