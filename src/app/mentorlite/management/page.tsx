@@ -29,7 +29,7 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import Link from 'next/link';
-import { collection } from 'firebase/firestore';
+import { collection, DocumentData } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Helper to generate a URL-friendly slug from a subject name
@@ -43,6 +43,11 @@ const createSubjectSlug = (subject: string) => {
     .replace(/\s+/g, '-') // Replace spaces with hyphens
     .replace(/-+/g, '-'); // Remove duplicate hyphens
 };
+
+interface SubjectWithCount {
+    name: string;
+    count: number;
+}
 
 export default function ManagementPage() {
   const { toast } = useToast();
@@ -62,12 +67,23 @@ export default function ManagementPage() {
     () => (firestore ? collection(firestore, 'questoes') : null),
     [firestore]
   );
-  const { data: allQuestions, isLoading: isLoadingSubjects } = useCollection(questionsQuery);
+  const { data: allQuestions, isLoading: isLoadingSubjects } = useCollection<DocumentData>(questionsQuery);
 
-  const availableSubjects = useMemo(() => {
+  const availableSubjects = useMemo((): SubjectWithCount[] => {
     if (!allQuestions) return [];
-    const subjects = new Set(allQuestions.map(q => q.Materia).filter(Boolean).filter(s => s.toLowerCase() !== 'matéria'));
-    return Array.from(subjects).sort();
+    
+    const subjectCounts = allQuestions.reduce((acc, q) => {
+        const subject = q.Materia;
+        if (subject && subject.toLowerCase() !== 'matéria') {
+            acc[subject] = (acc[subject] || 0) + 1;
+        }
+        return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(subjectCounts)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+
   }, [allQuestions]);
 
   const handleImportQuestions = async () => {
@@ -315,9 +331,10 @@ export default function ManagementPage() {
         ) : (
           availableSubjects.map(subject => (
             <SubjectCard 
-              key={subject}
-              subject={subject}
-              href={`/mentorlite/management/${createSubjectSlug(subject)}`}
+              key={subject.name}
+              subject={subject.name}
+              questionCount={subject.count}
+              href={`/mentorlite/management/${createSubjectSlug(subject.name)}`}
             />
           ))
         )}
