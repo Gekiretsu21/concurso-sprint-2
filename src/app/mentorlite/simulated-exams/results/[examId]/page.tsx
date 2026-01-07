@@ -190,7 +190,6 @@ export default function ExamResultsPage() {
     if (!firestore || questionIds.length === 0) return;
 
     const fetchedQuestionsData: Question[] = [];
-    // Firestore `in` query has a limit of 30 items per query
     const questionIdsBatches: string[][] = [];
     for (let i = 0; i < questionIds.length; i += 30) {
       questionIdsBatches.push(questionIds.slice(i, i + 30));
@@ -205,7 +204,6 @@ export default function ExamResultsPage() {
         });
     }
 
-    // CRITICAL: Re-order the fetched questions according to the original questionIds array
     const questionsMap = new Map(fetchedQuestionsData.map(q => [q.id, q]));
     const orderedQuestions = questionIds.map(id => questionsMap.get(id)).filter((q): q is Question => !!q);
     
@@ -230,7 +228,6 @@ export default function ExamResultsPage() {
     if (fromLocalStorage) {
       const data: ExamResultsData = JSON.parse(fromLocalStorage);
 
-      // CRITICAL: Reorder questions from localStorage data as well.
       const questionsMap = new Map(data.questions.map(q => [q.id, q]));
       const orderedQuestions = data.exam.questionIds.map(id => questionsMap.get(id)).filter((q): q is Question => !!q);
 
@@ -259,29 +256,35 @@ export default function ExamResultsPage() {
 
     } else if (savedResult) {
        const fetchExamAndQuestions = async () => {
-         if (!firestore) return;
-         // Determine if it's a community or previous exam based on URL/existing data if needed
-         // For now, assuming it's a previousExam as it's the main use case for re-viewing
-         const examRef = doc(firestore, 'previousExams', savedResult.examId);
-         const examSnap = await getDoc(examRef);
-         if (examSnap.exists()) {
-           const examData = examSnap.data() as SimulatedExam;
+         if (!firestore || !user) return;
+         
+         const examCollectionPaths = [
+            `users/${user.uid}/simulatedExams`,
+            'previousExams',
+            'communitySimulados',
+         ];
+
+         let examData: SimulatedExam | null = null;
+         
+         for (const path of examCollectionPaths) {
+            const examRef = doc(firestore, path, savedResult.examId);
+            const examSnap = await getDoc(examRef);
+            if (examSnap.exists()) {
+                examData = examSnap.data() as SimulatedExam;
+                break;
+            }
+         }
+
+         if (examData) {
            fetchAndSetQuestions(examData.questionIds, savedResult.userAnswers);
          } else {
-             // Fallback for community simulado if needed
-             const communityExamRef = doc(firestore, 'communitySimulados', savedResult.examId);
-             const communityExamSnap = await getDoc(communityExamRef);
-             if (communityExamSnap.exists()) {
-                const examData = communityExamSnap.data() as SimulatedExam;
-                fetchAndSetQuestions(examData.questionIds, savedResult.userAnswers);
-             }
+            console.error("Exam document not found in any collection for ID:", savedResult.examId);
+            router.push('/mentorlite/simulated-exams');
          }
        };
        fetchExamAndQuestions();
     } else if (!isLoadingResult) {
-        // No local storage, no saved result, and not loading. Probably direct navigation.
-        // Prevent showing an empty page by redirecting
-        router.push('/mentorlite/previous-exams');
+        router.push('/mentorlite/simulated-exams');
     }
 
   }, [savedResult, isLoadingResult, firestore, user, fetchAndSetQuestions, router]);
@@ -309,7 +312,7 @@ export default function ExamResultsPage() {
     <div className="flex flex-col gap-8">
       <header>
         <h1 className="text-3xl font-bold tracking-tight">Resultado do Simulado</h1>
-        <p className="text-muted-foreground">{examName || 'Prova Anterior'}</p>
+        <p className="text-muted-foreground">{examName || 'Simulado'}</p>
       </header>
 
       <Card>
@@ -430,9 +433,9 @@ export default function ExamResultsPage() {
       
       <div className="flex justify-center mt-8">
         <Button asChild size="lg">
-            <Link href="/mentorlite/previous-exams">
+            <Link href="/mentorlite/simulated-exams">
                 <Home className="mr-2" />
-                Voltar para Provas Anteriores
+                Voltar para Simulados
             </Link>
         </Button>
       </div>
