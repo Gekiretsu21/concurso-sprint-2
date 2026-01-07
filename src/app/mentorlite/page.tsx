@@ -1,14 +1,11 @@
 'use client';
 
 import {
-  BarChart2,
   BrainCircuit,
   ClipboardList,
   FileText,
   Flame,
-  Gauge,
   Layers,
-  Loader2,
   Timer,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -120,37 +117,22 @@ export default function Home() {
     const welcomeName = isUserLoading ? 'Concurseiro' : getFirstName(user?.displayName);
 
     const stats = userData?.stats;
-    const overallAccuracy = (stats?.performance?.questions?.totalAnswered ?? 0) > 0
-        ? ((stats?.performance?.questions?.totalCorrect ?? 0) / (stats.performance.questions.totalAnswered)) * 100
-        : 0;
-
-  const statCards = [
-    {
-        title: 'Tempo total de estudo',
-        value: formatStudyTime(stats?.totalStudyTime),
-        icon: Timer,
-        description: "Seu tempo de foco na plataforma."
-    },
-    {
-        title: 'Estatísticas Gerais',
-        value: `${overallAccuracy.toFixed(1)}% Acerto`,
-        icon: BarChart2,
-        description: "Em questões resolvidas"
-    },
-    {
-        title: 'Strike de dias',
-        value: `${dailyStreak} dias`,
-        icon: Flame,
-        color: 'text-amber-500',
-        description: "Sua sequência de estudos diários."
-    },
-    {
-        title: 'Nível',
-        value: `Nível ${stats?.level || 1}`,
-        icon: Gauge,
-        description: "Em desenvolvimento"
-    },
-  ];
+  
+    const statCards = [
+      {
+          title: 'Tempo total de estudo',
+          value: formatStudyTime(stats?.totalStudyTime),
+          icon: Timer,
+          description: "Seu tempo de foco na plataforma."
+      },
+      {
+          title: 'Strike de dias',
+          value: `${dailyStreak} dias`,
+          icon: Flame,
+          color: 'text-amber-500',
+          description: "Sua sequência de estudos diários."
+      },
+    ];
 
 
   return (
@@ -161,11 +143,9 @@ export default function Home() {
         </h1>
         <p className="text-muted-foreground">O que você gostaria de fazer hoje?</p>
       </section>
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {isLoading ? (
             <>
-                <StatCardSkeleton />
-                <StatCardSkeleton />
                 <StatCardSkeleton />
                 <StatCardSkeleton />
             </>
