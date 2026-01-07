@@ -25,6 +25,7 @@ interface PreviousExam {
 }
 
 interface PreviousExamResult {
+    id: string; // The doc ID from previousExamResults, which might not be examId
     examId: string;
     score: number;
     completedAt: any;
@@ -57,7 +58,8 @@ export default function PreviousExamsPage() {
   const { data: results, isLoading: isLoadingResults } = useCollection<PreviousExamResult>(resultsQuery);
 
   const resultsMap = useMemo(() => {
-      if (!results) return new Map();
+      if (!results) return new Map<string, PreviousExamResult>();
+      // Use examId as the key for the map, not the document's own id
       return new Map(results.map(r => [r.examId, r]));
   }, [results]);
 
