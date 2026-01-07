@@ -1,5 +1,8 @@
 'use server';
 
+// Load environment variables from .env file for the server-side admin SDK
+require('dotenv').config({ path: '.env' });
+
 import { adminFirestore } from '@/firebase/admin';
 
 interface SubjectPerformance {
@@ -23,8 +26,7 @@ export async function getUserAnalytics(userId: string): Promise<UserAnalytics> {
   }
 
   try {
-    // Use the admin SDK's method to get a document reference and fetch it.
-    const userDocRef = adminFirestore.doc(`users/${userId}`);
+    const userDocRef = adminFirestore.collection('users').doc(userId);
     const userDoc = await userDocRef.get();
 
     if (!userDoc.exists) {
@@ -40,8 +42,19 @@ export async function getUserAnalytics(userId: string): Promise<UserAnalytics> {
 
     const userData = userDoc.data();
     const stats = userData?.stats?.performance;
-    const questionsStats = stats?.questions;
 
+    // Return empty stats if performance data is not available
+    if (!stats) {
+        return {
+            totalAnswered: 0,
+            overallAccuracy: 0,
+            simulatedExamsFinished: 0,
+            flashcardsTotal: 0,
+            subjectPerformance: [],
+        };
+    }
+
+    const questionsStats = stats?.questions;
     const totalAnswered = questionsStats?.totalAnswered || 0;
     const totalCorrect = questionsStats?.totalCorrect || 0;
     const overallAccuracy = totalAnswered > 0 ? (totalCorrect / totalAnswered) * 100 : 0;
