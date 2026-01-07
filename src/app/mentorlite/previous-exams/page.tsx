@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -112,11 +113,6 @@ export default function PreviousExamsPage() {
                         <p className="text-sm text-muted-foreground">
                             {exam.questionCount} questões
                         </p>
-                         {isCompleted && (
-                            <p className="text-sm font-semibold text-primary">
-                                Seu aproveitamento: {result.score.toFixed(1)}%
-                            </p>
-                        )}
                     </CardContent>
                     <CardFooter>
                        {isCompleted ? (
