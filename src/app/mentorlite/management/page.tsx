@@ -212,16 +212,23 @@ export default function ManagementPage() {
           <CardHeader className="flex-row items-center justify-between">
             <CardTitle>Importar Flashcards</CardTitle>
             <Dialog>
-              <DialogTrigger asChild>
-                <Button disabled={isButtonDisabled}>
-                  {isUserLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Layers />
-                  )}
-                  {isUserLoading ? 'Carregando...' : 'Importar'}
+              {isClient ? (
+                <DialogTrigger asChild>
+                  <Button disabled={isButtonDisabled}>
+                    {isUserLoading ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Layers />
+                    )}
+                    {isUserLoading ? 'Carregando...' : 'Importar'}
+                  </Button>
+                </DialogTrigger>
+              ) : (
+                <Button disabled={true}>
+                  <Layers />
+                  Importar
                 </Button>
-              </DialogTrigger>
+              )}
               <DialogContent className="sm:max-w-[812px]">
                 <DialogHeader>
                   <DialogTitle>Importar Flashcards por Texto</DialogTitle>
