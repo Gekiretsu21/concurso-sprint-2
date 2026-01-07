@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
-import { collection, query, where, QueryConstraint } from 'firebase/firestore';
+import { collection, query, where, QueryConstraint, and } from 'firebase/firestore';
 import { toggleQuestionStatus } from '@/firebase/actions';
 import {
   Card,
@@ -45,11 +45,11 @@ function formatEnunciado(text: string) {
 }
 
 interface QuestionListProps {
-  subject?: string;
-  topic?: string;
+  subject: string;
+  topics?: string[];
 }
 
-export function QuestionList({ subject, topic }: QuestionListProps) {
+export function QuestionList({ subject, topics }: QuestionListProps) {
   const { firestore } = useFirebase();
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [answeredQuestions, setAnsweredQuestions] = useState<Record<string, boolean>>({});
@@ -59,16 +59,14 @@ export function QuestionList({ subject, topic }: QuestionListProps) {
   const questionsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
 
-    const constraints: QueryConstraint[] = [];
-    if (subject) {
-      constraints.push(where('Materia', '==', subject));
-    }
-    if (topic) {
-      constraints.push(where('Assunto', '==', topic));
+    const constraints: QueryConstraint[] = [where('Materia', '==', subject)];
+    
+    if (topics && topics.length > 0) {
+        constraints.push(where('Assunto', 'in', topics));
     }
 
-    return query(collection(firestore, 'questoes'), ...constraints);
-  }, [firestore, subject, topic]);
+    return query(collection(firestore, 'questoes'), and(...constraints));
+  }, [firestore, subject, topics]);
 
   const { data: questions, isLoading } = useCollection<Question>(questionsQuery);
 

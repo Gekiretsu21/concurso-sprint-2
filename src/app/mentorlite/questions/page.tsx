@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { collection, query, where, or, and } from 'firebase/firestore';
 import {
   Select,
   SelectContent,
@@ -17,6 +17,14 @@ import {
   CardContent,
   CardDescription,
 } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { QuestionList } from '@/components/QuestionList';
@@ -27,13 +35,13 @@ export default function QuestionsPage() {
   const { firestore } = useFirebase();
 
   const [filterSubject, setFilterSubject] = useState('');
-  const [filterTopic, setFilterTopic] = useState(ALL_TOPICS);
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [activeFilters, setActiveFilters] = useState<{
     subject: string;
-    topic: string;
+    topics: string[];
   }>({
     subject: '',
-    topic: ALL_TOPICS,
+    topics: [],
   });
 
   const subjectsQuery = useMemoFirebase(
@@ -45,7 +53,12 @@ export default function QuestionsPage() {
 
   const availableSubjects = useMemo(() => {
     if (!allQuestions) return [];
-    const subjects = new Set(allQuestions.map(q => q.Materia).filter(Boolean).filter(s => s.toLowerCase() !== 'materia'));
+    const subjects = new Set(
+      allQuestions
+        .map(q => q.Materia)
+        .filter(Boolean)
+        .filter(s => s.toLowerCase() !== 'materia')
+    );
     return Array.from(subjects).sort();
   }, [allQuestions]);
 
@@ -61,12 +74,23 @@ export default function QuestionsPage() {
 
   useEffect(() => {
     // When a new subject is selected, reset the topic filter
-    setFilterTopic(ALL_TOPICS);
+    setSelectedTopics([]);
   }, [filterSubject]);
 
   const handleFilterSubmit = () => {
-    setActiveFilters({ subject: filterSubject, topic: filterTopic });
+    setActiveFilters({ subject: filterSubject, topics: selectedTopics });
   };
+  
+  const getTopicButtonLabel = () => {
+    if (selectedTopics.length === 0) {
+      return "Assuntos";
+    }
+    if (selectedTopics.length === 1) {
+      return selectedTopics[0];
+    }
+    return `${selectedTopics.length} assuntos selecionados`;
+  };
+
 
   return (
     <div className="flex flex-col gap-8">
@@ -105,23 +129,32 @@ export default function QuestionsPage() {
               </SelectContent>
             </Select>
 
-            <Select
-              value={filterTopic}
-              onValueChange={setFilterTopic}
-              disabled={!filterSubject}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Assuntos" />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                <SelectItem value={ALL_TOPICS}>Todos os Assuntos</SelectItem>
-                {availableTopics.map(t => (
-                  <SelectItem key={t} value={t}>
-                    {t}
-                  </SelectItem>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" disabled={!filterSubject} className="w-full justify-start font-normal">
+                  {getTopicButtonLabel()}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="start">
+                <DropdownMenuLabel>Assuntos Disponíveis</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {availableTopics.map(topic => (
+                  <DropdownMenuCheckboxItem
+                    key={topic}
+                    checked={selectedTopics.includes(topic)}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setSelectedTopics(prev => [...prev, topic]);
+                      } else {
+                        setSelectedTopics(prev => prev.filter(t => t !== topic));
+                      }
+                    }}
+                  >
+                    {topic}
+                  </DropdownMenuCheckboxItem>
                 ))}
-              </SelectContent>
-            </Select>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <Button onClick={handleFilterSubmit} disabled={!filterSubject}>
               Buscar Questões
@@ -133,9 +166,7 @@ export default function QuestionsPage() {
       {activeFilters.subject ? (
         <QuestionList
           subject={activeFilters.subject}
-          topic={
-            activeFilters.topic === ALL_TOPICS ? undefined : activeFilters.topic
-          }
+          topics={activeFilters.topics}
         />
       ) : (
         <Card className="flex items-center justify-center h-40 border-dashed">
