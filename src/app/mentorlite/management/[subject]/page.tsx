@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
 import { QuestionList } from '@/components/QuestionList';
-import { useParams } from 'next/navigation';
 
 function SubjectPageContent({ subjectName }: { subjectName: string }) {
   return (
@@ -30,19 +29,8 @@ function SubjectPageContent({ subjectName }: { subjectName: string }) {
   );
 }
 
-// Helper to format the slug back to a displayable name
-// e.g., "direito-penal" -> "Direito Penal"
-function unslugifySubject(slug: string): string {
-    return slug
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-}
-
-
-export default function SubjectPage() {
-  const params = useParams();
-  const subjectSlug = Array.isArray(params.subject) ? params.subject[0] : params.subject;
+export default function SubjectPage({ params }: { params: { subject: string } }) {
+  const subjectSlug = params.subject;
 
   // This will handle URL-encoded characters (like %C3%A7 for ç) and reconstruct the name.
   const subjectName = subjectSlug
