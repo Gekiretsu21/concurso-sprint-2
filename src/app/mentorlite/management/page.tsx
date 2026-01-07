@@ -76,7 +76,7 @@ export default function ManagementPage() {
     
     const subjectCounts = allQuestions.reduce((acc, q) => {
         const subject = q.Materia;
-        if (subject && subject.toLowerCase() !== 'materia') {
+        if (subject && subject.trim().toLowerCase() !== 'materia') {
             acc[subject] = (acc[subject] || 0) + 1;
         }
         return acc;
