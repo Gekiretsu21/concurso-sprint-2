@@ -36,6 +36,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 
 // Helper to generate a URL-friendly slug from a subject name
 const createSubjectSlug = (subject: string) => {
@@ -108,7 +109,7 @@ function DeletePreviousExamsDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="destructive" disabled={!user}>
+        <Button variant="destructive" size="sm" disabled={!user}>
           <ArchiveX />
           Excluir Provas
         </Button>
@@ -471,50 +472,52 @@ export default function ManagementPage() {
             </p>
           </CardContent>
         </Card>
-        <Card className="bg-destructive/10 border-destructive/30">
-            <CardHeader className="flex-row items-center justify-between">
-                <CardTitle>Limpar Duplicatas</CardTitle>
-                 <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                         <Button variant="destructive" disabled={isButtonDisabled}>
-                            {isCleaning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 />}
-                            Limpar
-                        </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle className="flex items-center gap-2">
-                                <AlertCircle className="text-destructive"/>
-                                Tem certeza que deseja continuar?
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                                Esta ação é irreversível. Ela irá verificar todas as questões no banco de dados e remover permanentemente as que tiverem o mesmo enunciado, mantendo apenas uma cópia de cada.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleCleanDuplicates} className="bg-destructive hover:bg-destructive/90">
-                                Sim, remover duplicatas
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
+        
+        <Card>
+            <CardHeader>
+                <CardTitle>Ferramentas de Manutenção</CardTitle>
+                <CardDescription>Ações para organizar e limpar seus dados.</CardDescription>
             </CardHeader>
-            <CardContent>
-                 <p className="text-sm text-destructive/80">
-                   Use esta ferramenta para remover questões duplicadas do banco de dados. Esta ação não pode ser desfeita.
-                </p>
-            </CardContent>
-        </Card>
-         <Card className="bg-destructive/10 border-destructive/30">
-            <CardHeader className="flex-row items-center justify-between">
-                <CardTitle>Excluir Provas Anteriores</CardTitle>
-                <DeletePreviousExamsDialog />
-            </CardHeader>
-            <CardContent>
-                 <p className="text-sm text-destructive/80">
-                   Selecione e remova provas anteriores importadas que não são mais necessárias.
-                </p>
+            <CardContent className="space-y-6">
+                <div className="flex items-center justify-between p-4 rounded-lg border">
+                    <div>
+                        <h4 className="font-semibold">Limpar Duplicatas</h4>
+                        <p className="text-sm text-muted-foreground">Remove questões com o mesmo enunciado.</p>
+                    </div>
+                     <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                             <Button variant="destructive" size="sm" disabled={isButtonDisabled}>
+                                {isCleaning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 />}
+                                Limpar
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle className="flex items-center gap-2">
+                                    <AlertCircle className="text-destructive"/>
+                                    Tem certeza que deseja continuar?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Esta ação é irreversível. Ela irá verificar todas as questões no banco de dados e remover permanentemente as que tiverem o mesmo enunciado, mantendo apenas uma cópia de cada.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleCleanDuplicates} className="bg-destructive hover:bg-destructive/90">
+                                    Sim, remover duplicatas
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </div>
+
+                <div className="flex items-center justify-between p-4 rounded-lg border">
+                    <div>
+                        <h4 className="font-semibold">Excluir Provas Anteriores</h4>
+                        <p className="text-sm text-muted-foreground">Gerencie as provas importadas.</p>
+                    </div>
+                    <DeletePreviousExamsDialog />
+                </div>
             </CardContent>
         </Card>
       </div>
@@ -568,5 +571,3 @@ export default function ManagementPage() {
     </div>
   );
 }
-
-    
