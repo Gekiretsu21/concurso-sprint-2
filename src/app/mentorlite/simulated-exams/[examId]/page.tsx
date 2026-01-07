@@ -64,13 +64,11 @@ function formatEnunciado(text: string) {
 function QuestionCard({
   question,
   index,
-  isPreviousExam = false,
   onAnswerSelect,
   userAnswer
 }: {
   question: Question;
   index: number;
-  isPreviousExam?: boolean;
   onAnswerSelect: (questionId: string, answer: string) => void;
   userAnswer?: string;
 }) {
@@ -123,8 +121,7 @@ function QuestionCard({
                 key={optIndex}
                 onClick={() => handleSelectAnswer(alternativeKey)}
                 className={cn(
-                  'flex items-start space-x-3 p-3 rounded-lg border transition-all duration-300',
-                  isPreviousExam ? 'cursor-pointer' : 'cursor-default',
+                  'flex items-start space-x-3 p-3 rounded-lg border transition-all duration-300 cursor-pointer',
                   getAlternativeClassName(alternativeKey)
                 )}
               >
@@ -315,49 +312,46 @@ export default function SimulatedExamPage() {
                 key={q.id} 
                 question={q} 
                 index={index} 
-                isPreviousExam={isPreviousExam}
                 onAnswerSelect={handleAnswerSelect}
                 userAnswer={userAnswers[q.id]}
             />
           ))}
-          {isPreviousExam && (
-            <div className="flex justify-end mt-8">
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                    <Button size="lg">Encerrar Prova</Button>
-                </AlertDialogTrigger>
-                { allAnswered ? (
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Finalizar Prova?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                Você respondeu todas as questões. Deseja ver seu resultado agora?
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Voltar</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleFinishExam}>Ver Resultado</AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                ) : (
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Atenção</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                Você não respondeu todas as questões ({answeredCount}/{totalCount}). As questões não respondidas serão contadas como erradas. Deseja mesmo encerrar a prova?
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Continuar Prova</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleFinishExam} className="bg-destructive hover:bg-destructive/90">
-                                Encerrar Mesmo Assim
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                )}
-              </AlertDialog>
-            </div>
-          )}
+          <div className="flex justify-end mt-8">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                  <Button size="lg">Encerrar Simulado</Button>
+              </AlertDialogTrigger>
+              { allAnswered ? (
+                  <AlertDialogContent>
+                      <AlertDialogHeader>
+                          <AlertDialogTitle>Finalizar Simulado?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                              Você respondeu todas as questões. Deseja ver seu resultado agora?
+                          </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                          <AlertDialogCancel>Voltar</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleFinishExam}>Ver Resultado</AlertDialogAction>
+                      </AlertDialogFooter>
+                  </AlertDialogContent>
+              ) : (
+                  <AlertDialogContent>
+                      <AlertDialogHeader>
+                          <AlertDialogTitle>Atenção</AlertDialogTitle>
+                          <AlertDialogDescription>
+                              Você não respondeu todas as questões ({answeredCount}/{totalCount}). As questões não respondidas serão contadas como erradas. Deseja mesmo encerrar o simulado?
+                          </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                          <AlertDialogCancel>Continuar Simulado</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleFinishExam} className="bg-destructive hover:bg-destructive/90">
+                              Encerrar Mesmo Assim
+                          </AlertDialogAction>
+                      </AlertDialogFooter>
+                  </AlertDialogContent>
+              )}
+            </AlertDialog>
+          </div>
         </div>
       ) : (
         <Card className="flex flex-col items-center justify-center h-64">
