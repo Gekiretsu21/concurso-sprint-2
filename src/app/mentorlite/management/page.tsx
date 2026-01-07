@@ -366,14 +366,20 @@ export default function ManagementPage() {
         const subject = q.Materia;
         const isHidden = q.status === 'hidden';
 
-        if (subject && subject.trim().toLowerCase() !== 'materia' && !isHidden) {
-            acc[subject] = (acc[subject] || 0) + 1;
+        if (subject && subject.trim() && !isHidden) {
+            // Normalize the subject name to handle case variations
+            const normalizedSubject = subject.trim().toLowerCase();
+            if(normalizedSubject !== 'materia') {
+                if (!acc[normalizedSubject]) {
+                    acc[normalizedSubject] = { name: subject.trim(), count: 0 };
+                }
+                acc[normalizedSubject].count++;
+            }
         }
         return acc;
-    }, {} as Record<string, number>);
+    }, {} as Record<string, {name: string, count: number}>);
 
-    return Object.entries(subjectCounts)
-        .map(([name, count]) => ({ name, count }))
+    return Object.values(subjectCounts)
         .sort((a, b) => a.name.localeCompare(b.name));
 
   }, [allQuestions]);
@@ -760,3 +766,5 @@ Português | Crase | Analista Judiciário | Quando a crase é facultativa antes 
     </div>
   );
 }
+
+    
