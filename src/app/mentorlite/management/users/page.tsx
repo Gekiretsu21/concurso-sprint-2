@@ -26,13 +26,14 @@ export default function UsersPage() {
         setUsers(userList);
       } catch (error) {
          let message = 'Ocorreu um erro ao buscar os usuários.';
-          if (error instanceof Error && error.message.includes('Failed to retrieve user list.')) {
-            message = 'Você não tem permissão para visualizar os usuários. Verifique as credenciais do Admin SDK no seu arquivo .env.local.';
+          if (error instanceof Error && error.message === 'ADMIN_CREDENTIALS_ERROR') {
+            message = 'Você não tem permissão para visualizar os usuários. Verifique se as credenciais do Admin SDK (FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY) estão configuradas corretamente no seu ambiente.';
           }
          toast({
           variant: 'destructive',
-          title: 'Erro de Permissão',
+          title: 'Erro de Permissão ou Configuração',
           description: message,
+          duration: 10000,
         });
       } finally {
         setIsLoading(false);
