@@ -75,6 +75,15 @@ export async function getUserAnalytics(userId: string): Promise<UserAnalytics> {
     const stats = userData.stats;
     const performance = stats.performance;
 
+    if (!performance) {
+        return {
+            ...emptyAnalytics,
+            totalStudyTime: formatStudyTime(stats.totalStudyTime || 0),
+            dailyStreak: stats.dailyStreak || 0,
+            level: calculateLevel(0, 0, 0),
+        };
+    }
+
     const questionsStats = performance?.questions;
     const totalAnswered = questionsStats?.totalAnswered || 0;
     const totalCorrect = questionsStats?.totalCorrect || 0;
