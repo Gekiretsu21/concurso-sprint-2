@@ -275,6 +275,7 @@ export default function SimulatedExamPage() {
   const answeredCount = Object.values(userAnswers).filter(Boolean).length;
   const totalCount = questions.length;
   const allAnswered = answeredCount === totalCount;
+  const anyAnswered = answeredCount > 0;
 
   const isLoading = isLoadingExam || isLoadingQuestions;
   const backHref = getBackHref();
@@ -319,7 +320,7 @@ export default function SimulatedExamPage() {
            <div className="flex justify-center pt-8">
                 <AlertDialog>
                 <AlertDialogTrigger asChild>
-                    <Button size="lg" disabled={!allAnswered}>
+                    <Button size="lg" disabled={!anyAnswered}>
                     Encerrar Teste
                     </Button>
                 </AlertDialogTrigger>
@@ -327,7 +328,10 @@ export default function SimulatedExamPage() {
                     <AlertDialogHeader>
                     <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        Esta ação finalizará seu simulado e o levará para a página de resultados. Você não poderá alterar suas respostas.
+                       {allAnswered
+                          ? 'Esta ação finalizará seu simulado e o levará para a página de resultados. Você não poderá alterar suas respostas.'
+                          : `Você respondeu ${answeredCount} de ${totalCount} questões. Deseja mesmo finalizar o teste agora?`
+                       }
                     </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -357,5 +361,3 @@ export default function SimulatedExamPage() {
     </div>
   );
 }
-
-    
