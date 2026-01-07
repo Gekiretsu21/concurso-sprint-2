@@ -29,8 +29,6 @@ import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { QuestionList } from '@/components/QuestionList';
 
-const ALL_TOPICS = 'all-topics';
-
 export default function QuestionsPage() {
   const { firestore } = useFirebase();
 
@@ -57,7 +55,7 @@ export default function QuestionsPage() {
       allQuestions
         .map(q => q.Materia)
         .filter(Boolean)
-        .filter(s => s.toLowerCase() !== 'materia')
+        .filter(s => s.trim().toLowerCase() !== 'materia')
     );
     return Array.from(subjects).sort();
   }, [allQuestions]);
@@ -149,6 +147,7 @@ export default function QuestionsPage() {
                         setSelectedTopics(prev => prev.filter(t => t !== topic));
                       }
                     }}
+                    onSelect={(e) => e.preventDefault()}
                   >
                     {topic}
                   </DropdownMenuCheckboxItem>
