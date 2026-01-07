@@ -134,7 +134,7 @@ export default function FlashcardsPage() {
 
   const filterOptions = useMemo(() => {
     if (!allFlashcards) return { subjects: [], topics: [], targetRoles: [] };
-    
+
     const subjects = new Set(allFlashcards.map(fc => fc.subject));
     let filteredBySubject = allFlashcards;
 
@@ -142,6 +142,7 @@ export default function FlashcardsPage() {
       filteredBySubject = allFlashcards.filter(fc => fc.subject === filterSubject);
     }
     
+    // Use Set to ensure unique values for topics and targetRoles
     const topics = new Set(filteredBySubject.map(fc => fc.topic));
     const targetRoles = new Set(filteredBySubject.map(fc => fc.targetRole));
 
@@ -331,6 +332,3 @@ export default function FlashcardsPage() {
     </div>
   );
 }
-
-
-    
