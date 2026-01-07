@@ -144,8 +144,11 @@ export default function PreviousExamsPage() {
             <Card className="flex flex-col items-center justify-center h-40 border-dashed">
               <CardContent className="text-center p-6">
                 <p className="text-muted-foreground">
-                  Aguarde, em breve provas anteriores aparecerão aqui!
+                  Nenhuma prova anterior importada. Importe uma na tela de gerenciamento.
                 </p>
+                <Button variant="link" asChild>
+                  <Link href="/mentorlite/management">Ir para Gerenciamento</Link>
+                </Button>
               </CardContent>
             </Card>
           )
