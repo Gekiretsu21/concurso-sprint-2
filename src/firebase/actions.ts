@@ -272,19 +272,35 @@ export async function createSimulatedExam(
   };
 
   const communityExamCollection = collection(firestore, `communitySimulados`);
-  const examDocRef = await addDoc(communityExamCollection, examData).catch(serverError => {
+  
+  // This is now a non-blocking operation from the caller's perspective
+  const examDocPromise = addDoc(communityExamCollection, examData).catch(serverError => {
     const permissionError = new FirestorePermissionError({
       path: communityExamCollection.path,
       operation: 'create',
       requestResourceData: examData,
     });
     errorEmitter.emit('permission-error', permissionError);
+    // Re-throw to allow specific UI error handling if needed, though the global handler will catch it.
     throw permissionError;
   });
 
+  // The function can now resolve faster, while the write happens in the background.
+  // We await here to get the ID, but the error is handled in the catch block.
+  const examDocRef = await examDocPromise;
+
   const originalExamId = examDocRef.id;
 
-  await updateDoc(examDocRef, { originalExamId: originalExamId });
+  // This is a quick follow-up write, can also be non-blocking
+  updateDoc(examDocRef, { originalExamId: originalExamId }).catch(serverError => {
+     // A separate error handler for the update might be useful for detailed logging
+     const permissionError = new FirestorePermissionError({
+        path: examDocRef.path,
+        operation: 'update',
+        requestResourceData: { originalExamId: originalExamId },
+      });
+      errorEmitter.emit('permission-error', permissionError);
+  });
 
   return originalExamId;
 }

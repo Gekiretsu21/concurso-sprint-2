@@ -50,7 +50,7 @@ export function SimulatedExamDialog() {
   
   // This is the correct logic, similar to the management page.
   const questionsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'questoes') : null),
+    () => (firestore ? query(collection(firestore, 'questoes')) : null),
     [firestore]
   );
   const { data: allQuestions, isLoading: isLoadingSubjects } = useCollection<DocumentData>(questionsQuery);
@@ -102,32 +102,39 @@ export function SimulatedExamDialog() {
     }
 
     setIsLoading(true);
+
     try {
-      const newExamId = await createSimulatedExam(firestore, user.uid, {
-        name: examName,
-        subjects: Object.fromEntries(selectedSubjects),
-      });
-      toast({
-        title: 'Sucesso!',
-        description: `Simulado "${examName}" criado para a comunidade.`,
-      });
-      setExamName('');
-      setSubjectSelections({});
-      setIsOpen(false);
-      router.push(`/mentorlite/community-simulados`);
+        const examData = {
+            name: examName,
+            subjects: Object.fromEntries(selectedSubjects),
+        };
+        const newExamId = await createSimulatedExam(firestore, user.uid, examData);
+        
+        // Optimistically show success and close dialog
+        toast({
+            title: 'Sucesso!',
+            description: `Simulado "${examName}" criado para a comunidade.`,
+        });
+        setExamName('');
+        setSubjectSelections({});
+        setIsOpen(false);
+        router.push(`/mentorlite/community-simulados`);
+
     } catch (error) {
-      console.error(error);
-      let message = 'Não foi possível gerar o simulado. Tente novamente.';
-      if (error instanceof Error) {
-        message = error.message;
-      }
-      toast({
-        variant: 'destructive',
-        title: 'Erro na Geração',
-        description: message,
-      });
+        // This will now only catch synchronous errors, like the validation ones.
+        // Firestore permission errors are handled inside createSimulatedExam.
+        console.error(error);
+        let message = 'Não foi possível iniciar a geração do simulado. Tente novamente.';
+        if (error instanceof Error) {
+            message = error.message;
+        }
+        toast({
+            variant: 'destructive',
+            title: 'Erro na Geração',
+            description: message,
+        });
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
   };
 
