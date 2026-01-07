@@ -1,6 +1,5 @@
 'use server';
 
-import { doc, getDoc } from 'firebase/firestore';
 import { adminFirestore } from '@/firebase/admin';
 
 interface SubjectPerformance {
@@ -24,10 +23,12 @@ export async function getUserAnalytics(userId: string): Promise<UserAnalytics> {
   }
 
   try {
-    const userDocRef = doc(adminFirestore, 'users', userId);
-    const userDoc = await getDoc(userDocRef);
+    // Use the admin SDK's method to get a document reference and fetch it.
+    const userDocRef = adminFirestore.doc(`users/${userId}`);
+    const userDoc = await userDocRef.get();
 
-    if (!userDoc.exists()) {
+    if (!userDoc.exists) {
+      // If the user document doesn't exist, return empty stats.
       return {
         totalAnswered: 0,
         overallAccuracy: 0,
