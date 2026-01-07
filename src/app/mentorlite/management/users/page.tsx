@@ -9,18 +9,14 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
-import { getAllUsers } from './actions';
+import { fetchAllUsersData, type EnrichedUserData } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-
-export interface UserData {
-  id: string;
-  name: string | undefined;
-  email: string | undefined;
-}
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Progress } from '@/components/ui/progress';
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<UserData[]>([]);
+  const [users, setUsers] = useState<EnrichedUserData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
@@ -30,7 +26,7 @@ export default function UsersPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const userList = await getAllUsers();
+        const userList = await fetchAllUsersData();
         setUsers(userList);
       } catch (e) {
          let message = 'Ocorreu um erro ao buscar os usuários.';
@@ -104,7 +100,7 @@ export default function UsersPage() {
         <CardHeader>
           <CardTitle>Usuários Cadastrados</CardTitle>
           <CardDescription>
-            {isLoading ? 'Carregando usuários...' : `Lista com os últimos usuários cadastrados.`}
+            {isLoading ? 'Carregando usuários...' : `Análise detalhada dos usuários cadastrados.`}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -113,33 +109,86 @@ export default function UsersPage() {
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : users && users.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[80px]">Avatar</TableHead>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>ID do Usuário</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map(user => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <Avatar>
-                        <AvatarImage src={`https://api.dicebear.com/8.x/initials/svg?seed=${user.name}`} />
-                        <AvatarFallback>{user.name?.charAt(0).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                    </TableCell>
-                    <TableCell className="font-medium">{user.name || 'Não informado'}</TableCell>
-                    <TableCell className="text-muted-foreground">{user.email}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{user.id}</Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <Accordion type="multiple" className="w-full">
+              {users.map(user => {
+                 const questionStats = user.stats?.questions;
+                 const questionPercentage = questionStats && questionStats.totalAnswered > 0
+                    ? (questionStats.totalCorrect / questionStats.totalAnswered) * 100
+                    : 0;
+
+                return (
+                  <AccordionItem key={user.id} value={user.id}>
+                    <AccordionTrigger>
+                        <div className="flex items-center gap-4 text-left w-full">
+                            <Avatar>
+                                <AvatarImage src={`https://api.dicebear.com/8.x/initials/svg?seed=${user.name || '?'}`} />
+                                <AvatarFallback>{user.name?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                                <div className="truncate">
+                                    <p className="font-semibold truncate">{user.name || 'Não informado'}</p>
+                                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                                </div>
+                                <div className="hidden md:block">
+                                    <p className="text-sm font-medium">{questionStats?.totalAnswered || 0} Questões</p>
+                                    <p className="text-xs text-muted-foreground">{questionStats?.totalCorrect || 0} Acertos</p>
+                                </div>
+                                 <div className="hidden md:block">
+                                     <Progress value={questionPercentage} className="h-2"/>
+                                     <p className="text-xs text-muted-foreground text-right mt-1">{questionPercentage.toFixed(1)}% de Acerto</p>
+                                 </div>
+                            </div>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="p-4 bg-muted/50 rounded-lg space-y-4">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div>
+                                <p className="font-semibold">ID do Usuário</p>
+                                <Badge variant="outline" className="mt-1">{user.id}</Badge>
+                            </div>
+                            <div>
+                                <p className="font-semibold">Data de Criação</p>
+                                <p className="text-muted-foreground mt-1">{user.createdAt}</p>
+                            </div>
+                             <div>
+                                <p className="font-semibold">Flashcards Revisados</p>
+                                <p className="text-muted-foreground mt-1">{user.stats?.flashcards?.totalReviewed || 0}</p>
+                            </div>
+                             <div>
+                                <p className="font-semibold">Simulados Feitos</p>
+                                <p className="text-muted-foreground mt-1">{user.stats?.simulatedExams?.length || 0}</p>
+                            </div>
+                        </div>
+                         {user.stats && user.stats.simulatedExams.length > 0 && (
+                          <div>
+                            <h4 className="font-semibold text-sm mb-2">Histórico de Simulados</h4>
+                             <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                    <TableHead>Nome</TableHead>
+                                    <TableHead>Nota</TableHead>
+                                    <TableHead>Data</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {user.stats.simulatedExams.map((exam, idx) => (
+                                    <TableRow key={idx}>
+                                        <TableCell>{exam.name}</TableCell>
+                                        <TableCell>{exam.score.toFixed(1)}%</TableCell>
+                                        <TableCell>{exam.date}</TableCell>
+                                    </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                          </div>
+                        )}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                )
+              })}
+            </Accordion>
           ) : (
              <div className="flex flex-col items-center justify-center h-64 rounded-lg border border-dashed">
                 <p className="text-muted-foreground">Nenhum usuário encontrado.</p>
