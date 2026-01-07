@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
 import { QuestionList } from '@/components/QuestionList';
 
-export default function PenalLawPage() {
-  const subject = 'Direito Penal';
+export default function PortuguesePage() {
+  const subject = 'Português';
 
   return (
     <div className="flex flex-col gap-8">

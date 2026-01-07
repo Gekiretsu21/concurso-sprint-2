@@ -284,6 +284,10 @@ export default function ManagementPage() {
           subject="Direito Penal"
           href="/mentorlite/management/penal-law"
         />
+         <SubjectCard
+          subject="Português"
+          href="/mentorlite/management/portuguese"
+        />
         <Card>
             <Link href="/mentorlite/flashcards">
                 <CardHeader className="flex-row items-center justify-between">
@@ -314,5 +318,3 @@ export default function ManagementPage() {
     </div>
   );
 }
-
-    

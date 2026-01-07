@@ -4,8 +4,7 @@ import Link from 'next/link';
 import { Loader2, ExternalLink } from 'lucide-react';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { useUser } from '@/firebase/auth/use-user';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 interface SubjectCardProps {
   subject: string;
@@ -18,14 +17,13 @@ interface Question {
 
 export function SubjectCard({ subject, href }: SubjectCardProps) {
   const { firestore } = useFirebase();
-  const { user } = useUser();
 
   const questionsQuery = useMemoFirebase(
     () =>
-      firestore && user
+      firestore
         ? query(collection(firestore, 'questoes'), where('Materia', '==', subject))
         : null,
-    [firestore, user, subject]
+    [firestore, subject]
   );
 
   const { data: questions, isLoading } = useCollection<Question>(questionsQuery);
