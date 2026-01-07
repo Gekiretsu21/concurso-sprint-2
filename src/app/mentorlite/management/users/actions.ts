@@ -2,7 +2,13 @@
 
 import { adminAuth } from '@/firebase/admin';
 import { UserRecord } from 'firebase-admin/auth';
-import type { UserData } from './page';
+
+// This is the return type, but the actual type definition is now in the page component.
+type UserData = {
+  id: string;
+  name: string | undefined;
+  email: string | undefined;
+};
 
 export async function getAllUsers(): Promise<UserData[]> {
   try {
