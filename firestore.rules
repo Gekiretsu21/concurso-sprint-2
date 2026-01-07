@@ -36,8 +36,8 @@ service cloud.firestore {
     }
 
     // Questions are public to any authenticated user for reading and writing.
-    match /questoEs/{questionId} {
-      allow read: if isSignedIn();
+    match /questoes/{questionId} {
+      allow read, list: if isSignedIn();
       allow write: if isSignedIn(); 
     }
 
