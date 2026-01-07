@@ -28,7 +28,7 @@ interface ExamDetails {
 export async function importQuestions(
   firestore: Firestore,
   text: string,
-  userId: string, // userId is required for ownership if it's not a previous exam
+  userId: string,
   examDetails?: ExamDetails
 ): Promise<void> {
   if (!text) {
@@ -71,7 +71,7 @@ export async function importQuestions(
       correctAnswer,
     ] = parts;
 
-    const newQuestionDocRef = doc(questionsCollection); // Create a new doc reference
+    const newQuestionDocRef = doc(questionsCollection);
     const newQuestion: any = {
       Materia: Materia.trim(),
       Ano: Ano.trim(),
@@ -95,23 +95,19 @@ export async function importQuestions(
     newQuestionIds.push(newQuestionDocRef.id);
   }
   
-  // If it's a previous exam, create a public exam document
   if (examDetails?.isPreviousExam && newQuestionIds.length > 0) {
-      const examData: any = {
+      const examData = {
         name: examDetails.examName,
-        importerId: userId, // Keep track of who imported it
+        importerId: userId,
         createdAt: serverTimestamp(),
         questionIds: newQuestionIds,
         questionCount: newQuestionIds.length,
       };
-
-      // Write to the public 'previousExams' collection
-      const publicExamRef = doc(collection(firestore, `previousExams`));
+      const publicExamRef = doc(collection(firestore, 'previousExams'));
       batch.set(publicExamRef, examData);
   }
 
 
-  // Commit the batch
   await batch.commit().catch(serverError => {
     console.error('Firestore batch write error:', serverError);
     const permissionError = new FirestorePermissionError({
@@ -120,7 +116,7 @@ export async function importQuestions(
       requestResourceData: 'Batch operation for question import',
     });
     errorEmitter.emit('permission-error', permissionError);
-    throw permissionError; // Re-throw to be caught by the calling function
+    throw permissionError;
   });
 }
 
@@ -141,7 +137,6 @@ export async function importFlashcards(
   for (const fStr of flashcardsStr) {
     if (fStr.trim() === '') continue;
 
-    // Format: Materia/Pergunta/Resposta
     const parts = fStr.split('/');
     if (parts.length < 3) {
       console.warn('Skipping invalid flashcard format:', fStr);
@@ -215,7 +210,6 @@ export async function toggleQuestionStatus(
   });
 }
 
-// Function to fetch random questions for a given subject
 async function getRandomQuestions(
   firestore: Firestore,
   subject: string,
@@ -224,13 +218,13 @@ async function getRandomQuestions(
   const questionsCollection = collection(firestore, 'questoes');
   const q = query(
     questionsCollection,
-    where('Materia', '==', subject)
+    where('Materia', '==', subject),
+    where('status', '!=', 'hidden')
   );
 
   const snapshot = await getDocs(q);
   const allQuestionIds = snapshot.docs.map(doc => doc.id);
 
-  // Shuffle and pick
   const shuffled = allQuestionIds.sort(() => 0.5 - Math.random());
   return shuffled.slice(0, count);
 }
@@ -244,8 +238,8 @@ export async function createSimulatedExam(
   firestore: Firestore,
   userId: string,
   dto: CreateSimulatedExamDTO
-): Promise<void> {
-  const allQuestionIds: string[] = [];
+): Promise<string> {
+  let allQuestionIds: string[] = [];
   let totalQuestions = 0;
 
   for (const [subject, count] of Object.entries(dto.subjects)) {
@@ -271,71 +265,71 @@ export async function createSimulatedExam(
     createdAt: serverTimestamp(),
     questionIds: allQuestionIds,
     questionCount: totalQuestions,
-    isPreviousExam: false,
   };
 
-  const examRef = doc(collection(firestore, `users/${userId}/simulatedExams`));
-  
-  setDoc(examRef, examData).catch(serverError => {
-    console.error('Firestore setDoc error for exam:', serverError);
+  const communityExamCollection = collection(firestore, `communitySimulados`);
+  const examDocRef = await addDoc(communityExamCollection, examData).catch(serverError => {
     const permissionError = new FirestorePermissionError({
-      path: examRef.path,
+      path: communityExamCollection.path,
       operation: 'create',
       requestResourceData: examData,
     });
     errorEmitter.emit('permission-error', permissionError);
+    throw permissionError;
   });
+
+  const originalExamId = examDocRef.id;
+
+  await updateDoc(examDocRef, { originalExamId: originalExamId });
+
+  return originalExamId;
 }
 
 export async function deleteDuplicateQuestions(firestore: Firestore): Promise<number> {
-  const questionsRef = collection(firestore, 'questoes');
-  const snapshot = await getDocs(questionsRef);
+    const questionsRef = collection(firestore, 'questoes');
+    const snapshot = await getDocs(questionsRef);
   
-  const questionsByEnunciado = new Map<string, any[]>();
+    const questionsByEnunciado = new Map<string, any[]>();
 
-  // Group questions by their statement (Enunciado)
-  snapshot.docs.forEach(doc => {
-    const data = doc.data();
-    const enunciado = data.Enunciado;
-    if (!enunciado) return;
+    snapshot.docs.forEach(doc => {
+      const data = doc.data();
+      const enunciado = data.Enunciado;
+      if (!enunciado) return;
 
-    if (!questionsByEnunciado.has(enunciado)) {
-      questionsByEnunciado.set(enunciado, []);
+      if (!questionsByEnunciado.has(enunciado)) {
+        questionsByEnunciado.set(enunciado, []);
+      }
+      questionsByEnunciado.get(enunciado)!.push({ id: doc.id, ...data });
+    });
+
+    const batch = writeBatch(firestore);
+    let deletedCount = 0;
+
+    for (const [enunciado, duplicates] of questionsByEnunciado.entries()) {
+      if (duplicates.length > 1) {
+        const [first, ...rest] = duplicates;
+        
+        rest.forEach(dup => {
+          const docRef = doc(firestore, 'questoes', dup.id);
+          batch.delete(docRef);
+          deletedCount++;
+        });
+      }
     }
-    questionsByEnunciado.get(enunciado)!.push({ id: doc.id, ...data });
-  });
 
-  const batch = writeBatch(firestore);
-  let deletedCount = 0;
-
-  for (const [enunciado, duplicates] of questionsByEnunciado.entries()) {
-    if (duplicates.length > 1) {
-      // Keep the first one, delete the rest
-      const [first, ...rest] = duplicates;
-      console.log(`Found ${duplicates.length} duplicates for: "${enunciado}". Keeping one, deleting ${rest.length}.`);
-      
-      rest.forEach(dup => {
-        const docRef = doc(firestore, 'questoes', dup.id);
-        batch.delete(docRef);
-        deletedCount++;
+    if (deletedCount > 0) {
+      await batch.commit().catch(serverError => {
+         console.error('Firestore batch delete error:', serverError);
+          const permissionError = new FirestorePermissionError({
+              path: 'questoes',
+              operation: 'delete',
+          });
+          errorEmitter.emit('permission-error', permissionError);
+          throw permissionError;
       });
     }
-  }
 
-  if (deletedCount > 0) {
-    await batch.commit().catch(serverError => {
-       console.error('Firestore batch delete error:', serverError);
-        const permissionError = new FirestorePermissionError({
-            path: 'questoes',
-            operation: 'delete',
-        });
-        errorEmitter.emit('permission-error', permissionError);
-        // Re-throw the error to be caught by the calling function
-        throw permissionError;
-    });
-  }
-
-  return deletedCount;
+    return deletedCount;
 }
 
 export async function deleteQuestionsBySubject(firestore: Firestore, subject: string): Promise<number> {
@@ -372,13 +366,25 @@ export async function deletePreviousExams(firestore: Firestore, userId: string, 
   
   const batch = writeBatch(firestore);
   
-  examIds.forEach(examId => {
-    // This logic now needs to be smarter. For now, we assume we're only deleting from the user's private collection.
-    // A better implementation would check if the exam is public or private.
-    // For simplicity, this tool will now only delete from the `previousExams` public collection.
+  for (const examId of examIds) {
     const examRef = doc(firestore, `previousExams`, examId);
-    batch.delete(examRef);
-  });
+    
+    try {
+        const examSnap = await getDoc(examRef);
+        if (examSnap.exists()) {
+            const examData = examSnap.data();
+            const questionIds = examData.questionIds || [];
+
+            for (const qId of questionIds) {
+                const questionRef = doc(firestore, 'questoes', qId);
+                batch.delete(questionRef);
+            }
+        }
+        batch.delete(examRef);
+    } catch(e) {
+        console.error(`Error processing exam ${examId}:`, e);
+    }
+  }
   
   await batch.commit().catch(serverError => {
     console.error('Firestore batch delete error for previous exams:', serverError);

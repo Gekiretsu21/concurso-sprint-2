@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
-import { collection, query } from 'firebase/firestore';
+import { collection, query, orderBy } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -27,7 +27,7 @@ export default function CommunitySimuladosPage() {
   const communityExamsQuery = useMemoFirebase(
     () =>
       firestore
-        ? query(collection(firestore, 'communitySimulados'))
+        ? query(collection(firestore, 'communitySimulados'), orderBy('createdAt', 'desc'))
         : null,
     [firestore]
   );
@@ -64,8 +64,7 @@ export default function CommunitySimuladosPage() {
                     {exam.questionCount} questões
                   </p>
                    <Button asChild className="mt-4 w-full">
-                      {/* Note: This link will still point to the user's private exam copy for now. */}
-                      <Link href={`/mentorlite/simulated-exams/${exam.originalExamId}?userId=${exam.userId}`}>
+                      <Link href={`/mentorlite/simulated-exams/${exam.id}?from=community-simulados`}>
                         Iniciar Simulado
                       </Link>
                   </Button>
@@ -76,7 +75,7 @@ export default function CommunitySimuladosPage() {
         ) : (
           !isLoading && (
             <Card className="flex flex-col items-center justify-center h-40 border-dashed">
-              <CardContent className="text-center">
+              <CardContent className="text-center p-6">
                 <p className="text-muted-foreground">
                   Nenhum simulado na comunidade ainda.
                 </p>

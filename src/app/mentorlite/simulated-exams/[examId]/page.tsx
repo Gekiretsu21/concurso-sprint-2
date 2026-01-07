@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect } from 'react';
 import { useDoc, useFirebase, useMemoFirebase } from '@/firebase';
-import { doc, getDoc, DocumentReference, collection } from 'firebase/firestore';
+import { doc, getDoc, DocumentReference, collection, getDocs, query, where } from 'firebase/firestore';
 import {
   Card,
   CardContent,
@@ -38,6 +38,8 @@ interface SimulatedExam {
   id: string;
   name: string;
   questionIds: string[];
+  userId?: string; // It can be a community exam
+  originalExamId?: string; // For community exams
 }
 
 function formatEnunciado(text: string) {
@@ -153,7 +155,7 @@ function QuestionCard({
           <Button
             variant="default"
             onClick={handleConfirmAnswer}
-            disabled={!selected || isAnswered}
+            disabled={!selectedAnswer || isAnswered}
           >
             {isAnswered ? 'Respondido' : 'Responder'}
           </Button>
@@ -168,7 +170,12 @@ export default function SimulatedExamPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const examId = params.examId as string;
-  const isFromPreviousExams = searchParams.get('from') === 'previous-exams';
+  
+  // Determine which collection to use based on URL params
+  const from = searchParams.get('from');
+  const userId = searchParams.get('userId'); // For community simulados
+  const isPreviousExam = from === 'previous-exams';
+  const isCommunitySimulado = from === 'community-simulados';
 
   const { firestore, user } = useFirebase();
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -176,16 +183,19 @@ export default function SimulatedExamPage() {
 
   const examDocRef = useMemoFirebase(
     () => {
-      if (!firestore || !user || !examId) return null;
+      if (!firestore || !examId) return null;
 
-      const collectionName = isFromPreviousExams ? 'previousExams' : `users/${user.uid}/simulatedExams`;
-      return doc(
-            firestore,
-            collectionName,
-            examId
-          ) as DocumentReference<SimulatedExam>
+      let collectionName = `users/${user?.uid}/simulatedExams`; // Default to user's private exams
+
+      if (isPreviousExam) {
+        collectionName = 'previousExams';
+      } else if (isCommunitySimulado) {
+        collectionName = 'communitySimulados';
+      }
+      
+      return doc(firestore, collectionName, examId) as DocumentReference<SimulatedExam>;
     },
-    [firestore, user, examId, isFromPreviousExams]
+    [firestore, user, examId, isPreviousExam, isCommunitySimulado]
   );
 
   const { data: exam, isLoading: isLoadingExam } = useDoc<SimulatedExam>(examDocRef);
@@ -196,18 +206,17 @@ export default function SimulatedExamPage() {
 
       setIsLoadingQuestions(true);
       const fetchedQuestions: Question[] = [];
-      // Firestore 'in' query has a limit of 30 items. We need to fetch in batches if needed.
       const questionIdsBatches: string[][] = [];
       for (let i = 0; i < exam.questionIds.length; i += 30) {
         questionIdsBatches.push(exam.questionIds.slice(i, i + 30));
       }
 
       for (const batch of questionIdsBatches) {
+         if (batch.length === 0) continue;
         const q = query(collection(firestore, 'questoes'), where('__name__', 'in', batch));
         const questionSnapshots = await getDocs(q);
         const questionsMap = new Map(questionSnapshots.docs.map(doc => [doc.id, { id: doc.id, ...doc.data() as Omit<Question, 'id'>}]));
         
-        // Reorder questions to match the order in questionIds
         batch.forEach(id => {
           const question = questionsMap.get(id);
           if (question) {
@@ -223,8 +232,14 @@ export default function SimulatedExamPage() {
     fetchQuestions();
   }, [exam, firestore]);
   
+  const getBackHref = () => {
+    if (isPreviousExam) return '/mentorlite/previous-exams';
+    if (isCommunitySimulado) return '/mentorlite/community-simulados';
+    return '/mentorlite/simulated-exams';
+  };
+
   const isLoading = isLoadingExam || isLoadingQuestions;
-  const backHref = isFromPreviousExams ? '/mentorlite/previous-exams' : '/mentorlite/simulated-exams';
+  const backHref = getBackHref();
 
   return (
     <div className="flex flex-col gap-8">

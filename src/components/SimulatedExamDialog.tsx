@@ -25,7 +25,9 @@ import {
 import { useFirebase, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import { createSimulatedExam } from '@/firebase/actions';
 import { useToast } from '@/hooks/use-toast';
-import { collection, DocumentData } from 'firebase/firestore';
+import { collection, DocumentData, query, where } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
+
 
 const QUESTION_COUNTS = Array.from({ length: 20 }, (_, i) => i + 1);
 
@@ -37,6 +39,7 @@ export function SimulatedExamDialog() {
   const { firestore } = useFirebase();
   const { user } = useUser();
   const { toast } = useToast();
+  const router = useRouter();
 
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -46,7 +49,7 @@ export function SimulatedExamDialog() {
   );
   
   const questionsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'questoes') : null),
+    () => (firestore ? query(collection(firestore, 'questoes'), where('status', '!=', 'hidden')) : null),
     [firestore]
   );
   const { data: allQuestions, isLoading: isLoadingSubjects } = useCollection<DocumentData>(questionsQuery);
@@ -57,8 +60,7 @@ export function SimulatedExamDialog() {
     const subjects = new Set<string>();
     allQuestions.forEach(q => {
         const subject = q.Materia;
-        const isHidden = q.status === 'hidden';
-        if (subject && subject.trim().toLowerCase() !== 'materia' && !isHidden) {
+        if (subject && subject.trim().toLowerCase() !== 'materia') {
             subjects.add(subject);
         }
     });
@@ -98,17 +100,18 @@ export function SimulatedExamDialog() {
 
     setIsLoading(true);
     try {
-      await createSimulatedExam(firestore, user.uid, {
+      const newExamId = await createSimulatedExam(firestore, user.uid, {
         name: examName,
         subjects: Object.fromEntries(selectedSubjects),
       });
       toast({
         title: 'Sucesso!',
-        description: `Simulado "${examName}" criado com sucesso.`,
+        description: `Simulado "${examName}" criado para a comunidade.`,
       });
       setExamName('');
       setSubjectSelections({});
       setIsOpen(false);
+      router.push(`/mentorlite/community-simulados`);
     } catch (error) {
       console.error(error);
       let message = 'Não foi possível gerar o simulado. Tente novamente.';
@@ -131,7 +134,6 @@ export function SimulatedExamDialog() {
   };
   
   useEffect(() => {
-    // Reset selections when the dialog is closed
     if (!isOpen) {
       setExamName('');
       setSubjectSelections({});
@@ -148,10 +150,9 @@ export function SimulatedExamDialog() {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[625px]">
         <DialogHeader>
-          <DialogTitle>Gerar Novo Simulado</DialogTitle>
+          <DialogTitle>Gerar Novo Simulado para Comunidade</DialogTitle>
           <DialogDescription>
-            Configure seu simulado selecionando as matérias e o número de
-            questões.
+            Este simulado ficará disponível para todos os usuários.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-6 py-4">
@@ -214,7 +215,7 @@ export function SimulatedExamDialog() {
             {isLoading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : null}
-            Gerar Simulado
+            Publicar Simulado
           </Button>
         </DialogFooter>
       </DialogContent>
