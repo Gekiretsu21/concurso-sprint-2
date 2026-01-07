@@ -7,9 +7,9 @@ import { QuestionList } from '@/components/QuestionList';
 
 function SubjectPageContent({ subjectName, subjectParam }: { subjectName: string, subjectParam: string }) {
   
-  // Special handling for 'Lingua Portuguesa' to query variations
+  // Special handling for 'lingua-portuguesa' to query variations
   const querySubjects = subjectParam === 'lingua-portuguesa' 
-    ? ['Lingua Portuguesa', 'Língua Portuguesa']
+    ? ['Língua Portuguesa', 'Lingua Portuguesa']
     : [subjectName];
 
 
@@ -40,9 +40,14 @@ export default function SubjectPage({ params }: { params: { subject: string } })
   const subjectSlug = params.subject;
 
   // This will handle URL-encoded characters (like %C3%A7 for ç) and reconstruct the name.
-  const subjectName = subjectSlug
+  let subjectName = subjectSlug
     ? decodeURIComponent(subjectSlug).split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
     : '';
+
+  // Specific case to ensure correct accentuation for display
+  if (subjectSlug === 'lingua-portuguesa') {
+    subjectName = 'Língua Portuguesa';
+  }
 
   return <SubjectPageContent subjectName={subjectName} subjectParam={subjectSlug}/>;
 }

@@ -63,7 +63,7 @@ export default function QuestionsPage() {
         .forEach(q => {
             let subjectName = q.Materia.trim();
             if (subjectName.toLowerCase() === 'língua portuguesa' || subjectName.toLowerCase() === 'lingua portuguesa') {
-                subjectSet.add('Lingua Portuguesa');
+                subjectSet.add('Língua Portuguesa');
             } else {
                 subjectSet.add(subjectName);
             }
@@ -74,7 +74,7 @@ export default function QuestionsPage() {
   const availableTopics = useMemo(() => {
     if (!allQuestions || !filterSubject) return [];
     
-    const isLinguaPortuguesa = filterSubject === 'Lingua Portuguesa';
+    const isLinguaPortuguesa = filterSubject === 'Língua Portuguesa';
     
     const topics = new Set(
       allQuestions
@@ -96,9 +96,9 @@ export default function QuestionsPage() {
 
   const handleFilterSubmit = () => {
     let subjectQuery: string | string[] = filterSubject;
-    // If the selected subject is the standardized "Lingua Portuguesa", search for both variations.
-    if (filterSubject === 'Lingua Portuguesa') {
-        subjectQuery = ['Lingua Portuguesa', 'Língua Portuguesa'];
+    // If the selected subject is the standardized "Língua Portuguesa", search for both variations.
+    if (filterSubject === 'Língua Portuguesa') {
+        subjectQuery = ['Língua Portuguesa', 'Lingua Portuguesa'];
     }
     setActiveFilters({ subject: subjectQuery, topics: selectedTopics, status: filterStatus });
   };

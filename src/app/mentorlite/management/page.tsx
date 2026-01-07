@@ -367,7 +367,7 @@ export default function ManagementPage() {
             let subjectName = subject.trim();
             // Standardize "Língua Portuguesa" variations
             if (subjectName.toLowerCase() === 'língua portuguesa' || subjectName.toLowerCase() === 'lingua portuguesa') {
-                subjectName = 'Lingua Portuguesa';
+                subjectName = 'Língua Portuguesa';
             }
             
             if (subjectName !== 'materia') { // Filter out header row
@@ -606,7 +606,7 @@ export default function ManagementPage() {
                       id="flashcard-text"
                       className="min-h-[350px]"
                       placeholder="Direito Administrativo | Atos Administrativos | Geral | Quais são os atributos do ato administrativo? | Presunção de legitimidade, autoexecutoriedade, tipicidade e imperatividade (mnemônico: PATI).
-Português | Crase | Analista Judiciário | Quando a crase é facultativa antes de nomes próprios femininos? | A crase é facultativa, pois o artigo 'a' antes do nome é opcional. Ex: Entreguei à Paula. / Entreguei a Paula."
+Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativa antes de nomes próprios femininos? | A crase é facultativa, pois o artigo 'a' antes do nome é opcional. Ex: Entreguei à Paula. / Entreguei a Paula."
                       value={flashcardText}
                       onChange={e => setFlashcardText(e.target.value)}
                     />
