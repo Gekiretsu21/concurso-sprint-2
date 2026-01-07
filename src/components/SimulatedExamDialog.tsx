@@ -48,8 +48,9 @@ export function SimulatedExamDialog() {
     {}
   );
   
+  // This is the correct logic, similar to the management page.
   const questionsQuery = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'questoes'), where('status', '!=', 'hidden')) : null),
+    () => (firestore ? collection(firestore, 'questoes') : null),
     [firestore]
   );
   const { data: allQuestions, isLoading: isLoadingSubjects } = useCollection<DocumentData>(questionsQuery);
@@ -57,15 +58,17 @@ export function SimulatedExamDialog() {
   const availableSubjects = useMemo((): string[] => {
     if (!allQuestions) return [];
     
+    // Create a set of subjects from active questions.
     const subjects = new Set<string>();
     allQuestions.forEach(q => {
         const subject = q.Materia;
-        if (subject && subject.trim().toLowerCase() !== 'materia') {
+        const isHidden = q.status === 'hidden';
+        if (subject && subject.trim().toLowerCase() !== 'materia' && !isHidden) {
             subjects.add(subject);
         }
     });
 
-    return Array.from(subjects).sort();
+    return Array.from(subjects).sort((a, b) => a.localeCompare(b));
   }, [allQuestions]);
 
 
