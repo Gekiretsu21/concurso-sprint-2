@@ -52,7 +52,7 @@ export async function getUserAnalytics(userId: string): Promise<UserAnalytics> {
     const userDocRef = adminFirestore.collection('users').doc(userId);
     const userDoc = await userDocRef.get();
 
-    const emptyAnalytics = {
+    const emptyAnalytics: UserAnalytics = {
         totalAnswered: 0,
         overallAccuracy: 0,
         simulatedExamsFinished: 0,
@@ -67,57 +67,49 @@ export async function getUserAnalytics(userId: string): Promise<UserAnalytics> {
       return emptyAnalytics;
     }
 
-    const userData = userDoc.data();
-    if (!userData || !userData.stats) {
-        return emptyAnalytics;
-    }
-
-    const stats = userData.stats;
-    const performance = stats.performance;
-
-    if (!performance) {
-        return {
-            ...emptyAnalytics,
-            totalStudyTime: formatStudyTime(stats.totalStudyTime || 0),
-            dailyStreak: stats.dailyStreak || 0,
-            level: calculateLevel(0, 0, 0),
-        };
-    }
-
-    const questionsStats = performance?.questions;
-    const totalAnswered = questionsStats?.totalAnswered || 0;
-    const totalCorrect = questionsStats?.totalCorrect || 0;
+    const userData = userDoc.data() || {};
+    const stats = userData.stats || {};
+    
+    // Safely access performance data
+    const performance = stats.performance || {};
+    const questionsStats = performance.questions || {};
+    const flashcardsStats = performance.flashcards || {};
+    const simulatedExamsStats = performance.simulatedExams || [];
+    
+    const totalAnswered = questionsStats.totalAnswered || 0;
+    const totalCorrect = questionsStats.totalCorrect || 0;
     const overallAccuracy = totalAnswered > 0 ? (totalCorrect / totalAnswered) * 100 : 0;
     
+    const flashcardsTotal = flashcardsStats.totalReviewed || 0;
+    const simulatedExamsFinished = simulatedExamsStats.length || 0;
+
+    // Calculate level based on safe values
+    const level = calculateLevel(totalAnswered, flashcardsTotal, simulatedExamsFinished);
+
     const subjectPerformance: SubjectPerformance[] = [];
     let bestSubject: { name: string; accuracy: number } | undefined;
     let worstSubject: { name: string; accuracy: number } | undefined;
 
-    if (questionsStats?.bySubject) {
-      for (const [subject, data] of Object.entries(questionsStats.bySubject as any)) {
-        if (data.answered > 0) {
-          const accuracy = (data.correct / data.answered) * 100;
-          subjectPerformance.push({ subject, accuracy });
+    const bySubject = questionsStats.bySubject || {};
+    for (const [subject, data] of Object.entries(bySubject as any)) {
+      if (data && typeof data === 'object' && 'answered' in data && data.answered > 0) {
+        const accuracy = (data.correct / data.answered) * 100;
+        subjectPerformance.push({ subject, accuracy });
 
-          if (!bestSubject || accuracy > bestSubject.accuracy) {
-            bestSubject = { name: subject, accuracy };
-          }
-           if (!worstSubject || accuracy < worstSubject.accuracy) {
-            worstSubject = { name: subject, accuracy };
-          }
+        if (!bestSubject || accuracy > bestSubject.accuracy) {
+          bestSubject = { name: subject, accuracy };
         }
-      }
-      if (subjectPerformance.length === 1) {
-          worstSubject = bestSubject;
+        if (!worstSubject || accuracy < worstSubject.accuracy) {
+          worstSubject = { name: subject, accuracy };
+        }
       }
     }
     
+    if (subjectPerformance.length === 1 && bestSubject) {
+        worstSubject = bestSubject;
+    }
+    
     subjectPerformance.sort((a, b) => b.accuracy - a.accuracy);
-
-    const flashcardsTotal = performance?.flashcards?.totalReviewed || 0;
-    const simulatedExamsFinished = performance?.simulatedExams?.length || 0;
-    const level = calculateLevel(totalAnswered, flashcardsTotal, simulatedExamsFinished);
-
 
     return {
       totalAnswered,
