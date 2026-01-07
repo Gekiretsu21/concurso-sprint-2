@@ -13,7 +13,6 @@ import { getAllUsers } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-// A interface UserData foi movida para cá, que é o local correto.
 export interface UserData {
   id: string;
   name: string | undefined;
@@ -37,7 +36,7 @@ export default function UsersPage() {
          let message = 'Ocorreu um erro ao buscar os usuários.';
           if (e instanceof Error && e.message === 'ADMIN_CREDENTIALS_ERROR') {
             message = 'Você não tem permissão para visualizar os usuários. Verifique se as credenciais do Admin SDK (FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY) estão configuradas corretamente no seu ambiente.';
-            setError(message); // Set error state to display the Alert component
+            setError(message);
           } else if (e instanceof Error) {
             message = e.message;
           }
