@@ -67,7 +67,11 @@ export async function getUserAnalytics(userId: string): Promise<UserAnalytics> {
       return emptyAnalytics;
     }
 
-    const userData = userDoc.data() || {};
+    const userData = userDoc.data();
+    if (!userData) {
+      return emptyAnalytics;
+    }
+    
     const stats = userData.stats || {};
     
     // Safely access performance data
