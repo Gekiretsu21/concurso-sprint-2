@@ -187,7 +187,10 @@ export default function ExamResultsPage() {
   const { data: savedResult, isLoading: isLoadingResult } = useDoc<PreviousExamResult>(resultDocRef);
 
   const fetchAndSetQuestions = useCallback(async (questionIds: string[], storedAnswers: UserAnswers) => {
-    if (!firestore || questionIds.length === 0) return;
+    if (!firestore || questionIds.length === 0) {
+      setIsLoading(false);
+      return;
+    }
 
     const fetchedQuestionsData: Question[] = [];
     const questionIdsBatches: string[][] = [];
@@ -253,38 +256,46 @@ export default function ExamResultsPage() {
       }
       localStorage.removeItem('examResults');
       setIsLoading(false);
+      return; // Exit after processing local storage data
+    }
+    
+    // Only proceed to check Firestore if not loading and local storage was empty
+    if (!isLoadingResult) {
+        if (savedResult) {
+            const fetchExamAndQuestions = async () => {
+                if (!firestore || !user) return;
+                
+                const examCollectionPaths = [
+                    `users/${user.uid}/simulatedExams`,
+                    'previousExams',
+                    'communitySimulados',
+                ];
 
-    } else if (savedResult) {
-       const fetchExamAndQuestions = async () => {
-         if (!firestore || !user) return;
-         
-         const examCollectionPaths = [
-            `users/${user.uid}/simulatedExams`,
-            'previousExams',
-            'communitySimulados',
-         ];
+                let examData: SimulatedExam | null = null;
+                
+                for (const path of examCollectionPaths) {
+                    const examRef = doc(firestore, path, savedResult.examId);
+                    const examSnap = await getDoc(examRef);
+                    if (examSnap.exists()) {
+                        examData = { id: examSnap.id, ...examSnap.data() } as SimulatedExam;
+                        break;
+                    }
+                }
 
-         let examData: SimulatedExam | null = null;
-         
-         for (const path of examCollectionPaths) {
-            const examRef = doc(firestore, path, savedResult.examId);
-            const examSnap = await getDoc(examRef);
-            if (examSnap.exists()) {
-                examData = examSnap.data() as SimulatedExam;
-                break;
-            }
-         }
-
-         if (examData) {
-           fetchAndSetQuestions(examData.questionIds, savedResult.userAnswers);
-         } else {
-            console.error("Exam document not found in any collection for ID:", savedResult.examId);
+                if (examData) {
+                  fetchAndSetQuestions(examData.questionIds, savedResult.userAnswers);
+                } else {
+                    console.error("Exam document not found in any collection for ID:", savedResult.examId);
+                    setIsLoading(false); // Stop loading
+                    router.push('/mentorlite/simulated-exams'); // Redirect if exam is truly not found
+                }
+            };
+            fetchExamAndQuestions();
+        } else {
+            // If finished loading and there's no savedResult (and no localStorage data), then redirect
+            setIsLoading(false);
             router.push('/mentorlite/simulated-exams');
-         }
-       };
-       fetchExamAndQuestions();
-    } else if (!isLoadingResult) {
-        router.push('/mentorlite/simulated-exams');
+        }
     }
 
   }, [savedResult, isLoadingResult, firestore, user, fetchAndSetQuestions, router]);
