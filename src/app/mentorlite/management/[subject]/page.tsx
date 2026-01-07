@@ -32,16 +32,15 @@ function SubjectPageContent({ subjectName }: { subjectName: string }) {
 
 export default function SubjectPage() {
   const params = useParams();
-  const subjectSlug = params.subject as string;
+  const subjectSlug = Array.isArray(params.subject) ? params.subject[0] : params.subject;
 
-  // Decode the URL component to handle special characters correctly
-  // e.g., lingua-portuguesa -> lingua-portuguesa (no change)
-  // but if it were 'L%C3%ADngua%20Portuguesa', it would become 'Língua Portuguesa'
-  // The logic in createSubjectSlug normalizes it, so we need to reconstruct the likely name.
+  // This will handle URL-encoded characters (like %C3%A7 for ç) and reconstruct the name.
   const subjectName = subjectSlug
-    .split('-')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+    ? decodeURIComponent(subjectSlug)
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ')
+    : '';
 
   return <SubjectPageContent subjectName={subjectName} />;
 }
