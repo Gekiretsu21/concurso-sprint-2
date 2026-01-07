@@ -226,7 +226,7 @@ export default function ManagementPage() {
                   Importar
                 </Button>
               )}
-              <DialogContent className="sm:max-w-4xl">
+              <DialogContent className="sm:max-w-6xl">
                 <DialogHeader>
                   <DialogTitle>Importar Questões por Texto</DialogTitle>
                   <DialogDescription>
