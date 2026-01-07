@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 // These types should ideally be in a shared types file
 interface Question {
@@ -38,6 +39,18 @@ interface ExamResultsData {
   exam: SimulatedExam;
   questions: Question[];
   userAnswers: UserAnswers;
+}
+
+// Stats types
+interface PerformanceStats {
+  total: number;
+  correct: number;
+  incorrect: number;
+  percentage: number;
+}
+
+interface SubjectStats extends PerformanceStats {
+  topics: { [topicName: string]: PerformanceStats };
 }
 
 function formatEnunciado(text: string) {
@@ -121,6 +134,52 @@ export default function ExamResultsPage() {
     }
   }, [router]);
 
+  const performanceBySubject = useMemo((): { [subjectName: string]: SubjectStats } => {
+    if (!results) return {};
+
+    const stats: { [subjectName: string]: SubjectStats } = {};
+
+    for (const q of results.questions) {
+      const subject = q.Materia;
+      const topic = q.Assunto;
+      const userAnswer = results.userAnswers[q.id];
+      const isCorrect = userAnswer && userAnswer.toLowerCase() === q.correctAnswer.toLowerCase();
+
+      // Initialize subject stats if not present
+      if (!stats[subject]) {
+        stats[subject] = { total: 0, correct: 0, incorrect: 0, percentage: 0, topics: {} };
+      }
+      
+      // Initialize topic stats if not present
+      if (!stats[subject].topics[topic]) {
+        stats[subject].topics[topic] = { total: 0, correct: 0, incorrect: 0, percentage: 0 };
+      }
+      
+      // Update counts
+      stats[subject].total++;
+      stats[subject].topics[topic].total++;
+      if (isCorrect) {
+        stats[subject].correct++;
+        stats[subject].topics[topic].correct++;
+      } else {
+        stats[subject].incorrect++;
+        stats[subject].topics[topic].incorrect++;
+      }
+    }
+    
+    // Calculate percentages
+    for (const subject in stats) {
+      stats[subject].percentage = (stats[subject].correct / stats[subject].total) * 100;
+      for (const topic in stats[subject].topics) {
+        const topicStats = stats[subject].topics[topic];
+        topicStats.percentage = (topicStats.correct / topicStats.total) * 100;
+      }
+    }
+
+    return stats;
+  }, [results]);
+
+
   if (!results) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -151,7 +210,7 @@ export default function ExamResultsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Seu Desempenho</CardTitle>
+          <CardTitle>Seu Desempenho Geral</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
              <div className="flex items-center gap-4">
@@ -175,9 +234,90 @@ export default function ExamResultsPage() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Desempenho por Matéria</CardTitle>
+          <CardDescription>Analise seus acertos e erros em cada matéria e assunto.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Accordion type="single" collapsible className="w-full">
+            {Object.entries(performanceBySubject).map(([subject, stats]) => (
+              <AccordionItem key={subject} value={subject}>
+                <AccordionTrigger className="hover:no-underline">
+                  <div className="flex flex-1 items-center justify-between pr-4">
+                    <span className="font-bold text-lg">{subject}</span>
+                     <Badge variant={stats.percentage >= 70 ? 'default' : 'destructive'} className="text-base">
+                      {stats.percentage.toFixed(1)}%
+                    </Badge>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="space-y-4 pt-2">
+                  <div className="rounded-lg border bg-muted/50 p-4">
+                     <div className="grid grid-cols-4 gap-4 text-center">
+                        <div>
+                          <p className="font-bold text-lg">{stats.total}</p>
+                          <p className="text-xs text-muted-foreground">Total</p>
+                        </div>
+                        <div>
+                          <p className="font-bold text-lg text-emerald-600">{stats.correct}</p>
+                          <p className="text-xs text-muted-foreground">Acertos</p>
+                        </div>
+                        <div>
+                          <p className="font-bold text-lg text-destructive">{stats.incorrect}</p>
+                          <p className="text-xs text-muted-foreground">Erros</p>
+                        </div>
+                         <div>
+                          <p className="font-bold text-lg text-primary">{stats.percentage.toFixed(1)}%</p>
+                          <p className="text-xs text-muted-foreground">Aproveitamento</p>
+                        </div>
+                      </div>
+                  </div>
+                  <Accordion type="single" collapsible className="w-full pl-4">
+                     {Object.entries(stats.topics).map(([topic, topicStats]) => (
+                       <AccordionItem key={topic} value={topic}>
+                         <AccordionTrigger className="py-2 text-sm hover:no-underline">
+                            <div className="flex flex-1 items-center justify-between pr-4">
+                                <span>{topic}</span>
+                                <Badge variant={topicStats.percentage >= 70 ? 'secondary' : 'destructive'} className="font-normal">
+                                {topicStats.percentage.toFixed(1)}%
+                                </Badge>
+                            </div>
+                         </AccordionTrigger>
+                         <AccordionContent className="pt-2 pb-0">
+                           <div className="rounded-lg border p-3">
+                               <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                                  <div>
+                                    <p className="font-semibold">{topicStats.total}</p>
+                                    <p className="text-muted-foreground">Total</p>
+                                  </div>
+                                  <div>
+                                    <p className="font-semibold text-emerald-600">{topicStats.correct}</p>
+                                    <p className="text-muted-foreground">Acertos</p>
+                                  </div>
+                                  <div>
+                                    <p className="font-semibold text-destructive">{topicStats.incorrect}</p>
+                                    <p className="text-muted-foreground">Erros</p>
+                                  </div>
+                                   <div>
+                                    <p className="font-semibold text-primary">{topicStats.percentage.toFixed(1)}%</p>
+                                    <p className="text-muted-foreground">Aproveitamento</p>
+                                  </div>
+                                </div>
+                            </div>
+                         </AccordionContent>
+                       </AccordionItem>
+                     ))}
+                   </Accordion>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </CardContent>
+      </Card>
+
       <div className="space-y-6">
         <h2 className="text-2xl font-bold">Gabarito Detalhado</h2>
-        {questions.map((q, index) => (
+        {questions.map((q) => (
           <ResultDetails key={q.id} question={q} userAnswer={userAnswers[q.id]} />
         ))}
       </div>
