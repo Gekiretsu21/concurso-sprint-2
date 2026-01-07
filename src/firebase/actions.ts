@@ -125,71 +125,128 @@ export async function importQuestions(
   });
 }
 
-export async function importFlashcards(
-  firestore: Firestore,
-  text: string
-): Promise<void> {
+// Interface for the new, more detailed flashcard structure
+interface Flashcard {
+  id: string;
+  subject: string;
+  topic: string;
+  targetRole: string;
+  front: string;
+  back: string;
+  searchKeywords: string[];
+  createdAt: any; // serverTimestamp
+}
+
+
+export async function importFlashcards(firestore: Firestore, text: string): Promise<{ successCount: number; errorCount: number; errors: string[] }> {
   if (!text) {
     throw new Error('O texto não pode estar vazio.');
   }
+
+  const lines = text.trim().split('\n');
+  const flashcardsCollection = collection(firestore, 'flashcards');
+  const batches: WriteBatch[] = [];
+  let currentBatch = writeBatch(firestore);
+  let operationCount = 0;
   
-  const flashcardsStr = text.trim().split(';');
-  const flashcardsCollection = collection(
-    firestore,
-    'flashcards'
-  );
+  const results = {
+    successCount: 0,
+    errorCount: 0,
+    errors: [] as string[],
+  };
 
-  for (const fStr of flashcardsStr) {
-    if (fStr.trim() === '') continue;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line === '') continue;
 
-    const parts = fStr.split('/');
-    if (parts.length < 3) {
-      console.warn('Skipping invalid flashcard format:', fStr);
+    const parts = line.split('|');
+    if (parts.length !== 5) {
+      results.errorCount++;
+      results.errors.push(`Linha ${i + 1}: Formato inválido. Esperava 5 partes separadas por "|", mas encontrou ${parts.length}.`);
       continue;
     }
 
-    const [subject, front, back] = parts;
+    const [subject, topic, targetRole, front, back] = parts.map(p => p.trim());
+    
+    // Create keywords for searching
+    const keywords = [
+      ...subject.toLowerCase().split(/\s+/),
+      ...topic.toLowerCase().split(/\s+/),
+      ...front.toLowerCase().split(/\s+/),
+    ];
+    const uniqueKeywords = [...new Set(keywords)];
 
-    const newFlashcard = {
-      subject: subject.trim(),
-      front: front.trim(),
-      back: back.trim(),
+    const newFlashcardDocRef = doc(flashcardsCollection);
+    const newFlashcard: Omit<Flashcard, 'id'> = {
+      subject,
+      topic,
+      targetRole,
+      front,
+      back,
+      searchKeywords: uniqueKeywords,
       createdAt: serverTimestamp(),
     };
 
-    addDoc(flashcardsCollection, newFlashcard).catch(serverError => {
-      console.error('Firestore addDoc error for flashcard:', serverError);
-      const permissionError = new FirestorePermissionError({
-        path: flashcardsCollection.path,
-        operation: 'create',
-        requestResourceData: newFlashcard,
-      });
-      errorEmitter.emit('permission-error', permissionError);
-    });
+    currentBatch.set(newFlashcardDocRef, newFlashcard);
+    operationCount++;
+    results.successCount++;
+
+    if (operationCount === 499) { // Firebase batch limit is 500 operations
+      batches.push(currentBatch);
+      currentBatch = writeBatch(firestore);
+      operationCount = 0;
+    }
   }
+
+  // Add the last batch if it has operations
+  if (operationCount > 0) {
+    batches.push(currentBatch);
+  }
+
+  // Commit all batches
+  try {
+    await Promise.all(batches.map(b => b.commit()));
+  } catch (serverError) {
+    console.error('Firestore batch write error for flashcards:', serverError);
+    const permissionError = new FirestorePermissionError({
+      path: flashcardsCollection.path,
+      operation: 'create',
+      requestResourceData: 'Batch operation for flashcard import',
+    });
+    errorEmitter.emit('permission-error', permissionError);
+    throw permissionError; // Re-throw to be caught by the caller
+  }
+  
+  return results;
 }
+
 
 export async function handleFlashcardResponse(
   firestore: Firestore,
   userId: string,
-  flashcard: { id: string, subject: string },
+  flashcard: Flashcard, // Use the full, detailed Flashcard object
   status: 'correct' | 'incorrect'
 ): Promise<void> {
   if (!userId) {
     throw new Error('Usuário não autenticado.');
   }
-  const { id: flashcardId, subject } = flashcard;
+
+  // Now we can use the detailed info from the flashcard object
+  const { id: flashcardId, subject, topic, targetRole } = flashcard;
   
   const userRef = doc(firestore, `users/${userId}`);
   const responseRef = doc(firestore, `users/${userId}/flashcardResponses/${flashcardId}`);
   
   const batch = writeBatch(firestore);
 
-  // 1. Log the individual response
+  // 1. Log the individual response (includes new metadata)
   const responseData = {
     userId,
     flashcardId,
     status,
+    subject, // Store for context
+    topic,
+    targetRole,
     lastReviewed: serverTimestamp(),
   };
   batch.set(responseRef, responseData, { merge: true });
@@ -197,19 +254,23 @@ export async function handleFlashcardResponse(
   // 2. Atomically update the aggregated stats
   const totalCorrectIncrement = status === 'correct' ? 1 : 0;
   
-  // Using dot notation for nested fields
-  batch.update(userRef, {
+  // Using dot notation for nested fields ensures atomicity
+  const updatePayload: { [key: string]: any } = {
     'stats.performance.flashcards.totalReviewed': increment(1),
     'stats.performance.flashcards.totalCorrect': increment(totalCorrectIncrement),
     [`stats.performance.flashcards.bySubject.${subject}.reviewed`]: increment(1),
     [`stats.performance.flashcards.bySubject.${subject}.correct`]: increment(totalCorrectIncrement),
-  });
+    // Future-proofing for topic-level stats
+    // [`stats.performance.flashcards.byTopic.${topic}.reviewed`]: increment(1),
+    // [`stats.performance.flashcards.byTopic.${topic}.correct`]: increment(totalCorrectIncrement),
+  };
+  batch.update(userRef, updatePayload);
 
   batch.commit().catch(async (serverError) => {
-    // Check if the user document exists, if not, create it with initial stats.
     const userDoc = await getDoc(userRef);
     if (!userDoc.exists()) {
-      // The user document doesn't exist. Let's create it and then retry the batch.
+      // If the user document doesn't exist, create it with initial stats.
+      // This is a crucial step for the first time a user interacts with a flashcard.
       const initialStats = {
           stats: {
               performance: {
@@ -224,13 +285,14 @@ export async function handleFlashcardResponse(
           }
       };
       await setDoc(userRef, initialStats, { merge: true });
-      // Retry the original batch write
+      // Retry the original batch write after creating the user doc
       await handleFlashcardResponse(firestore, userId, flashcard, status);
     } else {
+       // If the doc exists, the error is likely a permissions issue.
        const permissionError = new FirestorePermissionError({
         path: userRef.path,
         operation: 'update',
-        requestResourceData: { /* aggregated data */ },
+        requestResourceData: updatePayload,
       });
       errorEmitter.emit('permission-error', permissionError);
       throw permissionError;
@@ -475,5 +537,3 @@ export async function deleteCommunitySimulados(firestore: Firestore, simuladoIds
     throw permissionError;
   });
 }
-
-    

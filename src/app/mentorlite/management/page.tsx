@@ -525,8 +525,8 @@ export default function ManagementPage() {
                 <DialogHeader>
                   <DialogTitle>Importar Flashcards por Texto</DialogTitle>
                   <DialogDescription>
-                    Cole o conteúdo no campo abaixo no formato:
-                    Materia/Pergunta/Resposta;
+                    Cole o conteúdo no campo abaixo, usando "|" como separador:
+                    Matéria | Assunto | Cargo | Pergunta | Resposta
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
@@ -537,7 +537,7 @@ export default function ManagementPage() {
                     <Textarea
                       id="flashcard-text"
                       className="min-h-[350px]"
-                      placeholder="Ex: Direito Administrativo/Quais são os atributos do ato administrativo?/Presunção de legitimidade, autoexecutoriedade, tipicidade e imperatividade (P-A-T-I);"
+                      placeholder="Ex: Direito Administrativo | Atos Administrativos | Geral | Quais são os atributos do ato administrativo? | Presunção de legitimidade, autoexecutoriedade, tipicidade e imperatividade (P-A-T-I)."
                       value={flashcardText}
                       onChange={e => setFlashcardText(e.target.value)}
                     />
@@ -673,5 +673,3 @@ export default function ManagementPage() {
     </div>
   );
 }
-
-    
