@@ -405,3 +405,27 @@ export async function deletePreviousExams(firestore: Firestore, userId: string, 
     throw permissionError;
   });
 }
+
+export async function deleteCommunitySimulados(firestore: Firestore, simuladoIds: string[]): Promise<void> {
+  if (!simuladoIds || simuladoIds.length === 0) {
+    throw new Error("Nenhum simulado foi selecionado para exclusão.");
+  }
+  
+  const batch = writeBatch(firestore);
+  
+  for (const simuladoId of simuladoIds) {
+    const simuladoRef = doc(firestore, 'communitySimulados', simuladoId);
+    batch.delete(simuladoRef);
+  }
+  
+  await batch.commit().catch(serverError => {
+    console.error('Firestore batch delete error for community simulados:', serverError);
+    const permissionError = new FirestorePermissionError({
+      path: 'communitySimulados',
+      operation: 'delete',
+      requestResourceData: { simuladoIds }
+    });
+    errorEmitter.emit('permission-error', permissionError);
+    throw permissionError;
+  });
+}

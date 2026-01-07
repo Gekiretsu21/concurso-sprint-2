@@ -16,7 +16,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardPaste, FileText, Layers, Loader2, Users, Trash2, AlertCircle, ArchiveX } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
-import { importQuestions, importFlashcards, deleteDuplicateQuestions, deletePreviousExams } from '@/firebase/actions';
+import { importQuestions, importFlashcards, deleteDuplicateQuestions, deletePreviousExams, deleteCommunitySimulados } from '@/firebase/actions';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
 import { SubjectCard } from '@/components/SubjectCard';
@@ -59,6 +59,12 @@ interface PreviousExam {
   id: string;
   name: string;
 }
+
+interface CommunitySimulado {
+    id: string;
+    name: string;
+}
+
 
 function DeletePreviousExamsDialog() {
   const { firestore } = useFirebase();
@@ -144,6 +150,93 @@ function DeletePreviousExamsDialog() {
           <Button variant="destructive" onClick={handleDelete} disabled={isDeleting || selectedExams.length === 0}>
             {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Excluir ({selectedExams.length})
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function DeleteCommunitySimuladosDialog() {
+  const { firestore } = useFirebase();
+  const { toast } = useToast();
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedSimulados, setSelectedSimulados] = useState<string[]>([]);
+  
+  const simuladosQuery = useMemoFirebase(() =>
+      firestore ? query(collection(firestore, `communitySimulados`)) : null,
+    [firestore]
+  );
+  const { data: simulados, isLoading } = useCollection<CommunitySimulado>(simuladosQuery);
+
+  const handleCheckboxChange = (simuladoId: string) => {
+    setSelectedSimulados(prev => 
+      prev.includes(simuladoId) ? prev.filter(id => id !== simuladoId) : [...prev, simuladoId]
+    );
+  };
+
+  const handleDelete = async () => {
+    if (!firestore || selectedSimulados.length === 0) return;
+    
+    setIsDeleting(true);
+    try {
+      await deleteCommunitySimulados(firestore, selectedSimulados);
+      toast({
+        title: "Sucesso!",
+        description: `${selectedSimulados.length} simulado(s) da comunidade foram excluídos.`
+      });
+      setSelectedSimulados([]);
+      setIsOpen(false);
+    } catch (error) {
+       toast({
+        variant: 'destructive',
+        title: 'Erro ao Excluir',
+        description: 'Não foi possível excluir os simulados selecionados.',
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button variant="destructive" size="sm" disabled={!firestore}>
+          <Trash2 />
+          Excluir Simulados
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Excluir Simulados da Comunidade</DialogTitle>
+          <DialogDescription>
+            Selecione os simulados da comunidade que você deseja excluir permanentemente.
+          </DialogDescription>
+        </DialogHeader>
+        <ScrollArea className="max-h-72 my-4">
+            <div className="space-y-4 pr-6">
+            {isLoading && <div className="flex items-center justify-center p-4"><Loader2 className="h-6 w-6 animate-spin"/></div>}
+            {!isLoading && simulados && simulados.length > 0 ? simulados.map(simulado => (
+                <div key={simulado.id} className="flex items-center space-x-2 rounded-md border p-3">
+                    <Checkbox
+                        id={`simulado-${simulado.id}`}
+                        checked={selectedSimulados.includes(simulado.id)}
+                        onCheckedChange={() => handleCheckboxChange(simulado.id)}
+                    />
+                    <Label htmlFor={`simulado-${simulado.id}`} className="flex-1 cursor-pointer">
+                        {simulado.name}
+                    </Label>
+                </div>
+            )) : !isLoading && <p className="text-sm text-muted-foreground text-center py-4">Nenhum simulado da comunidade encontrado.</p>}
+            </div>
+        </ScrollArea>
+        <DialogFooter>
+          <DialogClose asChild><Button variant="outline">Cancelar</Button></DialogClose>
+          <Button variant="destructive" onClick={handleDelete} disabled={isDeleting || selectedSimulados.length === 0}>
+            {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Excluir ({selectedSimulados.length})
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -477,20 +570,20 @@ export default function ManagementPage() {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="md:col-span-2">
             <CardHeader>
                 <CardTitle>Ferramentas de Manutenção</CardTitle>
                 <CardDescription>Ações para organizar e limpar seus dados.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-                <div className="flex items-center justify-between p-4 rounded-lg border">
+            <CardContent className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="flex flex-col justify-between p-4 rounded-lg border h-full">
                     <div>
                         <h4 className="font-semibold">Limpar Duplicatas</h4>
-                        <p className="text-sm text-muted-foreground">Remove questões com o mesmo enunciado.</p>
+                        <p className="text-sm text-muted-foreground mt-1">Remove questões com o mesmo enunciado.</p>
                     </div>
                      <AlertDialog>
                         <AlertDialogTrigger asChild>
-                             <Button variant="destructive" size="sm" disabled={isButtonDisabled}>
+                             <Button variant="destructive" size="sm" disabled={isButtonDisabled} className="mt-4">
                                 {isCleaning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 />}
                                 Limpar
                             </Button>
@@ -515,12 +608,19 @@ export default function ManagementPage() {
                     </AlertDialog>
                 </div>
 
-                <div className="flex items-center justify-between p-4 rounded-lg border">
+                <div className="flex flex-col justify-between p-4 rounded-lg border h-full">
                     <div>
                         <h4 className="font-semibold">Excluir Provas Anteriores</h4>
-                        <p className="text-sm text-muted-foreground">Gerencie as provas importadas.</p>
+                        <p className="text-sm text-muted-foreground mt-1">Gerencie as provas importadas.</p>
                     </div>
                     <DeletePreviousExamsDialog />
+                </div>
+                 <div className="flex flex-col justify-between p-4 rounded-lg border h-full">
+                    <div>
+                        <h4 className="font-semibold">Excluir Simulados da Comunidade</h4>
+                        <p className="text-sm text-muted-foreground mt-1">Gerencie os simulados criados.</p>
+                    </div>
+                    <DeleteCommunitySimuladosDialog />
                 </div>
             </CardContent>
         </Card>
