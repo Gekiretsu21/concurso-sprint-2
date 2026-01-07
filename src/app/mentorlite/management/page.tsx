@@ -14,9 +14,9 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardPaste, FileText, Layers, Loader2, Users } from 'lucide-react';
+import { ClipboardPaste, FileText, Layers, Loader2, Users, Trash2, AlertCircle } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
-import { importQuestions, importFlashcards } from '@/firebase/actions';
+import { importQuestions, importFlashcards, deleteDuplicateQuestions } from '@/firebase/actions';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
 import { SubjectCard } from '@/components/SubjectCard';
@@ -31,6 +31,7 @@ import {
 import Link from 'next/link';
 import { collection, DocumentData } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 // Helper to generate a URL-friendly slug from a subject name
 const createSubjectSlug = (subject: string) => {
@@ -57,6 +58,7 @@ export default function ManagementPage() {
   const [flashcardText, setFlashcardText] = useState('');
   const [isImportingQuestions, setIsImportingQuestions] = useState(false);
   const [isImportingFlashcards, setIsImportingFlashcards] = useState(false);
+  const [isCleaning, setIsCleaning] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -74,7 +76,7 @@ export default function ManagementPage() {
     
     const subjectCounts = allQuestions.reduce((acc, q) => {
         const subject = q.Materia;
-        if (subject && subject.toLowerCase() !== 'materia') { // Corrected filter
+        if (subject && subject.toLowerCase() !== 'materia') {
             acc[subject] = (acc[subject] || 0) + 1;
         }
         return acc;
@@ -150,6 +152,37 @@ export default function ManagementPage() {
       setIsImportingFlashcards(false);
     }
   };
+  
+    const handleCleanDuplicates = async () => {
+    if (!firestore) {
+      toast({ variant: 'destructive', title: 'Erro de Conexão' });
+      return;
+    }
+    setIsCleaning(true);
+    try {
+      const deletedCount = await deleteDuplicateQuestions(firestore);
+      if (deletedCount > 0) {
+        toast({
+          title: 'Limpeza Concluída',
+          description: `${deletedCount} questões duplicadas foram removidas.`,
+        });
+      } else {
+        toast({
+          title: 'Nenhuma Duplicata Encontrada',
+          description: 'Seu banco de questões já está limpo.',
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro na Limpeza',
+        description: 'Não foi possível remover as questões duplicadas.',
+      });
+    } finally {
+      setIsCleaning(false);
+    }
+  };
+
 
   const isButtonDisabled = !user || isUserLoading;
 
@@ -161,7 +194,7 @@ export default function ManagementPage() {
           Gerencie as configurações e dados do aplicativo.
         </p>
       </header>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="flex-row items-center justify-between">
             <CardTitle>Importar Questões</CardTitle>
@@ -316,6 +349,41 @@ export default function ManagementPage() {
               baralhos de estudo.
             </p>
           </CardContent>
+        </Card>
+        <Card className="bg-destructive/10 border-destructive/30">
+            <CardHeader className="flex-row items-center justify-between">
+                <CardTitle>Limpar Duplicatas</CardTitle>
+                 <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                         <Button variant="destructive" disabled={isButtonDisabled}>
+                            {isCleaning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 />}
+                            Limpar
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle className="flex items-center gap-2">
+                                <AlertCircle className="text-destructive"/>
+                                Tem certeza que deseja continuar?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Esta ação é irreversível. Ela irá verificar todas as questões no banco de dados e remover permanentemente as que tiverem o mesmo enunciado, mantendo apenas uma cópia de cada.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleCleanDuplicates} className="bg-destructive hover:bg-destructive/90">
+                                Sim, remover duplicatas
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            </CardHeader>
+            <CardContent>
+                 <p className="text-sm text-destructive/80">
+                   Use esta ferramenta para remover questões duplicadas do banco de dados. Esta ação não pode ser desfeita.
+                </p>
+            </CardContent>
         </Card>
       </div>
 

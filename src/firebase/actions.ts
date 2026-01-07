@@ -13,6 +13,7 @@ import {
   serverTimestamp,
   updateDoc,
   setDoc,
+  deleteDoc,
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -254,4 +255,55 @@ export async function createSimulatedExam(
     });
     errorEmitter.emit('permission-error', permissionError);
   });
+}
+
+export async function deleteDuplicateQuestions(firestore: Firestore): Promise<number> {
+  const questionsRef = collection(firestore, 'questoes');
+  const snapshot = await getDocs(questionsRef);
+  
+  const questionsByEnunciado = new Map<string, any[]>();
+
+  // Group questions by their statement (Enunciado)
+  snapshot.docs.forEach(doc => {
+    const data = doc.data();
+    const enunciado = data.Enunciado;
+    if (!enunciado) return;
+
+    if (!questionsByEnunciado.has(enunciado)) {
+      questionsByEnunciado.set(enunciado, []);
+    }
+    questionsByEnunciado.get(enunciado)!.push({ id: doc.id, ...data });
+  });
+
+  const batch = writeBatch(firestore);
+  let deletedCount = 0;
+
+  for (const [enunciado, duplicates] of questionsByEnunciado.entries()) {
+    if (duplicates.length > 1) {
+      // Keep the first one, delete the rest
+      const [first, ...rest] = duplicates;
+      console.log(`Found ${duplicates.length} duplicates for: "${enunciado}". Keeping one, deleting ${rest.length}.`);
+      
+      rest.forEach(dup => {
+        const docRef = doc(firestore, 'questoes', dup.id);
+        batch.delete(docRef);
+        deletedCount++;
+      });
+    }
+  }
+
+  if (deletedCount > 0) {
+    await batch.commit().catch(serverError => {
+       console.error('Firestore batch delete error:', serverError);
+        const permissionError = new FirestorePermissionError({
+            path: 'questoes',
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        // Re-throw the error to be caught by the calling function
+        throw permissionError;
+    });
+  }
+
+  return deletedCount;
 }
