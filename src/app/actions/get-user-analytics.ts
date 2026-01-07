@@ -1,4 +1,3 @@
-
 'use server';
 
 // Load environment variables from .env file for the server-side admin SDK
@@ -66,20 +65,18 @@ export async function getUserAnalytics(userId: string): Promise<UserAnalytics> {
     if (!userData) {
       return emptyAnalytics;
     }
+    
+    // Use optional chaining and nullish coalescing for cleaner, safer access
+    const stats = userData.stats ?? {};
+    const questionsStats = stats.performance?.questions ?? {};
+    const flashcardsStats = stats.performance?.flashcards ?? {};
+    const simulatedExamsStats = stats.performance?.simulatedExams ?? [];
 
-    const stats = userData.stats || {};
-    
-    // Safely access nested performance data
-    const performance = stats.performance || {};
-    const questionsStats = performance.questions || {};
-    const flashcardsStats = performance.flashcards || {};
-    const simulatedExamsStats = performance.simulatedExams || [];
-    
-    const totalAnswered = questionsStats.totalAnswered || 0;
-    const totalCorrect = questionsStats.totalCorrect || 0;
+    const totalAnswered = questionsStats.totalAnswered ?? 0;
+    const totalCorrect = questionsStats.totalCorrect ?? 0;
     const overallAccuracy = totalAnswered > 0 ? (totalCorrect / totalAnswered) * 100 : 0;
     
-    const flashcardsTotal = flashcardsStats.totalReviewed || 0;
+    const flashcardsTotal = flashcardsStats.totalReviewed ?? 0;
     const simulatedExamsFinished = Array.isArray(simulatedExamsStats) ? simulatedExamsStats.length : 0;
 
     const level = calculateLevel(totalAnswered, flashcardsTotal, simulatedExamsFinished);
@@ -88,11 +85,23 @@ export async function getUserAnalytics(userId: string): Promise<UserAnalytics> {
     let bestSubject: { name: string; accuracy: number } | undefined;
     let worstSubject: { name: string; accuracy: number } | undefined;
 
-    const bySubject = questionsStats.bySubject || {};
-    for (const [subject, data] of Object.entries(bySubject as Record<string, { answered?: number; correct?: number }>)) {
-      if (data && typeof data === 'object' && data.answered && data.answered > 0) {
-        const accuracy = ((data.correct || 0) / data.answered) * 100;
-        subjectPerformance.push({ subject, accuracy });
+    const bySubject = questionsStats.bySubject ?? {};
+
+    for (const subject in bySubject) {
+      // Check if the property is directly on the object to avoid iterating over inherited properties
+      if (Object.prototype.hasOwnProperty.call(bySubject, subject)) {
+        const data = bySubject[subject];
+        // Safely access properties and provide fallbacks
+        const answered = data?.answered ?? 0;
+        const correct = data?.correct ?? 0;
+        
+        if (answered > 0) {
+            const accuracy = (correct / answered) * 100;
+            subjectPerformance.push({ subject, accuracy });
+        } else if (data !== undefined) {
+           // Log malformed data for debugging purposes
+           console.warn(`Invalid performance data for subject "${subject}":`, data);
+        }
       }
     }
     
@@ -107,8 +116,8 @@ export async function getUserAnalytics(userId: string): Promise<UserAnalytics> {
       overallAccuracy,
       simulatedExamsFinished,
       flashcardsTotal,
-      totalStudyTime: formatStudyTime(stats.totalStudyTime || 0),
-      dailyStreak: stats.dailyStreak || 0,
+      totalStudyTime: formatStudyTime(stats.totalStudyTime ?? 0),
+      dailyStreak: stats.dailyStreak ?? 0,
       level,
       bestSubject,
       worstSubject,
