@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -22,15 +22,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select';
-import { useFirebase, useUser } from '@/firebase';
+import { useFirebase, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import { createSimulatedExam } from '@/firebase/actions';
 import { useToast } from '@/hooks/use-toast';
+import { collection, DocumentData } from 'firebase/firestore';
 
-const SUBJECTS = [
-  'Direito Administrativo',
-  'Direito Constitucional',
-  'Direito Penal',
-];
 const QUESTION_COUNTS = Array.from({ length: 20 }, (_, i) => i + 1);
 
 interface SubjectSelection {
@@ -48,6 +44,28 @@ export function SimulatedExamDialog() {
   const [subjectSelections, setSubjectSelections] = useState<SubjectSelection>(
     {}
   );
+  
+  const questionsQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'questoes') : null),
+    [firestore]
+  );
+  const { data: allQuestions, isLoading: isLoadingSubjects } = useCollection<DocumentData>(questionsQuery);
+  
+  const availableSubjects = useMemo((): string[] => {
+    if (!allQuestions) return [];
+    
+    const subjects = new Set<string>();
+    allQuestions.forEach(q => {
+        const subject = q.Materia;
+        const isHidden = q.status === 'hidden';
+        if (subject && subject.trim().toLowerCase() !== 'materia' && !isHidden) {
+            subjects.add(subject);
+        }
+    });
+
+    return Array.from(subjects).sort();
+  }, [allQuestions]);
+
 
   const handleGenerate = async () => {
     if (!firestore || !user) {
@@ -111,6 +129,14 @@ export function SimulatedExamDialog() {
     const count = Number(value);
     setSubjectSelections(prev => ({ ...prev, [subject]: count }));
   };
+  
+  useEffect(() => {
+    // Reset selections when the dialog is closed
+    if (!isOpen) {
+      setExamName('');
+      setSubjectSelections({});
+    }
+  }, [isOpen]);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -141,36 +167,40 @@ export function SimulatedExamDialog() {
 
           <div className="space-y-4">
             <Label>Matérias e Questões</Label>
-            <div className="space-y-3">
-              {SUBJECTS.map(subject => (
-                <div
-                  key={subject}
-                  className="grid grid-cols-2 items-center gap-4"
-                >
-                  <Label htmlFor={`subject-${subject}`} className="text-sm">
-                    {subject}
-                  </Label>
-                  <Select
-                    value={String(subjectSelections[subject] || 0)}
-                    onValueChange={value =>
-                      handleSubjectCountChange(subject, value)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Nº de Questões" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">0 questões</SelectItem>
-                      {QUESTION_COUNTS.map(count => (
-                        <SelectItem key={count} value={String(count)}>
-                          {count} questões
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+            {isLoadingSubjects ? (
+                 <div className="flex items-center justify-center p-4"><Loader2 className="h-6 w-6 animate-spin"/></div>
+            ) : (
+                <div className="space-y-3">
+                {availableSubjects.map(subject => (
+                    <div
+                    key={subject}
+                    className="grid grid-cols-2 items-center gap-4"
+                    >
+                    <Label htmlFor={`subject-${subject}`} className="text-sm">
+                        {subject}
+                    </Label>
+                    <Select
+                        value={String(subjectSelections[subject] || 0)}
+                        onValueChange={value =>
+                        handleSubjectCountChange(subject, value)
+                        }
+                    >
+                        <SelectTrigger>
+                        <SelectValue placeholder="Nº de Questões" />
+                        </SelectTrigger>
+                        <SelectContent>
+                        <SelectItem value="0">0 questões</SelectItem>
+                        {QUESTION_COUNTS.map(count => (
+                            <SelectItem key={count} value={String(count)}>
+                            {count} questões
+                            </SelectItem>
+                        ))}
+                        </SelectContent>
+                    </Select>
+                    </div>
+                ))}
                 </div>
-              ))}
-            </div>
+            )}
           </div>
         </div>
         <DialogFooter>
@@ -179,7 +209,7 @@ export function SimulatedExamDialog() {
           </DialogClose>
           <Button
             onClick={handleGenerate}
-            disabled={isLoading}
+            disabled={isLoading || isLoadingSubjects}
           >
             {isLoading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
