@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import {
@@ -10,21 +10,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardDescription,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { QuestionList } from '@/components/QuestionList';
 
-const ALL_SUBJECTS = 'all-subjects';
 const ALL_TOPICS = 'all-topics';
 
 export default function QuestionsPage() {
   const { firestore } = useFirebase();
 
-  const [filterSubject, setFilterSubject] = useState(ALL_SUBJECTS);
+  const [filterSubject, setFilterSubject] = useState('');
   const [filterTopic, setFilterTopic] = useState(ALL_TOPICS);
-  const [activeFilters, setActiveFilters] = useState<{ subject: string; topic: string }>({
-    subject: ALL_SUBJECTS,
+  const [activeFilters, setActiveFilters] = useState<{
+    subject: string;
+    topic: string;
+  }>({
+    subject: '',
     topic: ALL_TOPICS,
   });
 
@@ -32,23 +40,29 @@ export default function QuestionsPage() {
     () => (firestore ? collection(firestore, 'questoes') : null),
     [firestore]
   );
-  const { data: allQuestions } = useCollection(subjectsQuery);
+  const { data: allQuestions, isLoading: isLoadingSubjects } =
+    useCollection(subjectsQuery);
 
   const availableSubjects = useMemo(() => {
     if (!allQuestions) return [];
-    const subjects = new Set(allQuestions.map(q => q.Materia));
-    return Array.from(subjects);
+    const subjects = new Set(allQuestions.map(q => q.Materia).filter(Boolean));
+    return Array.from(subjects).sort();
   }, [allQuestions]);
 
   const availableTopics = useMemo(() => {
-    if (!allQuestions || filterSubject === ALL_SUBJECTS) return [];
+    if (!allQuestions || !filterSubject) return [];
     const topics = new Set(
       allQuestions
-        .filter(q => q.Materia === filterSubject)
+        .filter(q => q.Materia === filterSubject && q.Assunto)
         .map(q => q.Assunto)
     );
-    return Array.from(topics);
+    return Array.from(topics).sort();
   }, [allQuestions, filterSubject]);
+
+  useEffect(() => {
+    // When a new subject is selected, reset the topic filter
+    setFilterTopic(ALL_TOPICS);
+  }, [filterSubject]);
 
   const handleFilterSubmit = () => {
     setActiveFilters({ subject: filterSubject, topic: filterTopic });
@@ -77,19 +91,24 @@ export default function QuestionsPage() {
                 <SelectValue placeholder="Matéria" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL_SUBJECTS}>Todas as Matérias</SelectItem>
-                {availableSubjects.map(s => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
+                {isLoadingSubjects ? (
+                  <div className="flex items-center justify-center p-4">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  </div>
+                ) : (
+                  availableSubjects.map(s => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
 
             <Select
               value={filterTopic}
               onValueChange={setFilterTopic}
-              disabled={filterSubject === ALL_SUBJECTS}
+              disabled={!filterSubject}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Assunto" />
@@ -104,17 +123,27 @@ export default function QuestionsPage() {
               </SelectContent>
             </Select>
 
-            <Button onClick={handleFilterSubmit}>
+            <Button onClick={handleFilterSubmit} disabled={!filterSubject}>
               Buscar Questões
             </Button>
           </div>
         </CardContent>
       </Card>
-      
-      <QuestionList 
-        subject={activeFilters.subject === ALL_SUBJECTS ? undefined : activeFilters.subject}
-        topic={activeFilters.topic === ALL_TOPICS ? undefined : active-filters.topic}
-      />
+
+      {activeFilters.subject ? (
+        <QuestionList
+          subject={activeFilters.subject}
+          topic={
+            activeFilters.topic === ALL_TOPICS ? undefined : activeFilters.topic
+          }
+        />
+      ) : (
+        <Card className="flex items-center justify-center h-40 border-dashed">
+          <p className="text-muted-foreground">
+            Selecione os filtros acima para começar.
+          </p>
+        </Card>
+      )}
     </div>
   );
 }
