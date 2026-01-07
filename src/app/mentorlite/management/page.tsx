@@ -271,7 +271,7 @@ export default function ManagementPage() {
                   </DialogClose>
                   <Button
                     onClick={handleImportQuestions}
-                    disabled={isImportingQuestions || !questionText || (isPreviousExam && !examName)}
+                    disabled={isImportingQuestions || !questionText || (isPreviousExam && !examName.trim())}
                   >
                     {isImportingQuestions ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -463,3 +463,5 @@ export default function ManagementPage() {
     </div>
   );
 }
+
+    
