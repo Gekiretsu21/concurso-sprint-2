@@ -30,16 +30,23 @@ function SubjectPageContent({ subjectName }: { subjectName: string }) {
   );
 }
 
+// Helper to format the slug back to a displayable name
+// e.g., "direito-penal" -> "Direito Penal"
+function unslugifySubject(slug: string): string {
+    return slug
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
+
+
 export default function SubjectPage() {
   const params = useParams();
   const subjectSlug = Array.isArray(params.subject) ? params.subject[0] : params.subject;
 
   // This will handle URL-encoded characters (like %C3%A7 for ç) and reconstruct the name.
   const subjectName = subjectSlug
-    ? decodeURIComponent(subjectSlug)
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ')
+    ? decodeURIComponent(subjectSlug).split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
     : '';
 
   return <SubjectPageContent subjectName={subjectName} />;
