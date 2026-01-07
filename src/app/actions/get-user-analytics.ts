@@ -92,13 +92,15 @@ export async function getUserAnalytics(userId: string): Promise<UserAnalytics> {
       if (Object.prototype.hasOwnProperty.call(bySubject, subject)) {
         const data = bySubject[subject];
         // Safely access properties and provide fallbacks
-        const answered = data?.answered ?? 0;
-        const correct = data?.correct ?? 0;
-        
-        if (answered > 0) {
-            const accuracy = (correct / answered) * 100;
-            subjectPerformance.push({ subject, accuracy });
-        } else if (data !== undefined) {
+        if (data && typeof data === 'object') {
+            const answered = data.answered ?? 0;
+            const correct = data.correct ?? 0;
+            
+            if (answered > 0) {
+                const accuracy = (correct / answered) * 100;
+                subjectPerformance.push({ subject, accuracy });
+            }
+        } else {
            // Log malformed data for debugging purposes
            console.warn(`Invalid performance data for subject "${subject}":`, data);
         }
