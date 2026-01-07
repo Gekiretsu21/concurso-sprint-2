@@ -10,8 +10,7 @@ function isOwner(userId) {
 
 // Placeholder for admin logic. We will implement this later.
 function isAdmin() {
-  // return request.auth.token.admin == true;
-  return false; // By default, no one is an admin for safety.
+  return request.auth != null && request.auth.token.email == 'amentoriaacademy@gmail.com';
 }
 
 service cloud.firestore {
@@ -48,10 +47,11 @@ service cloud.firestore {
     
     // Community simulados can be read by any authenticated user.
     // Any authenticated user can create a community simulado.
-    // Updates/deletes are disallowed to maintain integrity.
+    // Only admins can delete community simulados.
     match /communitySimulados/{simuladoId} {
        allow read, create: if isSignedIn();
-       allow update, delete: if false;
+       allow update: if false;
+       allow delete: if isAdmin();
     }
     
     // Previous exams are public to any authenticated user.

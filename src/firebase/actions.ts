@@ -420,10 +420,12 @@ export async function deleteCommunitySimulados(firestore: Firestore, simuladoIds
   
   await batch.commit().catch(serverError => {
     console.error('Firestore batch delete error for community simulados:', serverError);
+    // Correctly report the path for one of the documents in the batch for better context
+    const representativePath = `communitySimulados/${simuladoIds[0]}`;
     const permissionError = new FirestorePermissionError({
-      path: 'communitySimulados',
+      path: representativePath,
       operation: 'delete',
-      requestResourceData: { simuladoIds }
+      requestResourceData: { simuladoIds } // Still useful to show all attempted deletions
     });
     errorEmitter.emit('permission-error', permissionError);
     throw permissionError;
