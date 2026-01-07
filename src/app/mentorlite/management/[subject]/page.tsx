@@ -37,17 +37,15 @@ function SubjectPageContent({ subjectName, subjectParam }: { subjectName: string
 }
 
 export default function SubjectPage({ params }: { params: { subject: string } }) {
-  const subjectSlug = params.subject;
 
   // This will handle URL-encoded characters (like %C3%A7 for ç) and reconstruct the name.
-  let subjectName = subjectSlug
-    ? decodeURIComponent(subjectSlug).split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+  // We use params.subject directly to avoid the Next.js direct access warning.
+  const subjectName = params.subject
+    ? decodeURIComponent(params.subject).split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
     : '';
 
   // Specific case to ensure correct accentuation for display
-  if (subjectSlug === 'lingua-portuguesa') {
-    subjectName = 'Língua Portuguesa';
-  }
-
-  return <SubjectPageContent subjectName={subjectName} subjectParam={subjectSlug}/>;
+  const finalSubjectName = params.subject === 'lingua-portuguesa' ? 'Língua Portuguesa' : subjectName;
+  
+  return <SubjectPageContent subjectName={finalSubjectName} subjectParam={params.subject}/>;
 }
