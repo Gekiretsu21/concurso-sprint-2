@@ -226,7 +226,7 @@ export default function ManagementPage() {
                   Importar
                 </Button>
               )}
-              <DialogContent className="sm:max-w-[812px]">
+              <DialogContent className="sm:max-w-4xl">
                 <DialogHeader>
                   <DialogTitle>Importar Questões por Texto</DialogTitle>
                   <DialogDescription>
@@ -241,7 +241,7 @@ export default function ManagementPage() {
                     </Label>
                     <Textarea
                       id="question-text"
-                      className="col-span-3 min-h-[250px]"
+                      className="col-span-3 min-h-[350px]"
                       placeholder="Cole seu texto aqui..."
                       value={questionText}
                       onChange={e => setQuestionText(e.target.value)}
@@ -331,7 +331,7 @@ export default function ManagementPage() {
                   Importar
                 </Button>
               )}
-              <DialogContent className="sm:max-w-[812px]">
+              <DialogContent className="sm:max-w-4xl">
                 <DialogHeader>
                   <DialogTitle>Importar Flashcards por Texto</DialogTitle>
                   <DialogDescription>
@@ -346,7 +346,7 @@ export default function ManagementPage() {
                     </Label>
                     <Textarea
                       id="flashcard-text"
-                      className="col-span-3 min-h-[250px]"
+                      className="col-span-3 min-h-[350px]"
                       placeholder="Ex: Direito Administrativo/Quais são os atributos do ato administrativo?/Presunção de legitimidade, autoexecutoriedade, tipicidade e imperatividade (P-A-T-I);"
                       value={flashcardText}
                       onChange={e => setFlashcardText(e.target.value)}
