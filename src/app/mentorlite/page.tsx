@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -137,14 +138,14 @@ export default function Home() {
 
   return (
     <div className="flex flex-col gap-8">
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+      <section className="space-y-6">
         <div className="space-y-1">
           <h1 className="text-3xl font-bold tracking-tight">
             Seja bem-vindo, {welcomeName}!
           </h1>
           <p className="text-muted-foreground">O que você gostaria de fazer hoje?</p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {isLoading ? (
                 <>
                     <StatCardSkeleton />
@@ -152,7 +153,7 @@ export default function Home() {
                 </>
             ) : (
                 statCards.map(stat => (
-                <Card key={stat.title}>
+                <Card key={stat.title} className="lg:col-span-2">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
                     <stat.icon
@@ -197,3 +198,4 @@ export default function Home() {
     </div>
   );
 }
+
