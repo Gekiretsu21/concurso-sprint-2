@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -59,8 +60,8 @@ export function SimulatedExamDialog() {
   );
   
   const questionsQuery = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'questoes')) : null),
-    [firestore]
+    () => (firestore && user ? query(collection(firestore, 'questoes')) : null),
+    [firestore, user]
   );
   const { data: allQuestions, isLoading: isLoadingQuestions } = useCollection<DocumentData>(questionsQuery);
   
@@ -212,7 +213,7 @@ export function SimulatedExamDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button disabled={!user}>
           <FileText />
           Gerar
         </Button>
