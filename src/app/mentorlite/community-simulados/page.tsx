@@ -106,8 +106,8 @@ export default function CommunitySimuladosPage() {
                             )}
                         </div>
                     </CardHeader>
-                    <CardContent className="flex-grow space-y-1 p-2 pt-0">
-                        <p className="text-sm text-muted-foreground">
+                    <CardContent className="flex-grow space-y-1 p-0 pt-0">
+                        <p className="text-sm text-muted-foreground px-2">
                             {exam.questionCount} questões
                         </p>
                     </CardContent>
@@ -121,7 +121,7 @@ export default function CommunitySimuladosPage() {
                                </Button>
                                <Button variant="outline" onClick={(e) => handleRedo(e, exam.id)} className="h-auto whitespace-normal">
                                     <RefreshCw className="mr-2 h-4 w-4"/>
-                                    Fazer Novamente
+                                    Repetir
                                </Button>
                            </div>
                        ) : (
