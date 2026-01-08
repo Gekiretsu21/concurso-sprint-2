@@ -707,6 +707,30 @@ export async function deleteFlashcards(firestore: Firestore, flashcardIds: strin
   });
 }
 
+export async function deleteAllFlashcards(firestore: Firestore): Promise<void> {
+    const flashcardsRef = collection(firestore, 'flashcards');
+    const snapshot = await getDocs(flashcardsRef);
+
+    if (snapshot.empty) {
+        return;
+    }
+
+    const batch = writeBatch(firestore);
+    snapshot.docs.forEach(doc => {
+        batch.delete(doc.ref);
+    });
+
+    await batch.commit().catch(serverError => {
+        console.error('Firestore batch delete error for all flashcards:', serverError);
+        const permissionError = new FirestorePermissionError({
+            path: 'flashcards',
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw permissionError;
+    });
+}
+
 
 interface ExamResultPayload {
     examId: string;
@@ -776,5 +800,3 @@ export async function addQuestionComment(
       throw permissionError;
   });
 }
-
-    

@@ -16,7 +16,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
-import { importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteFlashcards } from '@/firebase/actions';
+import { importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteFlashcards, deleteAllFlashcards } from '@/firebase/actions';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
 import { SubjectCard } from '@/components/SubjectCard';
@@ -278,12 +278,34 @@ function DeleteFlashcardsDialog() {
         description: `${selectedFlashcards.length} flashcard(s) foram excluídos.`
       });
       setSelectedFlashcards([]);
-      setIsOpen(false);
+      // Do not close the dialog, just refresh the list.
     } catch (error) {
        toast({
         variant: 'destructive',
         title: 'Erro ao Excluir',
         description: 'Não foi possível excluir os flashcards selecionados.',
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
+  const handleDeleteAll = async () => {
+    if (!firestore) return;
+    setIsDeleting(true);
+    try {
+      await deleteAllFlashcards(firestore);
+      toast({
+        title: "Sucesso!",
+        description: "Todos os flashcards foram excluídos."
+      });
+      setSelectedFlashcards([]);
+      setIsOpen(false);
+    } catch (error) {
+       toast({
+        variant: 'destructive',
+        title: 'Erro ao Excluir Tudo',
+        description: 'Não foi possível excluir todos os flashcards.',
       });
     } finally {
       setIsDeleting(false);
@@ -302,7 +324,7 @@ function DeleteFlashcardsDialog() {
         <DialogHeader>
           <DialogTitle>Excluir Flashcards</DialogTitle>
           <DialogDescription>
-            Selecione os flashcards que você deseja excluir permanentemente.
+            Selecione os flashcards que você deseja excluir permanentemente ou apague todos.
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-72 my-4">
@@ -322,12 +344,36 @@ function DeleteFlashcardsDialog() {
             )) : !isLoading && <p className="text-sm text-muted-foreground text-center py-4">Nenhum flashcard encontrado.</p>}
             </div>
         </ScrollArea>
-        <DialogFooter>
-          <DialogClose asChild><Button variant="outline">Cancelar</Button></DialogClose>
-          <Button variant="destructive" onClick={handleDelete} disabled={isDeleting || selectedFlashcards.length === 0}>
-            {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Excluir ({selectedFlashcards.length})
-          </Button>
+        <DialogFooter className="sm:justify-between">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" disabled={isDeleting || !flashcards || flashcards.length === 0}>
+                Excluir Todos
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Tem certeza absoluta?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Esta ação é irreversível e apagará todos os flashcards da plataforma.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteAll} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+                  {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Sim, excluir tudo
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          <div className="flex gap-2">
+            <DialogClose asChild><Button variant="outline">Fechar</Button></DialogClose>
+            <Button onClick={handleDelete} disabled={isDeleting || selectedFlashcards.length === 0}>
+              {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Excluir ({selectedFlashcards.length})
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
