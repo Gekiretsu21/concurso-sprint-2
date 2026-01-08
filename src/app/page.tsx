@@ -302,7 +302,7 @@ export default function LandingPage() {
             <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
               <Card className="bg-card p-8 text-center shadow-lg">
                 <Scale className="w-12 h-12 text-primary mx-auto mb-4" />
-                <h3 className="text-xl font-bold">Inteligência Jurídica</h3>
+                <h3 className="text-xl font-bold">Aprendizado estratégico</h3>
                 <p className="mt-2 text-muted-foreground">
                   Aprenda o Direito com quem vive a prática. Constitucional e
                   Administrativo direto ao ponto da prova.
