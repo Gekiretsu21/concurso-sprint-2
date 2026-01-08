@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Loader2, Trash2, Undo2 } from 'lucide-react';
+import { Loader2, MessageSquare, Trash2, Undo2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { QuestionComments } from './QuestionComments';
 import type { StatusFilter } from '@/app/mentorlite/questions/page';
 
 type AttemptStatus = 'correct' | 'incorrect' | null;
@@ -322,7 +330,20 @@ export function QuestionList({ subject, topics, statusFilter = 'all' }: Question
                     >
                       {isAnswered ? "Respondido" : "Responder"}
                     </Button>
-                    <Button variant="outline" disabled={isHidden}>Comentários</Button>
+                     <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" disabled={isHidden}>
+                            <MessageSquare className="mr-2"/>
+                            Comentários
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-3xl">
+                        <DialogHeader>
+                          <DialogTitle>Comentários da Questão</DialogTitle>
+                        </DialogHeader>
+                        <QuestionComments questionId={q.id} />
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </CardFooter>
               </Card>
@@ -354,3 +375,5 @@ export function QuestionList({ subject, topics, statusFilter = 'all' }: Question
     </>
   );
 }
+
+    

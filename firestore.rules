@@ -39,6 +39,16 @@ service cloud.firestore {
       allow read, list: if isSignedIn();
       allow write: if isSignedIn(); 
     }
+    
+    // Comments can be read by any signed-in user.
+    // A user can create a comment and can only delete their own comments.
+    match /questoes/{questionId}/comments/{commentId} {
+      allow read, list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow update: if false;
+    }
+
 
     // Flashcards are public to any authenticated user for reading and writing.
     match /flashcards/{flashcardId} {

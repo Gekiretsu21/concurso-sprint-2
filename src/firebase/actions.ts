@@ -22,6 +22,7 @@ import {
   arrayUnion,
   FieldValue,
 } from 'firebase/firestore';
+import { User } from 'firebase/auth';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -456,7 +457,7 @@ async function getRandomQuestions(
   firestore: Firestore,
   subject: string,
   count: number,
-  topics: string[]
+  topics?: string[]
 ): Promise<string[]> {
   const questionsCollection = collection(firestore, 'questoes');
 
@@ -744,3 +745,36 @@ export async function savePreviousExamResult(firestore: Firestore, payload: Exam
         throw permissionError;
     });
 }
+
+export async function addQuestionComment(
+  firestore: Firestore,
+  user: User,
+  questionId: string,
+  text: string
+): Promise<void> {
+  if (!user) {
+    throw new Error('User must be logged in to comment.');
+  }
+
+  const commentCollectionRef = collection(firestore, 'questoes', questionId, 'comments');
+  
+  const commentData = {
+    userId: user.uid,
+    userName: user.displayName || 'Anônimo',
+    userPhotoURL: user.photoURL || '',
+    text: text,
+    createdAt: serverTimestamp(),
+  };
+
+  addDoc(commentCollectionRef, commentData).catch(serverError => {
+     const permissionError = new FirestorePermissionError({
+        path: `${commentCollectionRef.path}/<new_comment>`,
+        operation: 'create',
+        requestResourceData: commentData,
+      });
+      errorEmitter.emit('permission-error', permissionError);
+      throw permissionError;
+  });
+}
+
+    
