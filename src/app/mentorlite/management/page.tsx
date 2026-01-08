@@ -14,7 +14,7 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardPaste, FileText, Layers, Loader2, Trash2, AlertCircle, ArchiveX } from 'lucide-react';
+import { ClipboardPaste, FileText, Layers, Loader2, Trash2, AlertCircle, ArchiveX, HelpCircle } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteFlashcards } from '@/firebase/actions';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
@@ -36,6 +36,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 // Helper to generate a URL-friendly slug from a subject name
 const createSubjectSlug = (subject: string) => {
@@ -502,7 +503,27 @@ export default function ManagementPage() {
             <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 
                 {/* Importar Questões */}
-                <div className="flex flex-col justify-between p-4 rounded-lg border h-full">
+                <div className="relative flex flex-col justify-between p-4 rounded-lg border h-full">
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6">
+                                <HelpCircle className="h-4 w-4" />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-80" side="top" align="end">
+                            <div className="grid gap-4">
+                                <div className="space-y-2">
+                                    <h4 className="font-medium leading-none">Modelo de Importação</h4>
+                                    <p className="text-sm text-muted-foreground">
+                                        Use o formato abaixo, separando cada campo com uma barra (`/`). Cada questão deve terminar com um ponto e vírgula (`;`).
+                                    </p>
+                                </div>
+                                <div className="rounded-md bg-muted p-2 text-xs font-mono">
+                                    Materia/Ano/Assunto/Cargo/Enunciado/a/b/c/d/e/correctAnswer;
+                                </div>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
                     <div>
                         <h4 className="font-semibold">Importar Questões</h4>
                         <p className="text-sm text-muted-foreground mt-1">Importe questões em massa.</p>
