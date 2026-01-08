@@ -111,7 +111,7 @@ export default function CommunitySimuladosPage() {
                             {exam.questionCount} questões
                         </p>
                     </CardContent>
-                    <CardFooter className="p-2 pt-0">
+                    <CardFooter className="p-2">
                        {isCompleted && result ? (
                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
                                <Button asChild className="h-auto whitespace-normal">
