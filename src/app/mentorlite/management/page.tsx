@@ -518,7 +518,7 @@ export default function ManagementPage() {
                                         Use o formato abaixo, separando cada campo com uma barra (`/`). Cada questão deve terminar com um ponto e vírgula (`;`).
                                     </p>
                                 </div>
-                                <div className="rounded-md bg-muted p-2 text-xs font-mono">
+                                <div className="w-fit rounded-md bg-muted p-2 text-xs font-mono">
                                     Materia/Ano/Assunto/Cargo/Enunciado/a/b/c/d/e/correctAnswer;
                                 </div>
                             </div>
