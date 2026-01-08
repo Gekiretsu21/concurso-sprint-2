@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { LogIn, LogOut, User as UserIcon } from 'lucide-react';
+import { Skeleton } from './ui/skeleton';
 
 export function AuthButton() {
   const { auth } = useFirebase();
@@ -30,7 +31,7 @@ export function AuthButton() {
       }
     } catch (error: any) {
       // Don't log an error if the user just cancels the popup.
-      if (error.code === 'auth/cancelled-popup-request') {
+      if (error.code === 'auth/cancelled-popup-request' || error.code === 'auth/popup-closed-by-user') {
         return;
       }
       console.error('Error signing in with Google: ', error);
@@ -48,7 +49,12 @@ export function AuthButton() {
   };
 
   if (isUserLoading) {
-    return <Button variant="ghost" disabled>Carregando...</Button>;
+    return (
+        <div className="flex items-center gap-2">
+            <Skeleton className="h-8 w-24 hidden md:block" />
+            <Skeleton className="h-9 w-9 rounded-full" />
+        </div>
+    );
   }
 
   if (user) {
@@ -68,12 +74,12 @@ export function AuthButton() {
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            className="relative h-10 flex items-center justify-end gap-2 p-0 md:px-2 md:py-1 hover:bg-accent/80"
+            className="relative h-10 flex items-center justify-end gap-2 p-0 md:px-2 md:py-1 hover:bg-transparent text-primary-foreground hover:text-primary-foreground/80"
           >
-            <span className="hidden md:block font-medium">
-              Bem-vindo, {firstName}
+            <span className="hidden md:block font-medium text-sm">
+              {firstName}
             </span>
-             <Avatar className="h-8 w-8">
+             <Avatar className="h-9 w-9">
               <AvatarImage src={user.photoURL ?? undefined} />
               <AvatarFallback>{firstName.charAt(0)}</AvatarFallback>
             </Avatar>
@@ -108,6 +114,7 @@ export function AuthButton() {
     <Button variant="secondary" onClick={handleGoogleLogin}>
         <LogIn className="mr-2 h-4 w-4" />
         <span className="hidden sm:inline">Entrar com Google</span>
+        <span className="sm:hidden">Entrar</span>
     </Button>
   );
 }

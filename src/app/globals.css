@@ -100,3 +100,18 @@
     --tw-prose-td-borders: hsl(var(--border));
   }
 }
+
+@layer utilities {
+  .animate-pulse-glow {
+    animation: pulse-glow 2s infinite;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 0 0 hsla(var(--accent), 0.7);
+    }
+    70% {
+      box-shadow: 0 0 0 10px hsla(var(--accent), 0);
+    }
+  }
+}

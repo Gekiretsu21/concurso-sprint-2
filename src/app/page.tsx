@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/sheet';
 import { useState } from 'react';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
 export default function LandingPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -103,18 +104,22 @@ export default function LandingPage() {
                   </Link>
                 ))}
               </nav>
-
-              {/* Action Buttons */}
-              <div className="flex items-center gap-2">
-                 <Button asChild variant="outline" size="sm" className="hidden lg:flex bg-transparent border-accent text-accent hover:bg-accent/10">
+              
+              <div className="hidden lg:flex items-center gap-2">
+                 <Button asChild variant="outline" size="sm" className="bg-transparent border-accent text-accent hover:bg-accent/10 animate-pulse-glow">
                   <Link href="/mentorlite">
                     Mentor Lite
                   </Link>
                 </Button>
                 <AuthButton />
+              </div>
+
+              {/* Mobile Menu */}
+              <div className="lg:hidden flex items-center">
+                <AuthButton />
                 <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                   <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon" className="lg:hidden hover:bg-primary/90">
+                    <Button variant="ghost" size="icon" className="hover:bg-primary/90">
                       <Menu />
                       <span className="sr-only">Abrir menu</span>
                     </Button>
@@ -124,6 +129,13 @@ export default function LandingPage() {
                       <SheetTitle className="sr-only">Navegação Principal</SheetTitle>
                     </SheetHeader>
                     <nav className="flex flex-col gap-6 text-base font-medium mt-8">
+                       <Link
+                          href="/mentorlite"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className='font-bold text-accent'
+                        >
+                          Mentor Lite
+                        </Link>
                       {navLinks.map(link => (
                         <Link
                           key={link.name}
@@ -500,6 +512,14 @@ export default function LandingPage() {
           </div>
         </section>
       </main>
+
+      {/* Mobile FAB for Mentor Lite */}
+      <Button asChild size="lg" className="lg:hidden fixed bottom-4 right-4 h-14 w-14 rounded-full shadow-lg z-50 bg-accent text-accent-foreground animate-pulse-glow">
+        <Link href="/mentorlite">
+          <Sparkles />
+          <span className="sr-only">Mentor Lite</span>
+        </Link>
+      </Button>
 
       {/* Footer */}
       <footer className="border-t border-border">
