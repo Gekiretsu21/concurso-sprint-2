@@ -213,6 +213,27 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Mindset Video Section */}
+        <section id="mindset" className="py-20 sm:py-32">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-3xl sm:text-4xl font-bold">
+              Mindset da MentorIA Academy
+            </h2>
+            <div className="mt-8 max-w-4xl mx-auto">
+              <div className="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden shadow-2xl">
+                <iframe
+                  src="https://www.youtube.com/embed/1XfBaufahtM"
+                  title="YouTube video player"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-full"
+                ></iframe>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Diferenciais Section */}
         <section id="diferencial" className="py-20 sm:py-32 bg-secondary/30">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
