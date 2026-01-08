@@ -68,7 +68,7 @@ export function AuthButton() {
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            className="relative h-10 flex items-center justify-end gap-2 hover:bg-accent/80"
+            className="relative h-10 flex items-center justify-end gap-2 p-0 md:px-2 md:py-1 hover:bg-accent/80"
           >
             <span className="hidden md:block font-medium">
               Bem-vindo, {firstName}
@@ -107,7 +107,7 @@ export function AuthButton() {
   return (
     <Button variant="secondary" onClick={handleGoogleLogin}>
         <LogIn className="mr-2 h-4 w-4" />
-        Entrar com Google
+        <span className="hidden sm:inline">Entrar com Google</span>
     </Button>
   );
 }

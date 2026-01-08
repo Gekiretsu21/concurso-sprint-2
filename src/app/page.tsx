@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -40,7 +39,6 @@ export default function LandingPage() {
     { name: 'O Método', href: '#metodo' },
     { name: 'Mentores', href: '#mentores' },
     { name: 'Arsenal', href: '#arsenal' },
-    { name: 'Mentor Lite', href: '/mentorlite', special: true },
   ];
 
   return (
@@ -93,23 +91,26 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
               <nav className="hidden lg:flex items-center gap-4 text-sm font-medium">
                 {navLinks.map(link => (
                   <Link
                     key={link.name}
                     href={link.href}
-                    className={
-                      link.special
-                        ? 'font-bold text-accent hover:text-accent/80 transition-colors'
-                        : 'text-primary-foreground/80 hover:text-primary-foreground transition-colors'
-                    }
+                    className='text-primary-foreground/80 hover:text-primary-foreground transition-colors'
                   >
                     {link.name}
                   </Link>
                 ))}
               </nav>
+
+              {/* Action Buttons */}
               <div className="flex items-center gap-2">
+                 <Button asChild variant="outline" size="sm" className="hidden lg:flex bg-transparent border-accent text-accent hover:bg-accent/10">
+                  <Link href="/mentorlite">
+                    Mentor Lite
+                  </Link>
+                </Button>
                 <AuthButton />
                 <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                   <SheetTrigger asChild>
@@ -122,17 +123,13 @@ export default function LandingPage() {
                     <SheetHeader>
                       <SheetTitle className="sr-only">Navegação Principal</SheetTitle>
                     </SheetHeader>
-                    <nav className="flex flex-col gap-6 text-lg font-medium mt-8">
+                    <nav className="flex flex-col gap-6 text-base font-medium mt-8">
                       {navLinks.map(link => (
                         <Link
                           key={link.name}
                           href={link.href}
                           onClick={() => setIsMobileMenuOpen(false)}
-                          className={
-                            link.special
-                              ? 'font-bold text-accent'
-                              : 'text-muted-foreground'
-                          }
+                          className='text-muted-foreground'
                         >
                           {link.name}
                         </Link>
