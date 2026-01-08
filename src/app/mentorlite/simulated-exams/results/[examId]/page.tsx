@@ -169,7 +169,8 @@ export default function ExamResultsPage() {
   const params = useParams();
   const router = useRouter();
   
-  const examId = params.examId as string;
+  // The 'examId' param is now the result document ID, not the exam ID itself
+  const resultId = params.examId as string;
   const [examName, setExamName] = useState<string | null>(null);
 
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -178,10 +179,11 @@ export default function ExamResultsPage() {
   const [performanceBySubject, setPerformanceBySubject] = useState<{ [subjectName: string]: SubjectStats }>({});
   const [isLoading, setIsLoading] = useState(true);
 
+  // Use the resultId from the URL to fetch the specific result document
   const resultDocRef = useMemoFirebase(() => {
-    if (!firestore || !user || !examId) return null;
-    return doc(firestore, `users/${user.uid}/previousExamResults/${examId}`);
-  }, [firestore, user, examId]);
+    if (!firestore || !user || !resultId) return null;
+    return doc(firestore, `users/${user.uid}/previousExamResults/${resultId}`);
+  }, [firestore, user, resultId]);
 
   const { data: savedResult, isLoading: isLoadingResult } = useDoc<PreviousExamResult>(resultDocRef);
 

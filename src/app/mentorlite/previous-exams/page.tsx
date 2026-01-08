@@ -26,7 +26,7 @@ interface PreviousExam {
 }
 
 interface PreviousExamResult {
-    id: string; // The doc ID from previousExamResults, which might not be examId
+    id: string; // The doc ID from previousExamResults
     examId: string;
     score: number;
     completedAt: any;
@@ -60,17 +60,13 @@ export default function PreviousExamsPage() {
 
   const resultsMap = useMemo(() => {
       if (!results) return new Map<string, PreviousExamResult>();
-      // Use examId as the key for the map, not the document's own id
       return new Map(results.map(r => [r.examId, r]));
   }, [results]);
 
   const isLoading = isLoadingExams || isLoadingResults;
 
   const handleRedo = (event: React.MouseEvent, examId: string) => {
-    event.preventDefault(); // Prevent Link navigation
-    // Here you could add logic to clear the previous result if needed,
-    // or just navigate to start the exam again.
-    // For now, we'll just navigate.
+    event.preventDefault(); 
     window.location.href = `/mentorlite/simulated-exams/${examId}?from=previous-exams`;
   };
 
@@ -115,10 +111,10 @@ export default function PreviousExamsPage() {
                         </p>
                     </CardContent>
                     <CardFooter>
-                       {isCompleted ? (
+                       {isCompleted && result ? (
                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
                                <Button asChild className="h-auto whitespace-normal">
-                                  <Link href={`/mentorlite/simulated-exams/results/${exam.id}?examName=${encodeURIComponent(exam.name)}`}>
+                                  <Link href={`/mentorlite/simulated-exams/results/${result.id}`}>
                                     Conferir Desempenho
                                   </Link>
                                </Button>

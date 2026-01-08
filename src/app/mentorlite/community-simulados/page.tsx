@@ -27,8 +27,8 @@ interface CommunitySimulatedExam {
 }
 
 interface ExamResult {
-    id: string;
-    examId: string;
+    id: string; // This is the result document ID
+    examId: string; // This is the ID of the exam itself
     score: number;
     completedAt: any;
 }
@@ -61,7 +61,6 @@ export default function CommunitySimuladosPage() {
 
   const resultsMap = useMemo(() => {
       if (!results) return new Map<string, ExamResult>();
-      // Use examId as the key for the map, not the document's own id
       return new Map(results.map(r => [r.examId, r]));
   }, [results]);
 
@@ -114,10 +113,10 @@ export default function CommunitySimuladosPage() {
                         </p>
                     </CardContent>
                     <CardFooter>
-                       {isCompleted ? (
+                       {isCompleted && result ? (
                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
                                <Button asChild className="h-auto whitespace-normal">
-                                  <Link href={`/mentorlite/simulated-exams/results/${exam.id}?examName=${encodeURIComponent(exam.name)}`}>
+                                  <Link href={`/mentorlite/simulated-exams/results/${result.id}`}>
                                     Conferir Desempenho
                                   </Link>
                                </Button>
