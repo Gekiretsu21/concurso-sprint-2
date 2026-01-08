@@ -105,7 +105,6 @@ export default function CommunitySimuladosPage() {
                                 </Badge>
                             )}
                         </div>
-                        <CardDescription>Criado por: {exam.userId.substring(0,6)}...</CardDescription>
                     </CardHeader>
                     <CardContent className="flex-grow space-y-2">
                         <p className="text-sm text-muted-foreground">
