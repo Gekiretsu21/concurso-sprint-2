@@ -46,11 +46,11 @@ const mainFeatures = [
     cta: 'Estudar Flashcards',
   },
   {
-    title: 'Plano de Estudo IA',
-    href: '/mentorlite/study-plan',
-    icon: BrainCircuit,
-    description: 'Receba um plano de estudo personalizado pela nossa IA.',
-    cta: 'Gerar Plano',
+    title: 'Provas Anteriores',
+    href: '/mentorlite/previous-exams',
+    icon: FileText,
+    description: 'Resolva provas completas de concursos passados.',
+    cta: 'Acessar Provas',
   },
 ];
 
