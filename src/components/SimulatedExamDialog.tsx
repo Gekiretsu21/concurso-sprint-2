@@ -58,17 +58,56 @@ export function SimulatedExamDialog() {
   const availableSubjects = useMemo((): string[] => {
     if (!allQuestions) return [];
     
-    // Create a set of subjects from active questions.
-    const subjects = new Set<string>();
-    allQuestions.forEach(q => {
+    const subjectCounts = allQuestions.reduce((acc, q) => {
         const subject = q.Materia;
         const isHidden = q.status === 'hidden';
-        if (subject && subject.trim().toLowerCase() !== 'materia' && !isHidden) {
-            subjects.add(subject);
-        }
-    });
 
-    return Array.from(subjects).sort((a, b) => a.localeCompare(b));
+        if (subject && subject.trim() && !isHidden) {
+            let subjectName = subject.trim();
+            
+            if (subjectName.toLowerCase() !== 'materia') {
+                if (!acc[subjectName]) {
+                    acc[subjectName] = { name: subjectName, count: 0 };
+                }
+                acc[subjectName].count++;
+            }
+        }
+        return acc;
+    }, {} as Record<string, {name: string, count: number}>);
+    
+    // Unify "Língua Portuguesa" variations
+    const portuguesComAcento = subjectCounts['Língua Portuguesa'];
+    const portuguesSemAcento = subjectCounts['Lingua Portuguesa'];
+    if (portuguesComAcento || portuguesSemAcento) {
+        const total = (portuguesComAcento?.count || 0) + (portuguesSemAcento?.count || 0);
+        if (portuguesComAcento) delete subjectCounts['Lingua Portuguesa'];
+        if (portuguesSemAcento) delete subjectCounts['Língua Portuguesa'];
+        subjectCounts['Língua Portuguesa'] = { name: 'Língua Portuguesa', count: total };
+    }
+
+    // Unify "Legislação Jurídica" variations
+    const legislacaoComAcento = subjectCounts['Legislação Jurídica'];
+    const legislacaoSemAcento = subjectCounts['Legislacao Juridica'];
+     if (legislacaoComAcento || legislacaoSemAcento) {
+        const total = (legislacaoComAcento?.count || 0) + (legislacaoSemAcento?.count || 0);
+        if (legislacaoComAcento) delete subjectCounts['Legislacao Juridica'];
+        if (legislacaoSemAcento) delete subjectCounts['Legislação Jurídica'];
+        subjectCounts['Legislação Jurídica'] = { name: 'Legislação Jurídica', count: total };
+    }
+    
+    // Unify "Legislação Institucional" variations
+    const institucionalComAcento = subjectCounts['Legislação Institucional'];
+    const institucionalSemAcento = subjectCounts['Legislacao Institucional'];
+    if (institucionalComAcento || institucionalSemAcento) {
+        const total = (institucionalComAcento?.count || 0) + (institucionalSemAcento?.count || 0);
+        if (institucionalComAcento) delete subjectCounts['Legislacao Institucional'];
+        if (institucionalSemAcento) delete subjectCounts['Legislação Institucional'];
+        subjectCounts['Legislação Institucional'] = { name: 'Legislação Institucional', count: total };
+    }
+
+
+    return Object.keys(subjectCounts)
+        .sort((a, b) => a.localeCompare(b));
   }, [allQuestions]);
 
 
