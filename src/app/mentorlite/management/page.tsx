@@ -517,7 +517,7 @@ export default function ManagementPage() {
                                     Use o formato abaixo, separando cada campo com uma barra (`/`). Cada questão deve terminar com um ponto e vírgula (`;`).
                                 </DialogDescription>
                             </DialogHeader>
-                            <div className="w-fit rounded-md bg-muted p-4 text-sm font-mono mt-4">
+                            <div className="rounded-md bg-muted p-4 text-sm font-mono mt-4 break-words">
                                 Materia/Ano/Assunto/Cargo/Enunciado/a/b/c/d/e/correctAnswer;
                             </div>
                         </DialogContent>
