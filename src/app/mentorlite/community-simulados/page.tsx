@@ -106,7 +106,7 @@ export default function CommunitySimuladosPage() {
                             )}
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-1 p-0 px-2">
+                    <CardContent className="space-y-1 p-0 px-2 flex-grow">
                         <p className="text-sm text-muted-foreground">
                             {exam.questionCount} questões
                         </p>
@@ -125,11 +125,13 @@ export default function CommunitySimuladosPage() {
                                </Button>
                            </div>
                        ) : (
-                           <Button asChild className="w-full">
-                              <Link href={`/mentorlite/simulated-exams/${exam.id}?from=community-simulados`}>
-                                Iniciar Simulado
-                              </Link>
-                          </Button>
+                           <div className="w-full flex justify-end">
+                                <Button asChild className="w-1/2">
+                                <Link href={`/mentorlite/simulated-exams/${exam.id}?from=community-simulados`}>
+                                    Iniciar Simulado
+                                </Link>
+                                </Button>
+                           </div>
                        )}
                     </CardFooter>
                 </Card>
