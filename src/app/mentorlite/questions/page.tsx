@@ -28,6 +28,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { QuestionList } from '@/components/QuestionList';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export type StatusFilter = 'all' | 'resolved' | 'unresolved';
 
@@ -180,22 +181,24 @@ export default function QuestionsPage() {
               <DropdownMenuContent className="w-56" align="start">
                 <DropdownMenuLabel>Assuntos Disponíveis</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {availableTopics.map(topic => (
-                  <DropdownMenuCheckboxItem
-                    key={topic}
-                    checked={selectedTopics.includes(topic)}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setSelectedTopics(prev => [...prev, topic]);
-                      } else {
-                        setSelectedTopics(prev => prev.filter(t => t !== topic));
-                      }
-                    }}
-                    onSelect={(e) => e.preventDefault()}
-                  >
-                    {topic}
-                  </DropdownMenuCheckboxItem>
-                ))}
+                <ScrollArea className="h-72">
+                  {availableTopics.map(topic => (
+                    <DropdownMenuCheckboxItem
+                      key={topic}
+                      checked={selectedTopics.includes(topic)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedTopics(prev => [...prev, topic]);
+                        } else {
+                          setSelectedTopics(prev => prev.filter(t => t !== topic));
+                        }
+                      }}
+                      onSelect={(e) => e.preventDefault()}
+                    >
+                      {topic}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </ScrollArea>
               </DropdownMenuContent>
             </DropdownMenu>
 
