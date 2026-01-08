@@ -510,7 +510,7 @@ export default function ManagementPage() {
                                 <HelpCircle className="h-4 w-4" />
                             </Button>
                         </DialogTrigger>
-                        <DialogContent>
+                        <DialogContent className="sm:max-w-2xl">
                              <DialogHeader>
                                 <DialogTitle>Modelo de Importação</DialogTitle>
                                 <DialogDescription>
