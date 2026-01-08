@@ -462,7 +462,7 @@ async function getRandomQuestions(
 
   // Build the query constraints
   const constraints = [where('Materia', '==', subject)];
-  if (topics.length > 0) {
+  if (topics && topics.length > 0) {
       constraints.push(where('Assunto', 'in', topics));
   }
   
@@ -476,7 +476,7 @@ async function getRandomQuestions(
   const allQuestionIds = activeQuestions.map(doc => doc.id);
 
   if (allQuestionIds.length < count) {
-      const topicInfo = topics.length > 0 ? ` nos tópicos [${topics.join(', ')}]` : '';
+      const topicInfo = topics && topics.length > 0 ? ` nos tópicos [${topics.join(', ')}]` : '';
       throw new Error(`Não há questões suficientes para a matéria '${subject}'${topicInfo}. Encontradas: ${allQuestionIds.length}, Solicitadas: ${count}.`);
   }
 
