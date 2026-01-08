@@ -93,7 +93,7 @@ export default function LandingPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <nav className="hidden lg:flex items-center gap-4 text-sm font-medium">
+              <nav className="hidden lg:flex items-center gap-4 text-xs font-medium">
                 {navLinks.map(link => (
                   <Link
                     key={link.name}
