@@ -168,10 +168,9 @@ export default function ExamResultsPage() {
   const { firestore, user } = useFirebase();
   const params = useParams();
   const router = useRouter();
-  const searchParams = useSearchParams();
   
   const examId = params.examId as string;
-  const examName = searchParams.get('examName');
+  const [examName, setExamName] = useState<string | null>(null);
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [userAnswers, setUserAnswers] = useState<UserAnswers>({});
@@ -231,6 +230,7 @@ export default function ExamResultsPage() {
     if (fromLocalStorage) {
       const data: ExamResultsData = JSON.parse(fromLocalStorage);
 
+      setExamName(data.exam.name);
       const questionsMap = new Map(data.questions.map(q => [q.id, q]));
       const orderedQuestions = data.exam.questionIds.map(id => questionsMap.get(id)).filter((q): q is Question => !!q);
 
@@ -277,6 +277,7 @@ export default function ExamResultsPage() {
                     const examSnap = await getDoc(examRef);
                     if (examSnap.exists()) {
                         examData = { id: examSnap.id, ...examSnap.data() } as SimulatedExam;
+                        setExamName(examData.name);
                         break;
                     }
                 }

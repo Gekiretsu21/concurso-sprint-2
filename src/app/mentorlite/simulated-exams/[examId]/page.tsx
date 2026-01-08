@@ -260,7 +260,7 @@ export default function SimulatedExamPage() {
         userAnswers,
     };
     localStorage.setItem('examResults', JSON.stringify(results));
-    router.push(`/mentorlite/simulated-exams/results/${examId}?examName=${encodeURIComponent(exam?.name || '')}`);
+    router.push(`/mentorlite/simulated-exams/results/${examId}`);
   };
 
 
