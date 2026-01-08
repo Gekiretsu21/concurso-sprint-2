@@ -598,7 +598,29 @@ export default function ManagementPage() {
                 </div>
 
                 {/* Importar Flashcards */}
-                <div className="flex flex-col justify-between p-4 rounded-lg border h-full">
+                <div className="relative flex flex-col justify-between p-4 rounded-lg border h-full">
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6">
+                                <HelpCircle className="h-4 w-4" />
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-2xl">
+                             <DialogHeader>
+                                <DialogTitle>Modelo de Importação de Flashcards</DialogTitle>
+                                <DialogDescription>
+                                    Use o formato abaixo, separando cada campo com um pipe (`|`). Cada flashcard deve estar em uma nova linha.
+                                </DialogDescription>
+                            </DialogHeader>
+                             <div className="rounded-md bg-muted p-4 text-sm font-mono mt-4 space-y-2 break-words">
+                                <p className='font-bold'>Formato:</p>
+                                <p>Matéria | Assunto | Cargo | Pergunta | Resposta</p>
+                                <p className='font-bold pt-4'>Exemplos:</p>
+                                <p>Direito Administrativo | Atos Administrativos | Geral | Quais são os atributos do ato administrativo? | Presunção de legitimidade, autoexecutoriedade, tipicidade e imperatividade (mnemônico: PATI).</p>
+                                <p>Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativa antes de nomes próprios femininos? | A crase é facultativa, pois o artigo 'a' antes do nome é opcional.</p>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
                     <div>
                         <h4 className="font-semibold">Importar Flashcards</h4>
                         <p className="text-sm text-muted-foreground mt-1">Importe flashcards em massa.</p>
