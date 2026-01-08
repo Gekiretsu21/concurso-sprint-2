@@ -492,178 +492,146 @@ export default function ManagementPage() {
           Gerencie as configurações e dados do aplicativo.
         </p>
       </header>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader className="flex-row items-center justify-between">
-            <CardTitle>Importar Questões</CardTitle>
-            <Dialog>
-              {isClient ? (
-                <DialogTrigger asChild>
-                  <Button disabled={isButtonDisabled}>
-                    {isUserLoading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <ClipboardPaste />
-                    )}
-                    {isUserLoading ? 'Carregando...' : 'Importar'}
-                  </Button>
-                </DialogTrigger>
-              ) : (
-                <Button disabled={true}>
-                  <ClipboardPaste />
-                  Importar
-                </Button>
-              )}
-              <DialogContent className="sm:max-w-4xl">
-                <DialogHeader>
-                  <DialogTitle>Importar Questões por Texto</DialogTitle>
-                  <DialogDescription>
-                    Cole o conteúdo no campo abaixo. Certifique-se de que o
-                    formato esteja correto.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="question-text">
-                      Conteúdo
-                    </Label>
-                    <Textarea
-                      id="question-text"
-                      className="min-h-[350px]"
-                      placeholder="Cole seu texto aqui..."
-                      value={questionText}
-                      onChange={e => setQuestionText(e.target.value)}
-                    />
-                  </div>
-                   <div className="space-y-4">
-                      <div className="flex items-center space-x-2">
-                          <Checkbox id="is-previous-exam" checked={isPreviousExam} onCheckedChange={(checked) => setIsPreviousExam(checked as boolean)} />
-                          <Label htmlFor="is-previous-exam">Prova Anterior</Label>
-                      </div>
-                      <div className={cn("transition-all duration-300 ease-in-out", isPreviousExam ? "max-h-40 opacity-100" : "max-h-0 opacity-0 overflow-hidden")}>
-                          {isPreviousExam && (
-                              <div className="space-y-2">
-                              <Label htmlFor="exam-name">Nome da Prova</Label>
-                              <Input id="exam-name" value={examName} onChange={(e) => setExamName(e.target.value)} placeholder="Ex: PMMG Soldado 2023"/>
-                              </div>
-                          )}
-                      </div>
-                   </div>
+
+      <div className="grid grid-cols-1 gap-6">
+        <Card className="md:col-span-2">
+            <CardHeader>
+                <CardTitle>Ações Rápidas</CardTitle>
+                <CardDescription>Principais ferramentas para gerenciamento de conteúdo.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                {/* Importar Questões */}
+                <div className="flex flex-col justify-between p-4 rounded-lg border h-full">
+                    <div>
+                        <h4 className="font-semibold">Importar Questões</h4>
+                        <p className="text-sm text-muted-foreground mt-1">Importe questões em massa.</p>
+                    </div>
+                     <Dialog>
+                        {isClient ? (
+                            <DialogTrigger asChild>
+                            <Button size="sm" className="mt-4" disabled={isButtonDisabled}>
+                                {isUserLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ClipboardPaste />}
+                                {isUserLoading ? 'Carregando...' : 'Importar'}
+                            </Button>
+                            </DialogTrigger>
+                        ) : (
+                            <Button size="sm" className="mt-4" disabled={true}><ClipboardPaste /> Importar</Button>
+                        )}
+                        <DialogContent className="sm:max-w-4xl">
+                            <DialogHeader>
+                            <DialogTitle>Importar Questões por Texto</DialogTitle>
+                            <DialogDescription>
+                                Cole o conteúdo no campo abaixo. Certifique-se de que o formato esteja correto.
+                            </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="question-text">Conteúdo</Label>
+                                <Textarea
+                                id="question-text"
+                                className="min-h-[350px]"
+                                placeholder="Cole seu texto aqui..."
+                                value={questionText}
+                                onChange={e => setQuestionText(e.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-4">
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox id="is-previous-exam" checked={isPreviousExam} onCheckedChange={(checked) => setIsPreviousExam(checked as boolean)} />
+                                    <Label htmlFor="is-previous-exam">Prova Anterior</Label>
+                                </div>
+                                <div className={cn("transition-all duration-300 ease-in-out", isPreviousExam ? "max-h-40 opacity-100" : "max-h-0 opacity-0 overflow-hidden")}>
+                                    {isPreviousExam && (
+                                        <div className="space-y-2">
+                                        <Label htmlFor="exam-name">Nome da Prova</Label>
+                                        <Input id="exam-name" value={examName} onChange={(e) => setExamName(e.target.value)} placeholder="Ex: PMMG Soldado 2023"/>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            </div>
+                            <DialogFooter>
+                            <DialogClose asChild><Button variant="outline">Cancelar</Button></DialogClose>
+                            <Button
+                                onClick={handleImportQuestions}
+                                disabled={isImportingQuestions || !questionText || (isPreviousExam && !examName.trim())}
+                            >
+                                {isImportingQuestions ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                Importar Questões
+                            </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </div>
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button variant="outline">Cancelar</Button>
-                  </DialogClose>
-                  <Button
-                    onClick={handleImportQuestions}
-                    disabled={isImportingQuestions || !questionText || (isPreviousExam && !examName.trim())}
-                  >
-                    {isImportingQuestions ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : null}
-                    Importar Questões
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Use a caixa de diálogo para importar questões em massa a partir de
-              um texto formatado.
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex-row items-center justify-between">
-            <CardTitle>Gerador de Simulados</CardTitle>
-            <div>
-              {isClient ? (
-                <SimulatedExamDialog />
-              ) : (
-                <Button disabled>
-                  <FileText />
-                  Gerar
-                </Button>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Crie simulados personalizados selecionando matérias e o número de
-              questões.
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex-row items-center justify-between">
-            <CardTitle>Importar Flashcards</CardTitle>
-            <Dialog>
-              {isClient ? (
-                <DialogTrigger asChild>
-                  <Button disabled={isButtonDisabled}>
-                    {isUserLoading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                
+                {/* Gerador de Simulados */}
+                <div className="flex flex-col justify-between p-4 rounded-lg border h-full">
+                    <div>
+                        <h4 className="font-semibold">Gerador de Simulados</h4>
+                        <p className="text-sm text-muted-foreground mt-1">Crie simulados para a comunidade.</p>
+                    </div>
+                     {isClient ? (
+                        <SimulatedExamDialog />
                     ) : (
-                      <Layers />
+                        <Button size="sm" className="mt-4" disabled><FileText />Gerar</Button>
                     )}
-                    {isUserLoading ? 'Carregando...' : 'Importar'}
-                  </Button>
-                </DialogTrigger>
-              ) : (
-                <Button disabled={true}>
-                  <Layers />
-                  Importar
-                </Button>
-              )}
-              <DialogContent className="sm:max-w-4xl">
-                <DialogHeader>
-                  <DialogTitle>Importar Flashcards por Texto</DialogTitle>
-                  <DialogDescription>
-                    Cole o conteúdo no campo abaixo, usando "|" como separador:
-                    Matéria | Assunto | Cargo | Pergunta | Resposta
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="flashcard-text">
-                      Conteúdo
-                    </Label>
-                    <Textarea
-                      id="flashcard-text"
-                      className="min-h-[350px]"
-                      placeholder="Direito Administrativo | Atos Administrativos | Geral | Quais são os atributos do ato administrativo? | Presunção de legitimidade, autoexecutoriedade, tipicidade e imperatividade (mnemônico: PATI).
+                </div>
+
+                {/* Importar Flashcards */}
+                <div className="flex flex-col justify-between p-4 rounded-lg border h-full">
+                    <div>
+                        <h4 className="font-semibold">Importar Flashcards</h4>
+                        <p className="text-sm text-muted-foreground mt-1">Importe flashcards em massa.</p>
+                    </div>
+                    <Dialog>
+                        {isClient ? (
+                            <DialogTrigger asChild>
+                            <Button size="sm" className="mt-4" disabled={isButtonDisabled}>
+                                {isUserLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Layers />}
+                                {isUserLoading ? 'Carregando...' : 'Importar'}
+                            </Button>
+                            </DialogTrigger>
+                        ) : (
+                            <Button size="sm" className="mt-4" disabled={true}><Layers />Importar</Button>
+                        )}
+                        <DialogContent className="sm:max-w-4xl">
+                            <DialogHeader>
+                            <DialogTitle>Importar Flashcards por Texto</DialogTitle>
+                            <DialogDescription>
+                                Cole o conteúdo no campo abaixo, usando "|" como separador: Matéria | Assunto | Cargo | Pergunta | Resposta
+                            </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="flashcard-text">Conteúdo</Label>
+                                <Textarea
+                                id="flashcard-text"
+                                className="min-h-[350px]"
+                                placeholder="Direito Administrativo | Atos Administrativos | Geral | Quais são os atributos do ato administrativo? | Presunção de legitimidade, autoexecutoriedade, tipicidade e imperatividade (mnemônico: PATI).
 Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativa antes de nomes próprios femininos? | A crase é facultativa, pois o artigo 'a' antes do nome é opcional."
-                      value={flashcardText}
-                      onChange={e => setFlashcardText(e.target.value)}
-                    />
-                  </div>
+                                value={flashcardText}
+                                onChange={e => setFlashcardText(e.target.value)}
+                                />
+                            </div>
+                            </div>
+                            <DialogFooter>
+                            <DialogClose asChild><Button variant="outline">Cancelar</Button></DialogClose>
+                            <Button
+                                onClick={handleImportFlashcards}
+                                disabled={isImportingFlashcards || !flashcardText}
+                            >
+                                {isImportingFlashcards ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                Importar Flashcards
+                            </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </div>
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button variant="outline">Cancelar</Button>
-                  </DialogClose>
-                  <Button
-                    onClick={handleImportFlashcards}
-                    disabled={isImportingFlashcards || !flashcardText}
-                  >
-                    {isImportingFlashcards ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : null}
-                    Importar Flashcards
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Importe flashcards em massa para acelerar a criação de novos
-              baralhos de estudo.
-            </p>
-          </CardContent>
+
+            </CardContent>
         </Card>
-        
+
         <Card className="md:col-span-2">
             <CardHeader>
                 <CardTitle>Ferramentas de Manutenção</CardTitle>
@@ -694,6 +662,7 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
             </CardContent>
         </Card>
       </div>
+
 
       <div className="space-y-6">
         <h3 className="text-2xl font-bold tracking-tight">Recursos</h3>
