@@ -94,7 +94,7 @@ export default function PreviousExamsPage() {
 
               return (
                 <Card key={exam.id} className={cn("flex flex-col", isCompleted && "bg-muted/40")}>
-                    <CardHeader>
+                    <CardHeader className="p-4">
                         <div className="flex items-center justify-between">
                             <CardTitle>{exam.name}</CardTitle>
                             {isCompleted && (
@@ -105,12 +105,12 @@ export default function PreviousExamsPage() {
                             )}
                         </div>
                     </CardHeader>
-                    <CardContent className="flex-grow space-y-2">
+                    <CardContent className="flex-grow p-4 pt-0">
                         <p className="text-sm text-muted-foreground">
                             {exam.questionCount} questões
                         </p>
                     </CardContent>
-                    <CardFooter>
+                    <CardFooter className="p-4 pt-0">
                        {isCompleted && result ? (
                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
                                <Button asChild className="h-auto whitespace-normal">
