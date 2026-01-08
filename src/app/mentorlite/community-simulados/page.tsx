@@ -99,8 +99,8 @@ export default function CommunitySimuladosPage() {
                         <div className="flex items-center justify-between">
                             <CardTitle className="text-lg font-semibold">{exam.name}</CardTitle>
                             {isCompleted && (
-                                <Badge variant="secondary" className="flex items-center gap-1">
-                                    <Check className="h-4 w-4"/>
+                                <Badge className="border-transparent bg-emerald-500/20 text-emerald-700 hover:bg-emerald-500/30">
+                                    <Check className="mr-1 h-3 w-3"/>
                                     Resolvido
                                 </Badge>
                             )}

@@ -97,8 +97,8 @@ export default function PreviousExamsPage() {
                         <div className="flex items-center justify-between">
                             <CardTitle>{exam.name}</CardTitle>
                             {isCompleted && (
-                                <Badge variant="secondary" className="flex items-center gap-1">
-                                    <Check className="h-4 w-4"/>
+                                <Badge className="border-transparent bg-emerald-500/20 text-emerald-700 hover:bg-emerald-500/30">
+                                    <Check className="mr-1 h-3 w-3"/>
                                     Resolvida
                                 </Badge>
                             )}
@@ -124,7 +124,7 @@ export default function PreviousExamsPage() {
                            </div>
                        ) : (
                            <Button asChild className="w-full">
-                              <Link href={`/mentorlite/simulated-exams/${exam.id}?from=previous-exams`}>
+                              <Link href={`/mentorlite/simulated-exams/${examId}?from=previous-exams`}>
                                 Iniciar Prova
                               </Link>
                           </Button>
