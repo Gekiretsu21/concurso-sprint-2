@@ -35,6 +35,7 @@ export default function LandingPage() {
 
   const navLinks = [
     { name: 'A Realidade', href: '#realidade' },
+    { name: 'Mindset', href: '#mindset' },
     { name: 'Diferencial', href: '#diferencial' },
     { name: 'O Método', href: '#metodo' },
     { name: 'Mentores', href: '#mentores' },
