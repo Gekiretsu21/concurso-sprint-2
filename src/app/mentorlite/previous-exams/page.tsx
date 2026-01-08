@@ -114,7 +114,7 @@ export default function PreviousExamsPage() {
                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
                                <Button asChild>
                                   <Link href={`/mentorlite/simulated-exams/results/${result.id}`}>
-                                    Conferir Desempenho
+                                    Desempenho
                                   </Link>
                                </Button>
                                <Button variant="outline" onClick={(e) => handleRedo(e, exam.id)}>
@@ -124,7 +124,7 @@ export default function PreviousExamsPage() {
                            </div>
                        ) : (
                            <Button asChild className="w-full">
-                              <Link href={`/mentorlite/simulated-exams/${exam.id}?from=previous-exams`}>
+                              <Link href={`/mentorlite/simulated-exams/${examId}?from=previous-exams`}>
                                 Iniciar Prova
                               </Link>
                           </Button>

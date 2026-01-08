@@ -114,9 +114,9 @@ export default function CommunitySimuladosPage() {
                     <CardFooter className="p-2">
                        {isCompleted && result ? (
                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
-                               <Button asChild className="h-auto whitespace-normal">
+                               <Button asChild>
                                   <Link href={`/mentorlite/simulated-exams/results/${result.id}`}>
-                                    Conferir Desempenho
+                                    Desempenho
                                   </Link>
                                </Button>
                                <Button variant="outline" onClick={(e) => handleRedo(e, exam.id)} className="h-auto whitespace-normal">
