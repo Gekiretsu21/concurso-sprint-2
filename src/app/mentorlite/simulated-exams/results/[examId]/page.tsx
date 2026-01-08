@@ -188,7 +188,7 @@ export default function ExamResultsPage() {
   const { data: savedResult, isLoading: isLoadingResult } = useDoc<PreviousExamResult>(resultDocRef);
 
   const fetchAndSetQuestions = useCallback(async (questionIds: string[], storedAnswers: UserAnswers) => {
-    if (!firestore || questionIds.length === 0) {
+    if (!firestore || !user || questionIds.length === 0) {
       setIsLoading(false);
       return;
     }
@@ -223,7 +223,7 @@ export default function ExamResultsPage() {
     setScorePercentage(total > 0 ? (correctCount / total) * 100 : 0);
     
     setIsLoading(false);
-  }, [firestore]);
+  }, [firestore, user]);
 
 
   useEffect(() => {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirebase, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, where, or, and } from 'firebase/firestore';
 import {
   Select,
@@ -33,7 +33,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 export type StatusFilter = 'all' | 'resolved' | 'unresolved';
 
 export default function QuestionsPage() {
-  const { firestore } = useFirebase();
+  const { firestore, user } = useFirebase();
 
   const [filterSubject, setFilterSubject] = useState('');
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
@@ -50,8 +50,8 @@ export default function QuestionsPage() {
   });
 
   const subjectsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'questoes') : null),
-    [firestore]
+    () => (firestore && user ? collection(firestore, 'questoes') : null),
+    [firestore, user]
   );
   const { data: allQuestions, isLoading: isLoadingSubjects } =
     useCollection(subjectsQuery);

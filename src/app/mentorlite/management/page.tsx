@@ -80,10 +80,10 @@ function DeletePreviousExamsDialog() {
   const [selectedExams, setSelectedExams] = useState<string[]>([]);
   
   const examsQuery = useMemoFirebase(() =>
-      firestore
+      firestore && user
         ? query(collection(firestore, `previousExams`))
         : null,
-    [firestore]
+    [firestore, user]
   );
   const { data: exams, isLoading } = useCollection<PreviousExam>(examsQuery);
 
@@ -162,6 +162,7 @@ function DeletePreviousExamsDialog() {
 
 function DeleteCommunitySimuladosDialog() {
   const { firestore } = useFirebase();
+  const { user } = useUser();
   const { toast } = useToast();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -169,8 +170,8 @@ function DeleteCommunitySimuladosDialog() {
   const [selectedSimulados, setSelectedSimulados] = useState<string[]>([]);
   
   const simuladosQuery = useMemoFirebase(() =>
-      firestore ? query(collection(firestore, `communitySimulados`)) : null,
-    [firestore]
+      firestore && user ? query(collection(firestore, `communitySimulados`)) : null,
+    [firestore, user]
   );
   const { data: simulados, isLoading } = useCollection<CommunitySimulado>(simuladosQuery);
 
@@ -206,7 +207,7 @@ function DeleteCommunitySimuladosDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="destructive" size="sm" disabled={!firestore}>
+        <Button variant="destructive" size="sm" disabled={!user}>
           <Trash2 />
           Excluir Simulados
         </Button>
@@ -249,6 +250,7 @@ function DeleteCommunitySimuladosDialog() {
 
 function DeleteFlashcardsDialog() {
   const { firestore } = useFirebase();
+  const { user } = useUser();
   const { toast } = useToast();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -256,8 +258,8 @@ function DeleteFlashcardsDialog() {
   const [selectedFlashcards, setSelectedFlashcards] = useState<string[]>([]);
   
   const flashcardsQuery = useMemoFirebase(() =>
-      firestore ? query(collection(firestore, `flashcards`)) : null,
-    [firestore]
+      firestore && user ? query(collection(firestore, `flashcards`)) : null,
+    [firestore, user]
   );
   const { data: flashcards, isLoading } = useCollection<Flashcard>(flashcardsQuery);
 
@@ -315,7 +317,7 @@ function DeleteFlashcardsDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="destructive" size="sm" disabled={!firestore}>
+        <Button variant="destructive" size="sm" disabled={!user}>
           <Layers />
           Excluir Flashcards
         </Button>
@@ -398,8 +400,8 @@ export default function ManagementPage() {
   }, []);
 
   const questionsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'questoes') : null),
-    [firestore]
+    () => (firestore && user ? collection(firestore, 'questoes') : null),
+    [firestore, user]
   );
   const { data: allQuestions, isLoading: isLoadingSubjects } = useCollection<DocumentData>(questionsQuery);
 

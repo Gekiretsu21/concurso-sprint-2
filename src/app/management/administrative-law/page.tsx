@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirebase, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import {
   Card,
@@ -42,13 +42,14 @@ function formatEnunciado(text: string) {
 
 export default function AdministrativeLawPage() {
   const { firestore } = useFirebase();
+  const { user } = useUser();
 
   const questionsQuery = useMemoFirebase(
     () =>
-      firestore
+      firestore && user
         ? query(collection(firestore, 'questoes'), where('Materia', '==', 'Direito Administrativo'))
         : null,
-    [firestore]
+    [firestore, user]
   );
 
   const { data: adminQuestions, isLoading: isLoadingQuestions } =

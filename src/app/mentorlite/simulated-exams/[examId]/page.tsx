@@ -191,14 +191,15 @@ export default function SimulatedExamPage() {
   const isPreviousExam = from === 'previous-exams';
   const isCommunitySimulado = from === 'community-simulados';
 
-  const { firestore, user } = useFirebase();
+  const { firestore } = useFirebase();
+  const { user } = useUser();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(true);
   const [userAnswers, setUserAnswers] = useState<UserAnswers>({});
 
   const examDocRef = useMemoFirebase(
     () => {
-      if (!firestore || !examId) return null;
+      if (!firestore || !examId || !user) return null;
 
       let collectionName = 'communitySimulados'; // Default to community simulados
 
@@ -208,7 +209,7 @@ export default function SimulatedExamPage() {
       
       return doc(firestore, collectionName, examId) as DocumentReference<SimulatedExam>;
     },
-    [firestore, examId, isPreviousExam, isCommunitySimulado]
+    [firestore, examId, isPreviousExam, isCommunitySimulado, user]
   );
 
   const { data: exam, isLoading: isLoadingExam } = useDoc<SimulatedExam>(examDocRef);
