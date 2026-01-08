@@ -81,7 +81,7 @@ export function QuestionList({ subject, topics, statusFilter = 'all' }: Question
 
   // 1. Fetch base questions based on subject and topics
   const questionsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !user) return null; // Wait for user
     const subjectConstraint = Array.isArray(subject) 
       ? where('Materia', 'in', subject) 
       : where('Materia', '==', subject);
@@ -91,13 +91,13 @@ export function QuestionList({ subject, topics, statusFilter = 'all' }: Question
       constraints.push(where('Assunto', 'in', topics));
     }
     return query(collection(firestore, 'questoes'), and(...constraints));
-  }, [firestore, subject, topics]);
+  }, [firestore, user, subject, topics]);
 
   const { data: questions, isLoading: isLoadingQuestions } = useCollection<Question>(questionsQuery);
   
   // 2. Fetch user's attempts for the current subject
   const attemptsQuery = useMemoFirebase(() => {
-      if(!firestore || !user) return null;
+      if(!firestore || !user) return null; // Wait for user
       // Fetch for one or multiple subjects
       const subjectConstraint = Array.isArray(subject)
         ? where('subject', 'in', subject)
@@ -375,5 +375,3 @@ export function QuestionList({ subject, topics, statusFilter = 'all' }: Question
     </>
   );
 }
-
-    
