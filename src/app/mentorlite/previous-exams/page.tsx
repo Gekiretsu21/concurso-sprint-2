@@ -123,11 +123,13 @@ export default function PreviousExamsPage() {
                                </Button>
                            </div>
                        ) : (
-                           <Button asChild className="w-full">
-                              <Link href={`/mentorlite/simulated-exams/${exam.id}?from=previous-exams`}>
-                                Iniciar Prova
-                              </Link>
-                          </Button>
+                           <div className="w-full flex justify-end">
+                                <Button asChild className="w-1/2">
+                                <Link href={`/mentorlite/simulated-exams/${exam.id}?from=previous-exams`}>
+                                    Iniciar Prova
+                                </Link>
+                                </Button>
+                           </div>
                        )}
                     </CardFooter>
                 </Card>
