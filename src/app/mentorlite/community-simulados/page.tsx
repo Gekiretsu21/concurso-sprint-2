@@ -97,7 +97,7 @@ export default function CommunitySimuladosPage() {
                 <Card key={exam.id} className={cn("flex flex-col", isCompleted && "bg-muted/40")}>
                     <CardHeader className="p-2">
                         <div className="flex items-center justify-between">
-                            <CardTitle>{exam.name}</CardTitle>
+                            <CardTitle className="text-lg font-semibold">{exam.name}</CardTitle>
                             {isCompleted && (
                                 <Badge variant="secondary" className="flex items-center gap-1">
                                     <Check className="h-4 w-4"/>
@@ -106,7 +106,7 @@ export default function CommunitySimuladosPage() {
                             )}
                         </div>
                     </CardHeader>
-                    <CardContent className="flex-grow space-y-1 p-0 px-2">
+                    <CardContent className="space-y-1 p-0 px-2">
                         <p className="text-sm text-muted-foreground">
                             {exam.questionCount} questões
                         </p>
