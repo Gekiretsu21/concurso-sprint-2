@@ -14,7 +14,7 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardPaste, FileText, Layers, Loader2, Trash2, AlertCircle, ArchiveX, HelpCircle } from 'lucide-react';
+import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteFlashcards } from '@/firebase/actions';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
@@ -510,7 +510,7 @@ export default function ManagementPage() {
                                 <HelpCircle className="h-4 w-4" />
                             </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-80" side="top" align="end">
+                        <PopoverContent className="w-[40rem]" side="top" align="end">
                             <div className="grid gap-4">
                                 <div className="space-y-2">
                                     <h4 className="font-medium leading-none">Modelo de Importação</h4>
