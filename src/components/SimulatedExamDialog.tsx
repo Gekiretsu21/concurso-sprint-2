@@ -12,7 +12,7 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { Button } from './ui/button';
-import { FileText, Loader2 } from 'lucide-react';
+import { FileText, Loader2, ChevronDown } from 'lucide-react';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import {
@@ -22,17 +22,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useFirebase, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import { createSimulatedExam } from '@/firebase/actions';
 import { useToast } from '@/hooks/use-toast';
 import { collection, DocumentData, query, where } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 
 const QUESTION_COUNTS = Array.from({ length: 20 }, (_, i) => i + 1);
 
 interface SubjectSelection {
-  [subject: string]: number;
+  [subject: string]: {
+    count: number;
+    topics: string[];
+  };
 }
 
 export function SimulatedExamDialog() {
@@ -48,66 +58,52 @@ export function SimulatedExamDialog() {
     {}
   );
   
-  // This is the correct logic, similar to the management page.
   const questionsQuery = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'questoes')) : null),
     [firestore]
   );
-  const { data: allQuestions, isLoading: isLoadingSubjects } = useCollection<DocumentData>(questionsQuery);
+  const { data: allQuestions, isLoading: isLoadingQuestions } = useCollection<DocumentData>(questionsQuery);
   
-  const availableSubjects = useMemo((): string[] => {
-    if (!allQuestions) return [];
+  const availableSubjectsAndTopics = useMemo(() => {
+    if (!allQuestions) return { subjects: [], topicsBySubject: {} };
     
-    const subjectCounts = allQuestions.reduce((acc, q) => {
+    const subjectCounts: Record<string, { name: string; count: number }> = {};
+    const topicsBySubject: Record<string, Set<string>> = {};
+
+    allQuestions.forEach(q => {
         const subject = q.Materia;
+        const topic = q.Assunto;
         const isHidden = q.status === 'hidden';
 
         if (subject && subject.trim() && !isHidden) {
             let subjectName = subject.trim();
             
+            // Normalize subject names
+            const subjectLower = subjectName.toLowerCase();
+            if (subjectLower === 'lingua portuguesa') subjectName = 'Língua Portuguesa';
+            if (subjectLower === 'legislacao juridica') subjectName = 'Legislação Jurídica';
+            if (subjectLower === 'legislacao institucional') subjectName = 'Legislação Institucional';
+
             if (subjectName.toLowerCase() !== 'materia') {
-                if (!acc[subjectName]) {
-                    acc[subjectName] = { name: subjectName, count: 0 };
+                if (!subjectCounts[subjectName]) {
+                    subjectCounts[subjectName] = { name: subjectName, count: 0 };
+                    topicsBySubject[subjectName] = new Set();
                 }
-                acc[subjectName].count++;
+                subjectCounts[subjectName].count++;
+                if (topic && topic.trim()) {
+                    topicsBySubject[subjectName].add(topic.trim());
+                }
             }
         }
-        return acc;
-    }, {} as Record<string, {name: string, count: number}>);
-    
-    // Unify "Língua Portuguesa" variations
-    const portuguesComAcento = subjectCounts['Língua Portuguesa'];
-    const portuguesSemAcento = subjectCounts['Lingua Portuguesa'];
-    if (portuguesComAcento || portuguesSemAcento) {
-        const total = (portuguesComAcento?.count || 0) + (portuguesSemAcento?.count || 0);
-        if (portuguesComAcento) delete subjectCounts['Lingua Portuguesa'];
-        if (portuguesSemAcento) delete subjectCounts['Língua Portuguesa'];
-        subjectCounts['Língua Portuguesa'] = { name: 'Língua Portuguesa', count: total };
-    }
+    });
 
-    // Unify "Legislação Jurídica" variations
-    const legislacaoComAcento = subjectCounts['Legislação Jurídica'];
-    const legislacaoSemAcento = subjectCounts['Legislacao Juridica'];
-     if (legislacaoComAcento || legislacaoSemAcento) {
-        const total = (legislacaoComAcento?.count || 0) + (legislacaoSemAcento?.count || 0);
-        if (legislacaoComAcento) delete subjectCounts['Legislacao Juridica'];
-        if (legislacaoSemAcento) delete subjectCounts['Legislação Jurídica'];
-        subjectCounts['Legislação Jurídica'] = { name: 'Legislação Jurídica', count: total };
-    }
-    
-    // Unify "Legislação Institucional" variations
-    const institucionalComAcento = subjectCounts['Legislação Institucional'];
-    const institucionalSemAcento = subjectCounts['Legislacao Institucional'];
-    if (institucionalComAcento || institucionalSemAcento) {
-        const total = (institucionalComAcento?.count || 0) + (institucionalSemAcento?.count || 0);
-        if (institucionalComAcento) delete subjectCounts['Legislacao Institucional'];
-        if (institucionalSemAcento) delete subjectCounts['Legislação Institucional'];
-        subjectCounts['Legislação Institucional'] = { name: 'Legislação Institucional', count: total };
-    }
-
-
-    return Object.keys(subjectCounts)
-        .sort((a, b) => a.localeCompare(b));
+    return {
+        subjects: Object.keys(subjectCounts).sort((a, b) => a.localeCompare(b)),
+        topicsBySubject: Object.entries(topicsBySubject).reduce((acc, [subject, topicsSet]) => {
+            acc[subject] = Array.from(topicsSet).sort();
+            return acc;
+        }, {} as Record<string, string[]>),
+    };
   }, [allQuestions]);
 
 
@@ -129,7 +125,7 @@ export function SimulatedExamDialog() {
       return;
     }
     const selectedSubjects = Object.entries(subjectSelections).filter(
-      ([, count]) => count > 0
+      ([, selection]) => selection.count > 0
     );
     if (selectedSubjects.length === 0) {
       toast({
@@ -145,11 +141,10 @@ export function SimulatedExamDialog() {
     try {
         const examData = {
             name: examName,
-            subjects: Object.fromEntries(selectedSubjects),
+            subjects: Object.fromEntries(selectedSubjects.map(([subject, selection]) => [subject, selection])),
         };
         const newExamId = await createSimulatedExam(firestore, user.uid, examData);
         
-        // Optimistically show success and close dialog
         toast({
             title: 'Sucesso!',
             description: `Simulado "${examName}" criado para a comunidade.`,
@@ -160,8 +155,6 @@ export function SimulatedExamDialog() {
         router.push(`/mentorlite/community-simulados`);
 
     } catch (error) {
-        // This will now only catch synchronous errors, like the validation ones.
-        // Firestore permission errors are handled inside createSimulatedExam.
         console.error(error);
         let message = 'Não foi possível iniciar a geração do simulado. Tente novamente.';
         if (error instanceof Error) {
@@ -179,7 +172,23 @@ export function SimulatedExamDialog() {
 
   const handleSubjectCountChange = (subject: string, value: string) => {
     const count = Number(value);
-    setSubjectSelections(prev => ({ ...prev, [subject]: count }));
+    setSubjectSelections(prev => ({
+       ...prev, 
+       [subject]: { ...prev[subject], count } 
+    }));
+  };
+  
+  const handleTopicChange = (subject: string, topic: string, checked: boolean) => {
+    setSubjectSelections(prev => {
+        const currentTopics = prev[subject]?.topics || [];
+        const newTopics = checked
+            ? [...currentTopics, topic]
+            : currentTopics.filter(t => t !== topic);
+        return {
+            ...prev,
+            [subject]: { ...prev[subject], topics: newTopics }
+        };
+    });
   };
   
   useEffect(() => {
@@ -189,6 +198,17 @@ export function SimulatedExamDialog() {
     }
   }, [isOpen]);
 
+  const getTopicButtonLabel = (subject: string) => {
+    const selectedTopics = subjectSelections[subject]?.topics || [];
+    if (selectedTopics.length === 0) {
+      return "Todos os Assuntos";
+    }
+    if (selectedTopics.length === 1) {
+      return selectedTopics[0];
+    }
+    return `${selectedTopics.length} assuntos selecionados`;
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -197,7 +217,7 @@ export function SimulatedExamDialog() {
           Gerar
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[625px]">
+      <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>Gerar Novo Simulado para Comunidade</DialogTitle>
           <DialogDescription>
@@ -216,21 +236,47 @@ export function SimulatedExamDialog() {
           </div>
 
           <div className="space-y-4">
-            <Label>Matérias e Questões</Label>
-            {isLoadingSubjects ? (
+            <div className="grid grid-cols-3 gap-4 px-2 font-medium">
+                <Label>Matéria</Label>
+                <Label>Assuntos</Label>
+                <Label>Nº de Questões</Label>
+            </div>
+            {isLoadingQuestions ? (
                  <div className="flex items-center justify-center p-4"><Loader2 className="h-6 w-6 animate-spin"/></div>
             ) : (
-                <div className="space-y-3">
-                {availableSubjects.map(subject => (
+                <div className="space-y-3 max-h-72 overflow-y-auto pr-2">
+                {availableSubjectsAndTopics.subjects.map(subject => (
                     <div
                     key={subject}
-                    className="grid grid-cols-2 items-center gap-4"
+                    className="grid grid-cols-3 items-center gap-4"
                     >
-                    <Label htmlFor={`subject-${subject}`} className="text-sm">
+                    <Label htmlFor={`subject-${subject}`} className="text-sm font-normal truncate">
                         {subject}
                     </Label>
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="w-full justify-between font-normal truncate">
+                           {getTopicButtonLabel(subject)}
+                           <ChevronDown className="h-4 w-4 opacity-50" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-56" align="start">
+                        {(availableSubjectsAndTopics.topicsBySubject[subject] || []).map(topic => (
+                          <DropdownMenuCheckboxItem
+                            key={topic}
+                            checked={(subjectSelections[subject]?.topics || []).includes(topic)}
+                            onCheckedChange={(checked) => handleTopicChange(subject, topic, !!checked)}
+                             onSelect={(e) => e.preventDefault()}
+                          >
+                            {topic}
+                          </DropdownMenuCheckboxItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
                     <Select
-                        value={String(subjectSelections[subject] || 0)}
+                        value={String(subjectSelections[subject]?.count || 0)}
                         onValueChange={value =>
                         handleSubjectCountChange(subject, value)
                         }
@@ -259,7 +305,7 @@ export function SimulatedExamDialog() {
           </DialogClose>
           <Button
             onClick={handleGenerate}
-            disabled={isLoading || isLoadingSubjects}
+            disabled={isLoading || isLoadingQuestions}
           >
             {isLoading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

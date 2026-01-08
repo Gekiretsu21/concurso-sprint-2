@@ -455,13 +455,18 @@ export async function toggleQuestionStatus(
 async function getRandomQuestions(
   firestore: Firestore,
   subject: string,
-  count: number
+  count: number,
+  topics: string[]
 ): Promise<string[]> {
   const questionsCollection = collection(firestore, 'questoes');
-  const q = query(
-    questionsCollection,
-    where('Materia', '==', subject)
-  );
+
+  // Build the query constraints
+  const constraints = [where('Materia', '==', subject)];
+  if (topics.length > 0) {
+      constraints.push(where('Assunto', 'in', topics));
+  }
+  
+  const q = query(questionsCollection, and(...constraints));
 
   const snapshot = await getDocs(q);
   
@@ -471,7 +476,8 @@ async function getRandomQuestions(
   const allQuestionIds = activeQuestions.map(doc => doc.id);
 
   if (allQuestionIds.length < count) {
-      throw new Error(`Não há questões suficientes para a matéria '${subject}'. Encontradas: ${allQuestionIds.length}, Solicitadas: ${count}.`);
+      const topicInfo = topics.length > 0 ? ` nos tópicos [${topics.join(', ')}]` : '';
+      throw new Error(`Não há questões suficientes para a matéria '${subject}'${topicInfo}. Encontradas: ${allQuestionIds.length}, Solicitadas: ${count}.`);
   }
 
   const shuffled = allQuestionIds.sort(() => 0.5 - Math.random());
@@ -480,7 +486,12 @@ async function getRandomQuestions(
 
 interface CreateSimulatedExamDTO {
   name: string;
-  subjects: { [subject: string]: number };
+  subjects: { 
+    [subject: string]: {
+      count: number;
+      topics: string[];
+    } 
+  };
 }
 
 export async function createSimulatedExam(
@@ -491,11 +502,11 @@ export async function createSimulatedExam(
   let allQuestionIds: string[] = [];
   let totalQuestions = 0;
 
-  for (const [subject, count] of Object.entries(dto.subjects)) {
-    if (count > 0) {
-      const questionIds = await getRandomQuestions(firestore, subject, count);
+  for (const [subject, selection] of Object.entries(dto.subjects)) {
+    if (selection.count > 0) {
+      const questionIds = await getRandomQuestions(firestore, subject, selection.count, selection.topics);
       allQuestionIds.push(...questionIds);
-      totalQuestions += count;
+      totalQuestions += selection.count;
     }
   }
 
@@ -504,12 +515,11 @@ export async function createSimulatedExam(
   }
 
   const communityExamCollection = collection(firestore, `communitySimulados`);
-  // Generate a new document reference with an auto-generated ID
   const examDocRef = doc(communityExamCollection);
 
   const examData = {
     id: examDocRef.id,
-    originalExamId: examDocRef.id, // Set it directly
+    originalExamId: examDocRef.id,
     name: dto.name,
     userId,
     createdAt: serverTimestamp(),
@@ -517,11 +527,10 @@ export async function createSimulatedExam(
     questionCount: totalQuestions,
   };
 
-  // Use setDoc with the new ref to create the document in one operation
   setDoc(examDocRef, examData).catch(serverError => {
     const permissionError = new FirestorePermissionError({
       path: examDocRef.path,
-      operation: 'create', // It's a create operation with a specific ID
+      operation: 'create',
       requestResourceData: examData,
     });
     errorEmitter.emit('permission-error', permissionError);
@@ -735,5 +744,3 @@ export async function savePreviousExamResult(firestore: Firestore, payload: Exam
         throw permissionError;
     });
 }
-
-    
