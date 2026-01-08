@@ -289,14 +289,12 @@ export default function ExamResultsPage() {
                 } else {
                     console.error("Exam document not found in any collection for ID:", savedResult.examId);
                     setIsLoading(false); // Stop loading
-                    router.push('/mentorlite'); // Redirect if exam is truly not found
                 }
             };
             fetchExamAndQuestions();
         } else {
-            // If finished loading and there's no savedResult (and no localStorage data), then redirect
+            // If finished loading and there's no savedResult (and no localStorage data), stop loading.
             setIsLoading(false);
-            router.push('/mentorlite');
         }
     }
 
@@ -317,6 +315,26 @@ export default function ExamResultsPage() {
       <div className="flex items-center justify-center h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
         <p className="ml-4">Carregando resultados...</p>
+      </div>
+    );
+  }
+
+  if (!questions || questions.length === 0) {
+    return (
+       <div className="flex flex-col gap-8 items-center text-center">
+        <header>
+          <h1 className="text-3xl font-bold tracking-tight">Resultado do Simulado</h1>
+        </header>
+        <Card className="flex flex-col items-center justify-center h-40 w-full max-w-2xl border-dashed">
+          <CardContent className="text-center p-6">
+            <p className="text-muted-foreground mb-4">
+              Não foi possível carregar os resultados deste simulado.
+            </p>
+            <Button asChild variant="secondary">
+              <Link href="/mentorlite">Voltar para o Dashboard</Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
