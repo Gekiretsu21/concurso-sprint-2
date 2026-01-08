@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -113,12 +112,12 @@ export default function PreviousExamsPage() {
                     <CardFooter className="p-4 pt-0">
                        {isCompleted && result ? (
                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
-                               <Button asChild className="h-auto whitespace-normal">
+                               <Button asChild>
                                   <Link href={`/mentorlite/simulated-exams/results/${result.id}`}>
                                     Conferir Desempenho
                                   </Link>
                                </Button>
-                               <Button variant="outline" onClick={(e) => handleRedo(e, exam.id)} className="h-auto whitespace-normal">
+                               <Button variant="outline" onClick={(e) => handleRedo(e, exam.id)}>
                                     <RefreshCw className="mr-2 h-4 w-4"/>
                                     Fazer Novamente
                                </Button>
