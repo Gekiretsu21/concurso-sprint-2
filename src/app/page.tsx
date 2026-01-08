@@ -304,8 +304,7 @@ export default function LandingPage() {
                 <Scale className="w-12 h-12 text-primary mx-auto mb-4" />
                 <h3 className="text-xl font-bold">Aprendizado estratégico</h3>
                 <p className="mt-2 text-muted-foreground">
-                  Aprenda o Direito com quem vive a prática. Constitucional e
-                  Administrativo direto ao ponto da prova.
+                  Estudo para concursos com estratégias eficientes.
                 </p>
               </Card>
               <Card className="bg-card p-8 text-center shadow-lg">
