@@ -124,7 +124,7 @@ export default function PreviousExamsPage() {
                            </div>
                        ) : (
                            <Button asChild className="w-full">
-                              <Link href={`/mentorlite/simulated-exams/${examId}?from=previous-exams`}>
+                              <Link href={`/mentorlite/simulated-exams/${exam.id}?from=previous-exams`}>
                                 Iniciar Prova
                               </Link>
                           </Button>
