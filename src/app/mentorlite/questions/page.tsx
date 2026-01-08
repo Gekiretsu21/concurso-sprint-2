@@ -173,7 +173,7 @@ export default function QuestionsPage() {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" disabled={!filterSubject} className="w-full justify-start font-normal">
+                <Button variant="outline" disabled={!filterSubject} className="w-full justify-start font-normal truncate">
                   {getTopicButtonLabel()}
                 </Button>
               </DropdownMenuTrigger>
