@@ -175,12 +175,6 @@ export function QuestionList({ subject, topics, statusFilter = 'all' }: Question
     saveQuestionAttempt(firestore, user.uid, question.id, isCorrect, selectedOption, question.Materia);
   };
 
-
-  const handleToggleStatus = (questionId: string, currentStatus: 'active' | 'hidden' = 'active') => {
-    if (!firestore) return;
-    toggleQuestionStatus(firestore, questionId, currentStatus);
-  };
-
   const isLoading = isLoadingQuestions || isLoadingAttempts;
 
   if (isLoading) {
@@ -231,21 +225,6 @@ export function QuestionList({ subject, topics, statusFilter = 'all' }: Question
                   <div className="flex items-center justify-between">
                     <CardTitle>Questão {indexOfFirstQuestion + index + 1}</CardTitle>
                     <div className="flex items-center gap-4">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleToggleStatus(q.id, q.status)}
-                            className={cn('h-8 w-8', isHidden && 'text-amber-600 hover:text-amber-700')}
-                          >
-                            {isHidden ? <Undo2 /> : <Trash2 />}
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{isHidden ? 'Restaurar questão' : 'Ocultar questão'}</p>
-                        </TooltipContent>
-                      </Tooltip>
                       <Badge variant="secondary">{q.Assunto}</Badge>
                       <Badge variant="secondary">{q.Cargo}</Badge>
                       <Badge variant="outline">{q.Ano}</Badge>

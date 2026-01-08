@@ -434,25 +434,6 @@ export async function handleFlashcardResponse(
   });
 }
 
-
-export async function toggleQuestionStatus(
-  firestore: Firestore,
-  questionId: string,
-  currentStatus: 'active' | 'hidden'
-): Promise<void> {
-  const newStatus = currentStatus === 'active' ? 'hidden' : 'active';
-  const questionRef = doc(firestore, 'questoes', questionId);
-
-  updateDoc(questionRef, { status: newStatus }).catch(serverError => {
-    const permissionError = new FirestorePermissionError({
-      path: questionRef.path,
-      operation: 'update',
-      requestResourceData: { status: newStatus },
-    });
-    errorEmitter.emit('permission-error', permissionError);
-  });
-}
-
 async function getRandomQuestions(
   firestore: Firestore,
   subject: string,
