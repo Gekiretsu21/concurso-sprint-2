@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  AreaChart,
   BrainCircuit,
   ClipboardList,
   FileText,
@@ -49,7 +48,6 @@ import { useStudyTimeTracker } from '@/hooks/use-study-time-tracker';
 
 const menuItems = [
   { href: '/mentorlite', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/mentorlite/dashboard', icon: AreaChart, label: 'Analytics' },
   { href: '/mentorlite/questions', icon: ClipboardList, label: 'Questões' },
   { href: '/mentorlite/community-simulados', icon: Shield, label: 'Simulados da Comunidade'},
   { href: '/mentorlite/previous-exams', icon: FileText, label: 'Provas Anteriores' },

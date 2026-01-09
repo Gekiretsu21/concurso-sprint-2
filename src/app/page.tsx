@@ -61,10 +61,10 @@ export default function LandingPage() {
   };
 
   const navLinks = [
-    { name: 'A Realidade', href: '#realidade' },
+    { name: 'Realidade', href: '#realidade' },
     { name: 'Mindset', href: '#mindset' },
     { name: 'Diferencial', href: '#diferencial' },
-    { name: 'O Método', href: '#metodo' },
+    { name: 'Método', href: '#metodo' },
     { name: 'Mentores', href: '#mentores' },
     { name: 'Arsenal', href: '#arsenal' },
   ];
@@ -115,7 +115,7 @@ export default function LandingPage() {
                 href="/"
                 className="flex items-center gap-2 text-lg font-bold whitespace-nowrap"
               >
-                MENTORIA <Zap className="w-5 h-5 text-accent" /> ACADEMY
+                MENTORIA ACADEMY
               </Link>
               <Link href="https://www.instagram.com/amentoriaacademy" target="_blank" rel="noopener noreferrer" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">
                 <svg
