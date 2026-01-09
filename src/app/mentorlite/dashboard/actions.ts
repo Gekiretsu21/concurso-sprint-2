@@ -80,5 +80,3 @@ export async function getDashboardAnalytics(userId: string): Promise<DashboardAn
     throw new Error('Could not retrieve dashboard data from the server.');
   }
 }
-
-export type { DashboardAnalyticsData, SubjectHighlight };
