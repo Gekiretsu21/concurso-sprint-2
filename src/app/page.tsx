@@ -99,7 +99,9 @@ export default function LandingPage() {
       e.preventDefault();
       handleGoogleLogin();
     } else {
-      window.location.href = href;
+      // For standard navigation, we let the default browser behavior handle it.
+      // For dynamically handled routes (like in a Sheet), we might need to close it.
+      // This logic seems fine for now.
     }
   };
 
@@ -167,14 +169,15 @@ export default function LandingPage() {
                 ))}
               </nav>
               
-              <div className="hidden lg:flex items-center gap-2">
-                 {renderMentorLiteButton()}
+              <div className="flex items-center gap-2">
+                <div className="hidden lg:flex">
+                  {renderMentorLiteButton()}
+                </div>
                 <AuthButton />
               </div>
 
               {/* Mobile Menu */}
               <div className="lg:hidden flex items-center">
-                <AuthButton />
                 <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                   <SheetTrigger asChild>
                     <Button variant="ghost" size="icon" className="hover:bg-primary/90">
@@ -190,7 +193,7 @@ export default function LandingPage() {
                        <Link
                           href="/mentorlite"
                           onClick={(e) => {
-                            handleProtectedLinkClick(e, '/mentorlite');
+                            handleProtectedLinkClick(e as any, '/mentorlite');
                             setIsMobileMenuOpen(false);
                           }}
                           className='font-bold text-accent'
@@ -456,26 +459,25 @@ export default function LandingPage() {
               <Card className="bg-primary/10 p-6 flex flex-col text-left shadow-sm">
                 <div className="flex-grow">
                   <Badge className="flex-shrink-0 mb-3 bg-green-500/20 text-green-700 hover:bg-green-500/30 border-none">
-                    <Sparkles className="w-3 h-3 mr-1" /> Mentor Lite
+                    <Sparkles className="w-3 h-3 mr-1" /> Gratuito
                   </Badge>
-                  <h3 className="font-bold">Acesso à Plataforma de IA</h3>
+                  <h3 className="font-bold">Mentor Lite</h3>
                   <p className="text-sm text-muted-foreground mt-1">
                     Use nossas ferramentas de IA para praticar com questões, flashcards e mais.
                   </p>
                 </div>
-                <a
-                    href="/mentorlite"
+                <button
                     onClick={(e) => handleProtectedLinkClick(e, '/mentorlite')}
                     className="text-sm font-semibold text-primary mt-4 flex items-center gap-1 group"
                     >
                     Acessar Agora{' '}
                     <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </a>
+                </button>
               </Card>
               
-               <Card className="bg-primary/10 p-6 flex flex-col text-left shadow-sm">
+               <Card className="bg-yellow-400/10 p-6 flex flex-col text-left shadow-sm">
                 <div className="flex-grow">
-                  <Badge className="flex-shrink-0 mb-3 bg-red-500/20 text-red-700 hover:bg-red-500/30 border-none">
+                  <Badge className="flex-shrink-0 mb-3 bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30 border-none">
                     <Shield className="w-3 h-3 mr-1" /> DESAFIO
                   </Badge>
                   <h3 className="font-bold">Simulados da Comunidade</h3>
@@ -483,23 +485,22 @@ export default function LandingPage() {
                     A prática leva à aprovação. Teste seu conhecimento com simulados reais e vença a concorrência.
                   </p>
                 </div>
-                <a
-                    href="/mentorlite/community-simulados"
+                <button
                     onClick={(e) => handleProtectedLinkClick(e, '/mentorlite/community-simulados')}
                     className="text-sm font-semibold text-primary mt-4 flex items-center gap-1 group"
                     >
                     Encarar o Desafio{' '}
                     <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </a>
+                </button>
               </Card>
 
-              <Card className="bg-accent text-accent-foreground p-6 flex flex-col text-left shadow-sm">
+              <Card className="bg-red-500/10 p-6 flex flex-col text-left shadow-sm">
                 <div className="flex-grow">
-                  <Badge variant="outline" className="flex-shrink-0 mb-3">
+                  <Badge variant="destructive" className="flex-shrink-0 mb-3 bg-red-500/20 text-red-700 hover:bg-red-500/30 border-none">
                     <Crown className="w-3 h-3 mr-1" /> VIP
                   </Badge>
                   <h3 className="font-bold">Correção de Redação</h3>
-                  <p className="text-sm text-accent-foreground/80 mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     Somente para quem quer tirar 90+ na redação. Correção
                     individual detalhada.
                   </p>
@@ -508,7 +509,7 @@ export default function LandingPage() {
                   href="https://api.whatsapp.com/send/?phone=5531984585846&text=Quero%20saber%20mais%20sobre%20a%20corre%C3%A7%C3%A3o%20de%20Reda%C3%A7%C3%A3o"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm font-semibold text-background mt-4 flex items-center gap-1 group"
+                  className="text-sm font-semibold text-primary mt-4 flex items-center gap-1 group"
                 >
                   Adquirir correção{' '}
                   <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
