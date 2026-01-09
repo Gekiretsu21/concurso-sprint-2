@@ -459,7 +459,7 @@ export default function LandingPage() {
                   </p>
                 </div>
                 <Link
-                  href="#"
+                  href="https://api.whatsapp.com/send/?phone=5531984585846&text=Quero%20saber%20mais%20sobre%20a%20corre%C3%A7%C3%A3o%20de%20Reda%C3%A7%C3%A3o"
                   className="text-sm font-semibold text-background mt-4 flex items-center gap-1 group"
                 >
                   Adquirir correção{' '}
