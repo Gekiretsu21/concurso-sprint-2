@@ -1,3 +1,4 @@
+
 'use server';
 
 import {
@@ -11,7 +12,7 @@ export async function handleGenerateStudyPlan(
 ): Promise<GeneratePersonalizedStudyPlanOutput> {
   try {
     // Basic validation can be done here before calling the AI flow
-    if (!input.performanceStatistics || !input.goals || !input.availableResources || !input.availableTime) {
+    if (!input.goals || !input.hoursPerDay || !input.daysOfWeek || !input.examDate) {
       throw new Error('All fields are required.');
     }
     

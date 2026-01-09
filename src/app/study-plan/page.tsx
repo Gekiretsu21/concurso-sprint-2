@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { handleGenerateStudyPlan } from './actions';
@@ -12,17 +13,17 @@ import { useState } from 'react';
 import { Loader2, Sparkles } from 'lucide-react';
 
 const formSchema = z.object({
-  performanceStatistics: z.string().min(10, { message: 'Por favor, detalhe suas estatísticas.' }),
   goals: z.string().min(10, { message: 'Por favor, descreva seus objetivos.' }),
-  availableResources: z.string().min(10, { message: 'Por favor, liste os recursos disponíveis.' }),
-  availableTime: z.string().min(5, { message: 'Por favor, informe seu tempo disponível.' }),
+  hoursPerDay: z.string().min(1, { message: 'Informe as horas.' }),
+  daysOfWeek: z.string().min(5, { message: 'Informe os dias.' }),
+  examDate: z.string().min(5, { message: 'Informe a data.' }),
 });
 
 const exampleData = {
-    performanceStatistics: "Meu desempenho geral é de 65%. Tenho mais dificuldade em Direito Administrativo (50% de acerto) e Raciocínio Lógico (55%). Minhas melhores matérias são Português (80%) e Direito Constitucional (75%).",
-    goals: "Meu objetivo principal é ser aprovado no concurso para Analista do Tribunal Regional Federal. Preciso aumentar meu percentual de acerto geral para pelo menos 85% nos próximos 3 meses.",
-    availableResources: "Tenho acesso a videoaulas do curso 'Estratégia Concursos', PDFs de todas as matérias, e a plataforma de questões 'Qconcursos'.",
-    availableTime: "Tenho 4 horas líquidas de estudo por dia de segunda a sexta, e 6 horas no sábado. Domingo é meu dia de descanso."
+    goals: "Meu objetivo principal é ser aprovado no concurso para Analista do Tribunal Regional Federal. Preciso aumentar meu percentual de acerto geral para pelo menos 85% nos próximos 3 meses. Tenho mais dificuldade em Direito Administrativo (50% de acerto) e Raciocínio Lógico (55%). Minhas melhores matérias são Português (80%) e Direito Constitucional (75%).",
+    hoursPerDay: "4 horas líquidas",
+    daysOfWeek: "Segunda a sexta, e 6 horas no sábado. Domingo é meu dia de descanso.",
+    examDate: "Daqui a 3 meses"
 };
 
 
@@ -34,10 +35,10 @@ export default function StudyPlanPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      performanceStatistics: '',
       goals: '',
-      availableResources: '',
-      availableTime: '',
+      hoursPerDay: '',
+      daysOfWeek: '',
+      examDate: '',
     },
   });
 
@@ -56,10 +57,10 @@ export default function StudyPlanPage() {
   }
 
   const fillExample = () => {
-    form.setValue('performanceStatistics', exampleData.performanceStatistics);
     form.setValue('goals', exampleData.goals);
-    form.setValue('availableResources', exampleData.availableResources);
-    form.setValue('availableTime', exampleData.availableTime);
+    form.setValue('hoursPerDay', exampleData.hoursPerDay);
+    form.setValue('daysOfWeek', exampleData.daysOfWeek);
+    form.setValue('examDate', exampleData.examDate);
   }
 
   return (
@@ -86,12 +87,12 @@ export default function StudyPlanPage() {
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                     <FormField
                         control={form.control}
-                        name="performanceStatistics"
+                        name="goals"
                         render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Estatísticas de Desempenho</FormLabel>
+                            <FormLabel>Metas e Desempenho</FormLabel>
                             <FormControl>
-                            <Textarea placeholder="Ex: Acerto de 70% em Português, 55% em Direito Administrativo..." {...field} rows={4} />
+                            <Textarea placeholder="Ex: Ser aprovado no concurso do TJ-SP, melhorar em Raciocínio Lógico... Meu desempenho geral é de 65%. Tenho mais dificuldade em Direito Administrativo (50% de acerto)..." {...field} rows={6} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -99,12 +100,12 @@ export default function StudyPlanPage() {
                     />
                     <FormField
                         control={form.control}
-                        name="goals"
+                        name="hoursPerDay"
                         render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Metas e Objetivos</FormLabel>
+                            <FormLabel>Horas de Estudo por Dia</FormLabel>
                             <FormControl>
-                            <Textarea placeholder="Ex: Ser aprovado no concurso do TJ-SP, melhorar em Raciocínio Lógico..." {...field} rows={4} />
+                            <Input placeholder="Ex: 3 horas" {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -112,12 +113,12 @@ export default function StudyPlanPage() {
                     />
                      <FormField
                         control={form.control}
-                        name="availableResources"
+                        name="daysOfWeek"
                         render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Recursos Disponíveis</FormLabel>
+                            <FormLabel>Dias Disponíveis na Semana</FormLabel>
                             <FormControl>
-                            <Textarea placeholder="Ex: Videoaulas do cursinho X, PDFs, Livro Y..." {...field} rows={3} />
+                            <Input placeholder="Ex: Segunda a Sexta" {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -125,12 +126,12 @@ export default function StudyPlanPage() {
                     />
                     <FormField
                         control={form.control}
-                        name="availableTime"
+                        name="examDate"
                         render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Tempo Disponível</FormLabel>
+                            <FormLabel>Data (ou previsão) da Prova</FormLabel>
                             <FormControl>
-                            <Textarea placeholder="Ex: 3 horas por dia durante a semana, 6 horas nos finais de semana." {...field} rows={3} />
+                            <Input placeholder="Ex: 25/12/2024 ou 'daqui a 3 meses'" {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
