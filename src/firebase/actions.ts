@@ -440,7 +440,7 @@ async function getRandomQuestions(
   subject: string,
   count: number,
   topics?: string[],
-  cargo?: string
+  cargos?: string[]
 ): Promise<string[]> {
   const questionsCollection = collection(firestore, 'questoes');
 
@@ -449,8 +449,8 @@ async function getRandomQuestions(
   if (topics && topics.length > 0) {
       constraints.push(where('Assunto', 'in', topics));
   }
-  if (cargo) {
-      constraints.push(where('Cargo', '==', cargo));
+  if (cargos && cargos.length > 0) {
+      constraints.push(where('Cargo', 'in', cargos));
   }
   
   const q = query(questionsCollection, and(...constraints));
@@ -464,7 +464,7 @@ async function getRandomQuestions(
 
   if (allQuestionIds.length < count) {
       let errorMsg = `Não há questões suficientes para a matéria '${subject}'`;
-      if (cargo) errorMsg += ` para o cargo '${cargo}'`;
+      if (cargos && cargos.length > 0) errorMsg += ` para o(s) cargo(s) [${cargos.join(', ')}]`;
       if (topics && topics.length > 0) errorMsg += ` nos tópicos [${topics.join(', ')}]`;
       errorMsg += `. Encontradas: ${allQuestionIds.length}, Solicitadas: ${count}.`;
       throw new Error(errorMsg);
@@ -476,7 +476,7 @@ async function getRandomQuestions(
 
 interface CreateSimulatedExamDTO {
   name: string;
-  cargo?: string;
+  cargos?: string[];
   subjects: { 
     [subject: string]: {
       count: number;
@@ -495,7 +495,7 @@ export async function createSimulatedExam(
 
   for (const [subject, selection] of Object.entries(dto.subjects)) {
     if (selection.count > 0) {
-      const questionIds = await getRandomQuestions(firestore, subject, selection.count, selection.topics, dto.cargo);
+      const questionIds = await getRandomQuestions(firestore, subject, selection.count, selection.topics, dto.cargos);
       allQuestionIds.push(...questionIds);
       totalQuestions += selection.count;
     }
@@ -790,3 +790,5 @@ export async function addQuestionComment(
       throw permissionError;
   });
 }
+
+    

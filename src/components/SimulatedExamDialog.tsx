@@ -28,6 +28,8 @@ import {
   DropdownMenuContent,
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { useFirebase, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import { createSimulatedExam } from '@/firebase/actions';
@@ -35,6 +37,7 @@ import { useToast } from '@/hooks/use-toast';
 import { collection, DocumentData, query, where } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { ScrollArea } from './ui/scroll-area';
 
 
 const QUESTION_COUNTS = Array.from({ length: 20 }, (_, i) => i + 1);
@@ -55,7 +58,7 @@ export function SimulatedExamDialog() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [examName, setExamName] = useState('');
-  const [selectedCargo, setSelectedCargo] = useState<string>('all');
+  const [selectedCargos, setSelectedCargos] = useState<string[]>([]);
   const [subjectSelections, setSubjectSelections] = useState<SubjectSelection>(
     {}
   );
@@ -150,7 +153,7 @@ export function SimulatedExamDialog() {
     try {
         const examData = {
             name: examName,
-            cargo: selectedCargo === 'all' ? undefined : selectedCargo,
+            cargos: selectedCargos,
             subjects: Object.fromEntries(selectedSubjects.map(([subject, selection]) => [subject, selection])),
         };
         const newExamId = await createSimulatedExam(firestore, user.uid, examData);
@@ -161,7 +164,7 @@ export function SimulatedExamDialog() {
         });
         setExamName('');
         setSubjectSelections({});
-        setSelectedCargo('all');
+        setSelectedCargos([]);
         setIsOpen(false);
         router.push(`/mentorlite/community-simulados`);
 
@@ -206,7 +209,7 @@ export function SimulatedExamDialog() {
     if (!isOpen) {
       setExamName('');
       setSubjectSelections({});
-      setSelectedCargo('all');
+      setSelectedCargos([]);
     }
   }, [isOpen]);
 
@@ -219,6 +222,16 @@ export function SimulatedExamDialog() {
       return selectedTopics[0];
     }
     return `${selectedTopics.length} assuntos selecionados`;
+  };
+
+  const getCargoButtonLabel = () => {
+    if (selectedCargos.length === 0) {
+      return "Todos os Cargos";
+    }
+    if (selectedCargos.length === 1) {
+      return selectedCargos[0];
+    }
+    return `${selectedCargos.length} cargos selecionados`;
   };
 
   return (
@@ -248,18 +261,35 @@ export function SimulatedExamDialog() {
               />
             </div>
              <div className="space-y-2">
-                <Label htmlFor="cargo-select">Cargo Alvo</Label>
-                <Select value={selectedCargo} onValueChange={setSelectedCargo}>
-                    <SelectTrigger id="cargo-select">
-                        <SelectValue placeholder="Selecione o Cargo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">Todos os Cargos</SelectItem>
-                        {availableResources.cargos.map(cargo => (
-                            <SelectItem key={cargo} value={cargo}>{cargo}</SelectItem>
+                <Label htmlFor="cargo-select">Cargo(s) Alvo</Label>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="w-full justify-between font-normal truncate">
+                       {getCargoButtonLabel()}
+                       <ChevronDown className="h-4 w-4 opacity-50" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="start">
+                    <DropdownMenuLabel>Cargos Disponíveis</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <ScrollArea className="h-72">
+                      {availableResources.cargos.map(cargo => (
+                          <DropdownMenuCheckboxItem
+                            key={cargo}
+                            checked={selectedCargos.includes(cargo)}
+                            onCheckedChange={(checked) => {
+                              setSelectedCargos(prev => 
+                                checked ? [...prev, cargo] : prev.filter(c => c !== cargo)
+                              )
+                            }}
+                            onSelect={(e) => e.preventDefault()}
+                          >
+                            {cargo}
+                          </DropdownMenuCheckboxItem>
                         ))}
-                    </SelectContent>
-                </Select>
+                    </ScrollArea>
+                  </DropdownMenuContent>
+                </DropdownMenu>
             </div>
           </div>
 
@@ -345,3 +375,5 @@ export function SimulatedExamDialog() {
     </Dialog>
   );
 }
+
+    
