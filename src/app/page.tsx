@@ -434,8 +434,8 @@ export default function LandingPage() {
               <div className="text-center md:text-right">
                 <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
                   A combinação perfeita entre{' '}
-                  <span className="text-accent">Conhecimento Jurídico</span> e{' '}
-                  <span className="text-accent">Estratégia de Prova</span>.
+                  <span className="text-accent">Conhecimento</span> e{' '}
+                  <span className="text-accent">Estratégia</span>.
                 </h2>
               </div>
             </div>
