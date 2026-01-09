@@ -400,44 +400,15 @@ export default function LandingPage() {
               outros são desafios exclusivos.
             </p>
             <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card className="bg-[#DCFCE7] p-6 flex flex-col text-left border-none shadow-sm">
-                <div className="flex-grow">
-                  <Badge variant="destructive" className="flex-shrink-0 mb-3">
-                    <Lock className="w-3 h-3 mr-1" /> BLOQUEADO
-                  </Badge>
-                  <h3 className="font-bold text-gray-800">
-                    Simulado 02 - PPMG
-                  </h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Acesso Restrito: Para acessar, você precisa da
-                    Palavra-Chave.
-                  </p>
-                </div>
-                <Link
-                  href="#"
-                  className="text-sm font-semibold text-primary mt-4 flex items-center gap-1 group"
-                >
-                  Desbloquear Simulado{' '}
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </Link>
-              </Card>
-              <Card className="bg-card p-6 flex flex-col text-left opacity-70 shadow-sm">
-                <div className="flex-grow">
-                  <Badge variant="outline" className="flex-shrink-0 mb-3">
-                    <XCircle className="w-3 h-3 mr-1" /> EXPIRADO
-                  </Badge>
-                  <h3 className="font-bold">Simulado 01 - PPMG</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Prazo Encerrado
-                  </p>
-                </div>
-              </Card>
               <Card className="bg-primary/10 p-6 flex flex-col text-left shadow-sm">
                 <div className="flex-grow">
                   <Badge className="flex-shrink-0 mb-3 bg-green-500/20 text-green-700 hover:bg-green-500/30 border-none">
-                    <Sparkles className="w-3 h-3 mr-1" /> EXTRA
+                    <Sparkles className="w-3 h-3 mr-1" /> Mentor Lite
                   </Badge>
-                  <h3 className="font-bold">2026 é meu ano da APROVAÇÃO!</h3>
+                  <h3 className="font-bold">Acesso à Plataforma de Estudos</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Use nossas ferramentas de IA para praticar com questões, flashcards e mais.
+                  </p>
                 </div>
                 <Link
                   href="/mentorlite"
@@ -512,7 +483,7 @@ export default function LandingPage() {
                 asChild
               >
                 <Link
-                  href="https://api.whatsapp.com/send?phone=5531984585846&text=Quero%20ser%20aprovado%20em%20Concurso%20P%C3%BAblico"
+                  href="https://api.whatsapp.com/send/?phone=5531984585846&text=Quero%20ser%20aprovado%20em%20Concurso%20P%C3%BAblico"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
