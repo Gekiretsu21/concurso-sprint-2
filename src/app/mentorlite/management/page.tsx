@@ -16,7 +16,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
-import { importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteAllFlashcards, deleteFlashcardsByFilter, deleteFlashcardsByIds } from '@/firebase/actions';
+import { importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteAllFlashcards, deleteFlashcardsByFilter, deleteFlashcardsByIds, deleteQuestionsByIds } from '@/firebase/actions';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
 import { SubjectCard } from '@/components/SubjectCard';
@@ -71,6 +71,147 @@ interface Flashcard {
   subject: string;
   topic: string;
   targetRole: string;
+}
+
+interface Question {
+  id: string;
+  Enunciado: string;
+  Materia: string;
+  Ano: string;
+  Cargo: string;
+}
+
+
+function DeleteQuestionsDialog({ availableResources, allQuestions, isLoadingQuestions }: { availableResources: any, allQuestions: Question[] | null, isLoadingQuestions: boolean }) {
+  const { firestore } = useFirebase();
+  const { toast } = useToast();
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  const [filterSubject, setFilterSubject] = useState<string>('all');
+  const [filterAno, setFilterAno] = useState<string>('all');
+  const [filterCargo, setFilterCargo] = useState<string>('all');
+  const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
+
+  // Reset filters and selection when dialog is closed/opened
+  useEffect(() => {
+    if (!isOpen) {
+      setFilterSubject('all');
+      setFilterAno('all');
+      setFilterCargo('all');
+      setSelectedQuestions([]);
+    }
+  }, [isOpen]);
+  
+  const filteredQuestions = useMemo(() => {
+    if (!allQuestions) return [];
+    return allQuestions.filter(q => {
+      const subjectMatch = filterSubject === 'all' || q.Materia === filterSubject;
+      const anoMatch = filterAno === 'all' || q.Ano === filterAno;
+      const cargoMatch = filterCargo === 'all' || q.Cargo === filterCargo;
+      return subjectMatch && anoMatch && cargoMatch;
+    });
+  }, [allQuestions, filterSubject, filterAno, filterCargo]);
+
+  const handleCheckboxChange = (questionId: string) => {
+    setSelectedQuestions(prev => 
+      prev.includes(questionId) ? prev.filter(id => id !== questionId) : [...prev, questionId]
+    );
+  };
+
+  const handleDeleteSelected = async () => {
+    if (!firestore || selectedQuestions.length === 0) return;
+    
+    setIsDeleting(true);
+    try {
+      await deleteQuestionsByIds(firestore, selectedQuestions);
+      toast({
+        title: "Sucesso!",
+        description: `${selectedQuestions.length} questão(ões) foram excluídas.`
+      });
+      setSelectedQuestions([]);
+      // Do not close dialog, allow for more deletions
+    } catch (error) {
+       toast({
+        variant: 'destructive',
+        title: 'Erro ao Excluir',
+        description: 'Não foi possível excluir as questões selecionadas.',
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button variant="destructive" size="sm" disabled={isLoadingQuestions}>
+          <Trash2 />
+          Excluir Questões
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-4xl">
+        <DialogHeader>
+          <DialogTitle>Excluir Questões</DialogTitle>
+          <DialogDescription>
+            Use os filtros para encontrar e excluir questões específicas.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
+            <Select value={filterSubject} onValueChange={setFilterSubject}>
+                <SelectTrigger><SelectValue placeholder="Matéria" /></SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">Todas as Matérias</SelectItem>
+                    {availableResources.questionSubjects.map((s: string) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+            </Select>
+            <Select value={filterAno} onValueChange={setFilterAno}>
+                <SelectTrigger><SelectValue placeholder="Ano" /></SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">Todos os Anos</SelectItem>
+                    {availableResources.questionAnos.map((y: string) => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+                </SelectContent>
+            </Select>
+            <Select value={filterCargo} onValueChange={setFilterCargo}>
+                <SelectTrigger><SelectValue placeholder="Cargo" /></SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">Todos os Cargos</SelectItem>
+                    {availableResources.questionCargos.map((r: string) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                </SelectContent>
+            </Select>
+        </div>
+
+        <ScrollArea className="max-h-72 my-4 border rounded-md">
+            <div className="space-y-2 p-4">
+            {isLoadingQuestions && <div className="flex items-center justify-center p-4"><Loader2 className="h-6 w-6 animate-spin"/></div>}
+            {!isLoadingQuestions && filteredQuestions.length > 0 ? filteredQuestions.map(question => (
+                <div key={question.id} className="flex items-center space-x-3 rounded-md border p-3 bg-muted/50">
+                    <Checkbox
+                        id={`question-${question.id}`}
+                        checked={selectedQuestions.includes(question.id)}
+                        onCheckedChange={() => handleCheckboxChange(question.id)}
+                    />
+                    <Label htmlFor={`question-${question.id}`} className="flex-1 cursor-pointer text-sm truncate">
+                        {question.Enunciado}
+                    </Label>
+                </div>
+            )) : !isLoadingQuestions && <p className="text-sm text-muted-foreground text-center py-4">Nenhuma questão corresponde aos filtros.</p>}
+            </div>
+        </ScrollArea>
+        <DialogFooter className="sm:justify-end">
+          <div className="flex gap-2">
+            <DialogClose asChild><Button variant="outline">Fechar</Button></DialogClose>
+             <Button variant="destructive" onClick={handleDeleteSelected} disabled={isDeleting || selectedQuestions.length === 0}>
+              {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Excluir ({selectedQuestions.length})
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 
@@ -485,7 +626,7 @@ export default function ManagementPage() {
     () => (firestore && user ? collection(firestore, 'questoes') : null),
     [firestore, user]
   );
-  const { data: allQuestions, isLoading: isLoadingSubjects } = useCollection<DocumentData>(questionsQuery);
+  const { data: allQuestions, isLoading: isLoadingSubjects } = useCollection<Question>(questionsQuery);
   
   const flashcardsQuery = useMemoFirebase(
     () => (firestore && user ? collection(firestore, 'flashcards') : null),
@@ -580,6 +721,26 @@ export default function ManagementPage() {
         flashcardCargos: Array.from(cargos).sort(),
     };
 }, [allFlashcards]);
+
+  const availableQuestionResources = useMemo(() => {
+    if (!allQuestions) return { questionSubjects: [], questionAnos: [], questionCargos: [] };
+    
+    const subjects = new Set<string>();
+    const anos = new Set<string>();
+    const cargos = new Set<string>();
+
+    for (const q of allQuestions) {
+        if(q.Materia) subjects.add(q.Materia);
+        if(q.Ano) anos.add(q.Ano);
+        if(q.Cargo) cargos.add(q.Cargo);
+    }
+
+    return {
+        questionSubjects: Array.from(subjects).sort(),
+        questionAnos: Array.from(anos).sort((a,b) => b.localeCompare(a)), // sort descending
+        questionCargos: Array.from(cargos).sort(),
+    };
+  }, [allQuestions]);
 
   const handleImportQuestions = () => {
     if (!firestore || !user) {
@@ -847,7 +1008,18 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
                 <CardTitle>Ferramentas de Manutenção</CardTitle>
                 <CardDescription>Ações para organizar e limpar seus dados.</CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="flex flex-col justify-between p-4 rounded-lg border h-full">
+                    <div>
+                        <h4 className="font-semibold">Excluir Questões</h4>
+                        <p className="text-sm text-muted-foreground mt-1">Filtre e apague questões.</p>
+                    </div>
+                    <DeleteQuestionsDialog
+                      availableResources={availableQuestionResources}
+                      allQuestions={allQuestions}
+                      isLoadingQuestions={isLoadingSubjects}
+                    />
+                </div>
                 <div className="flex flex-col justify-between p-4 rounded-lg border h-full">
                     <div>
                         <h4 className="font-semibold">Excluir Provas</h4>

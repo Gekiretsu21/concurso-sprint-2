@@ -643,6 +643,31 @@ export async function deleteQuestionsBySubject(firestore: Firestore, subject: st
     return snapshot.size;
 }
 
+export async function deleteQuestionsByIds(firestore: Firestore, questionIds: string[]): Promise<void> {
+  if (!questionIds || questionIds.length === 0) {
+    throw new Error("Nenhuma questão foi selecionada para exclusão.");
+  }
+  
+  const batch = writeBatch(firestore);
+  
+  for (const questionId of questionIds) {
+    const questionRef = doc(firestore, 'questoes', questionId);
+    batch.delete(questionRef);
+  }
+  
+  await batch.commit().catch(serverError => {
+    console.error('Firestore batch delete error for specific questions:', serverError);
+    const representativePath = `questoes/${questionIds[0]}`;
+    const permissionError = new FirestorePermissionError({
+      path: representativePath,
+      operation: 'delete',
+      requestResourceData: { questionIds }
+    });
+    errorEmitter.emit('permission-error', permissionError);
+    throw permissionError;
+  });
+}
+
 export async function deletePreviousExams(firestore: Firestore, userId: string, examIds: string[]): Promise<void> {
   if (!examIds || examIds.length === 0) {
     throw new Error("Nenhuma prova foi selecionada para exclusão.");
