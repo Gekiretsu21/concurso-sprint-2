@@ -100,7 +100,7 @@ function QuestionCard({
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Questão {index + 1}</CardTitle>
-          <div className="flex items-center gap-2 text-xs">
+          <div className="hidden md:flex items-center gap-2 text-xs">
             <Badge variant="secondary">{question.Assunto}</Badge>
             <Badge variant="secondary">{question.Cargo}</Badge>
             <Badge variant="outline">{question.Ano}</Badge>

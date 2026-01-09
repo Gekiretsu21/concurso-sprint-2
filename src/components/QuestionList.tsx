@@ -224,7 +224,7 @@ export function QuestionList({ subject, topics, statusFilter = 'all' }: Question
                 <CardHeader className="pt-10">
                   <div className="flex items-center justify-between">
                     <CardTitle>Questão {indexOfFirstQuestion + index + 1}</CardTitle>
-                    <div className="flex items-center gap-4">
+                    <div className="hidden md:flex items-center gap-4">
                       <Badge variant="secondary">{q.Assunto}</Badge>
                       <Badge variant="secondary">{q.Cargo}</Badge>
                       <Badge variant="outline">{q.Ano}</Badge>
