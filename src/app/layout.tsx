@@ -6,6 +6,22 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 export const metadata: Metadata = {
   title: 'Concurso Sprint',
   description: 'Sua plataforma completa para preparação de concursos.',
+  openGraph: {
+    title: 'Concurso Sprint | MentorIA Academy',
+    description: 'Acelere sua aprovação com o método de estudo ativo e estratégico.',
+    url: 'https://my-web-app--studio-6116545318-c4cd8.us-central1.hosted.app/',
+    siteName: 'MentorIA Academy',
+    images: [
+      {
+        url: 'https://my-web-app--studio-6116545318-c4cd8.us-central1.hosted.app/LOGO/logotipo%20site.png',
+        width: 1200,
+        height: 630,
+        alt: 'MentorIA Academy Logo',
+      },
+    ],
+    locale: 'pt_BR',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({
