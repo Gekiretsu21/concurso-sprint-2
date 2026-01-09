@@ -29,9 +29,34 @@ import {
 import { useState } from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { useUser } from '@/firebase';
+import { useFirebase } from '@/firebase/provider';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { useToast } from '@/hooks/use-toast';
 
 export default function LandingPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, isUserLoading } = useUser();
+  const { auth } = useFirebase();
+  const { toast } = useToast();
+
+
+  const handleGoogleLogin = async () => {
+    if (!auth) return;
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error: any) {
+      if (error.code !== 'auth/cancelled-popup-request' && error.code !== 'auth/popup-closed-by-user') {
+        console.error('Error signing in with Google: ', error);
+        toast({
+          variant: 'destructive',
+          title: 'Erro de Login',
+          description: 'Não foi possível fazer login com o Google. Verifique se os pop-ups estão ativados e tente novamente.',
+        });
+      }
+    }
+  };
 
   const navLinks = [
     { name: 'A Realidade', href: '#realidade' },
@@ -41,6 +66,31 @@ export default function LandingPage() {
     { name: 'Mentores', href: '#mentores' },
     { name: 'Arsenal', href: '#arsenal' },
   ];
+  
+  const renderMentorLiteButton = (isMobile = false) => {
+    const commonClasses = "bg-transparent border-accent text-accent hover:bg-accent/10 animate-pulse-glow";
+    const size = isMobile ? 'lg' : 'sm';
+    
+    if (isUserLoading) {
+      return <Button variant="outline" size={size} className={commonClasses} disabled>Mentor Lite</Button>;
+    }
+    
+    if (user) {
+      return (
+        <Button asChild variant="outline" size={size} className={commonClasses}>
+          <Link href="/mentorlite">
+            Mentor Lite
+          </Link>
+        </Button>
+      );
+    }
+    
+    return (
+      <Button variant="outline" size={size} className={commonClasses} onClick={handleGoogleLogin}>
+        Mentor Lite
+      </Button>
+    );
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground font-body antialiased">
@@ -106,11 +156,7 @@ export default function LandingPage() {
               </nav>
               
               <div className="hidden lg:flex items-center gap-2">
-                 <Button asChild variant="outline" size="sm" className="bg-transparent border-accent text-accent hover:bg-accent/10 animate-pulse-glow">
-                  <Link href="/mentorlite">
-                    Mentor Lite
-                  </Link>
-                </Button>
+                 {renderMentorLiteButton()}
                 <AuthButton />
               </div>
 
@@ -131,7 +177,13 @@ export default function LandingPage() {
                     <nav className="flex flex-col gap-6 text-base font-medium mt-8">
                        <Link
                           href="/mentorlite"
-                          onClick={() => setIsMobileMenuOpen(false)}
+                          onClick={(e) => {
+                            if (!user) {
+                              e.preventDefault();
+                              handleGoogleLogin();
+                            }
+                            setIsMobileMenuOpen(false);
+                          }}
                           className='font-bold text-accent'
                         >
                           Mentor Lite
@@ -410,13 +462,16 @@ export default function LandingPage() {
                     Use nossas ferramentas de IA para praticar com questões, flashcards e mais.
                   </p>
                 </div>
-                <Link
-                  href="/mentorlite"
-                  className="text-sm font-semibold text-primary mt-4 flex items-center gap-1 group"
-                >
-                  Acessar Agora{' '}
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </Link>
+                <button
+                    onClick={() => {
+                        if (!user) handleGoogleLogin();
+                        else window.location.href = '/mentorlite';
+                    }}
+                    className="text-sm font-semibold text-primary mt-4 flex items-center gap-1 group"
+                    >
+                    Acessar Agora{' '}
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </button>
               </Card>
               <Card className="bg-accent text-accent-foreground p-6 flex flex-col text-left shadow-sm">
                 <div className="flex-grow">
@@ -496,12 +551,15 @@ export default function LandingPage() {
       </main>
 
       {/* Mobile FAB for Mentor Lite */}
-      <Button asChild size="lg" className="lg:hidden fixed bottom-4 right-4 h-14 w-14 rounded-full shadow-lg z-50 bg-accent text-accent-foreground animate-pulse-glow">
-        <Link href="/mentorlite">
-          <Sparkles />
-          <span className="sr-only">Mentor Lite</span>
-        </Link>
-      </Button>
+       <button 
+        onClick={() => {
+          if (!user) handleGoogleLogin();
+          else window.location.href = '/mentorlite';
+        }}
+        className="lg:hidden fixed bottom-4 right-4 h-14 w-14 rounded-full shadow-lg z-50 bg-accent text-accent-foreground animate-pulse-glow inline-flex items-center justify-center">
+        <Sparkles />
+        <span className="sr-only">Mentor Lite</span>
+      </button>
 
       {/* Footer */}
       <footer className="border-t border-border">
