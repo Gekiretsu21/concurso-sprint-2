@@ -95,13 +95,11 @@ export default function LandingPage() {
   };
   
   const handleProtectedLinkClick = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
     if (!user) {
-      e.preventDefault();
       handleGoogleLogin();
     } else {
-      // For standard navigation, we let the default browser behavior handle it.
-      // For dynamically handled routes (like in a Sheet), we might need to close it.
-      // This logic seems fine for now.
+      window.location.href = href;
     }
   };
 
@@ -456,51 +454,51 @@ export default function LandingPage() {
               outros são desafios exclusivos.
             </p>
             <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card className="bg-primary/10 p-6 flex flex-col text-left shadow-sm">
+              <Card className="bg-green-100 dark:bg-green-900/30 p-6 flex flex-col text-left shadow-sm">
                 <div className="flex-grow">
                   <Badge className="flex-shrink-0 mb-3 bg-green-500/20 text-green-700 hover:bg-green-500/30 border-none">
                     <Sparkles className="w-3 h-3 mr-1" /> Gratuito
                   </Badge>
-                  <h3 className="font-bold">Mentor Lite</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <h3 className="font-bold text-green-900 dark:text-green-200">Mentor Lite</h3>
+                  <p className="text-sm text-green-800 dark:text-green-300/80 mt-1">
                     Use nossas ferramentas de IA para praticar com questões, flashcards e mais.
                   </p>
                 </div>
                 <button
                     onClick={(e) => handleProtectedLinkClick(e, '/mentorlite')}
-                    className="text-sm font-semibold text-primary mt-4 flex items-center gap-1 group"
+                    className="text-sm font-semibold text-green-700 dark:text-green-300 mt-4 flex items-center gap-1 group"
                     >
                     Acessar Agora{' '}
                     <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                 </button>
               </Card>
               
-               <Card className="bg-yellow-400/10 p-6 flex flex-col text-left shadow-sm">
+               <Card className="bg-yellow-100 dark:bg-yellow-900/30 p-6 flex flex-col text-left shadow-sm">
                 <div className="flex-grow">
                   <Badge className="flex-shrink-0 mb-3 bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30 border-none">
                     <Shield className="w-3 h-3 mr-1" /> DESAFIO
                   </Badge>
-                  <h3 className="font-bold">Simulados da Comunidade</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <h3 className="font-bold text-yellow-900 dark:text-yellow-200">Simulados da Comunidade</h3>
+                  <p className="text-sm text-yellow-800 dark:text-yellow-300/80 mt-1">
                     A prática leva à aprovação. Teste seu conhecimento com simulados reais e vença a concorrência.
                   </p>
                 </div>
                 <button
                     onClick={(e) => handleProtectedLinkClick(e, '/mentorlite/community-simulados')}
-                    className="text-sm font-semibold text-primary mt-4 flex items-center gap-1 group"
+                    className="text-sm font-semibold text-yellow-700 dark:text-yellow-300 mt-4 flex items-center gap-1 group"
                     >
                     Encarar o Desafio{' '}
                     <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                 </button>
               </Card>
 
-              <Card className="bg-red-500/10 p-6 flex flex-col text-left shadow-sm">
+              <Card className="bg-red-100 dark:bg-red-900/30 p-6 flex flex-col text-left shadow-sm">
                 <div className="flex-grow">
                   <Badge variant="destructive" className="flex-shrink-0 mb-3 bg-red-500/20 text-red-700 hover:bg-red-500/30 border-none">
                     <Crown className="w-3 h-3 mr-1" /> VIP
                   </Badge>
-                  <h3 className="font-bold">Correção de Redação</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <h3 className="font-bold text-red-900 dark:text-red-200">Correção de Redação</h3>
+                  <p className="text-sm text-red-800 dark:text-red-300/80 mt-1">
                     Somente para quem quer tirar 90+ na redação. Correção
                     individual detalhada.
                   </p>
@@ -509,21 +507,21 @@ export default function LandingPage() {
                   href="https://api.whatsapp.com/send/?phone=5531984585846&text=Quero%20saber%20mais%20sobre%20a%20corre%C3%A7%C3%A3o%20de%20Reda%C3%A7%C3%A3o"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm font-semibold text-primary mt-4 flex items-center gap-1 group"
+                  className="text-sm font-semibold text-red-700 dark:text-red-300 mt-4 flex items-center gap-1 group"
                 >
                   Adquirir correção{' '}
                   <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Card>
-              <Card className="bg-[#E2E8F0] p-6 flex flex-col text-left col-span-1 md:col-span-2 lg:col-span-1 border-none shadow-sm">
+              <Card className="bg-blue-100 dark:bg-blue-900/30 p-6 flex flex-col text-left col-span-1 md:col-span-2 lg:col-span-1 border-none shadow-sm">
                 <div className="flex-grow">
                   <Badge className="flex-shrink-0 mb-3 bg-blue-500/20 text-blue-700 hover:bg-blue-500/30 border-none">
                     DRIVE
                   </Badge>
-                  <h3 className="font-bold text-gray-800">
+                  <h3 className="font-bold text-blue-900 dark:text-blue-200">
                     Drive com guia de redação e muito mais...
                   </h3>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-blue-800 dark:text-blue-300/80 mt-1">
                     Do zero à aprovação. Estruturas prontas...
                   </p>
                 </div>
@@ -531,7 +529,7 @@ export default function LandingPage() {
                   href="https://drive.google.com/drive/folders/1nt9Tek397SZFw5mOo14Y6fzCVdhsicLX?usp=drive_link"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm font-semibold text-primary mt-4 flex items-center gap-1 group"
+                  className="text-sm font-semibold text-blue-700 dark:text-blue-300 mt-4 flex items-center gap-1 group"
                 >
                   Acessar Drive{' '}
                   <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -573,9 +571,7 @@ export default function LandingPage() {
 
       {/* Mobile FAB for Mentor Lite */}
        <button 
-        onClick={() => {
-          handleProtectedLinkClick({} as React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>, '/mentorlite');
-        }}
+        onClick={(e) => handleProtectedLinkClick(e, '/mentorlite')}
         className="lg:hidden fixed bottom-4 right-4 h-14 w-14 rounded-full shadow-lg z-50 bg-accent text-accent-foreground animate-pulse-glow inline-flex items-center justify-center">
         <Sparkles />
         <span className="sr-only">Mentor Lite</span>
