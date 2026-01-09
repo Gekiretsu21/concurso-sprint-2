@@ -481,7 +481,7 @@ async function getRandomQuestions(
 
 interface CreateSimulatedExamDTO {
   name: string;
-  cargos?: string[];
+  cargos: string[];
   subjects: { 
     [subject: string]: {
       count: number;
@@ -500,8 +500,40 @@ export async function createSimulatedExam(
 
   for (const [subject, selection] of Object.entries(dto.subjects)) {
     if (selection.count > 0) {
-      const questionIds = await getRandomQuestions(firestore, subject, selection.count, selection.topics, dto.cargos);
-      allQuestionIds.push(...questionIds);
+      // Get all questions for the subject first, then filter client-side
+      const subjectQuestionsSnapshot = await getDocs(query(collection(firestore, 'questoes'), where('Materia', '==', subject)));
+      let potentialQuestions = subjectQuestionsSnapshot.docs.filter(doc => doc.data().status !== 'hidden');
+
+      // Filter by cargos
+      if (dto.cargos && dto.cargos.length > 0) {
+        potentialQuestions = potentialQuestions.filter(doc => {
+          const cargo = doc.data().Cargo;
+          return cargo && dto.cargos.includes(cargo);
+        });
+      }
+
+      // Filter by topics
+      if (selection.topics && selection.topics.length > 0) {
+         potentialQuestions = potentialQuestions.filter(doc => {
+            const assunto = doc.data().Assunto;
+            return assunto && selection.topics.includes(assunto);
+        });
+      }
+
+      const availableIds = potentialQuestions.map(doc => doc.id);
+      
+      if (availableIds.length < selection.count) {
+          let errorMsg = `Não há questões suficientes para a matéria '${subject}'`;
+          if (dto.cargos && dto.cargos.length > 0) errorMsg += ` para o(s) cargo(s) [${dto.cargos.join(', ')}]`;
+          if (selection.topics && selection.topics.length > 0) errorMsg += ` nos tópicos [${selection.topics.join(', ')}]`;
+          errorMsg += `. Encontradas: ${availableIds.length}, Solicitadas: ${selection.count}.`;
+          throw new Error(errorMsg);
+      }
+      
+      const shuffled = availableIds.sort(() => 0.5 - Math.random());
+      const selectedIds = shuffled.slice(0, selection.count);
+
+      allQuestionIds.push(...selectedIds);
       totalQuestions += selection.count;
     }
   }
@@ -743,6 +775,31 @@ export async function deleteFlashcardsByFilter(firestore: Firestore, filters: De
     });
 
     return snapshot.size;
+}
+
+export async function deleteFlashcardsByIds(firestore: Firestore, flashcardIds: string[]): Promise<void> {
+  if (!flashcardIds || flashcardIds.length === 0) {
+    throw new Error("Nenhum flashcard foi selecionado para exclusão.");
+  }
+  
+  const batch = writeBatch(firestore);
+  
+  for (const flashcardId of flashcardIds) {
+    const flashcardRef = doc(firestore, 'flashcards', flashcardId);
+    batch.delete(flashcardRef);
+  }
+  
+  await batch.commit().catch(serverError => {
+    console.error('Firestore batch delete error for specific flashcards:', serverError);
+    const representativePath = `flashcards/${flashcardIds[0]}`;
+    const permissionError = new FirestorePermissionError({
+      path: representativePath,
+      operation: 'delete',
+      requestResourceData: { flashcardIds }
+    });
+    errorEmitter.emit('permission-error', permissionError);
+    throw permissionError;
+  });
 }
 
 
