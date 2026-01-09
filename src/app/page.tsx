@@ -11,6 +11,7 @@ import {
   Lock,
   MessageCircle,
   Rocket,
+  Shield,
   ShieldCheck,
   Sparkles,
   XCircle,
@@ -91,6 +92,16 @@ export default function LandingPage() {
       </Button>
     );
   };
+  
+  const handleProtectedLinkClick = (e: React.MouseEvent<HTMLButtonElement>, href: string) => {
+    if (!user) {
+      e.preventDefault();
+      handleGoogleLogin();
+    } else {
+      window.location.href = href;
+    }
+  };
+
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground font-body antialiased">
@@ -457,22 +468,39 @@ export default function LandingPage() {
                   <Badge className="flex-shrink-0 mb-3 bg-green-500/20 text-green-700 hover:bg-green-500/30 border-none">
                     <Sparkles className="w-3 h-3 mr-1" /> Mentor Lite
                   </Badge>
-                  <h3 className="font-bold">Acesso à Plataforma de Estudos</h3>
+                  <h3 className="font-bold">Acesso à Plataforma de IA</h3>
                   <p className="text-sm text-muted-foreground mt-1">
                     Use nossas ferramentas de IA para praticar com questões, flashcards e mais.
                   </p>
                 </div>
                 <button
-                    onClick={() => {
-                        if (!user) handleGoogleLogin();
-                        else window.location.href = '/mentorlite';
-                    }}
+                    onClick={(e) => handleProtectedLinkClick(e, '/mentorlite')}
                     className="text-sm font-semibold text-primary mt-4 flex items-center gap-1 group"
                     >
                     Acessar Agora{' '}
                     <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                 </button>
               </Card>
+              
+               <Card className="bg-primary/10 p-6 flex flex-col text-left shadow-sm">
+                <div className="flex-grow">
+                  <Badge className="flex-shrink-0 mb-3 bg-red-500/20 text-red-700 hover:bg-red-500/30 border-none">
+                    <Shield className="w-3 h-3 mr-1" /> DESAFIO
+                  </Badge>
+                  <h3 className="font-bold">Simulados da Comunidade</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    A prática leva à aprovação. Teste seu conhecimento com simulados reais e vença a concorrência.
+                  </p>
+                </div>
+                <button
+                    onClick={(e) => handleProtectedLinkClick(e, '/mentorlite/community-simulados')}
+                    className="text-sm font-semibold text-primary mt-4 flex items-center gap-1 group"
+                    >
+                    Encarar o Desafio{' '}
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </button>
+              </Card>
+
               <Card className="bg-accent text-accent-foreground p-6 flex flex-col text-left shadow-sm">
                 <div className="flex-grow">
                   <Badge variant="outline" className="flex-shrink-0 mb-3">
