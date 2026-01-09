@@ -460,6 +460,8 @@ export default function LandingPage() {
                 </div>
                 <Link
                   href="https://api.whatsapp.com/send/?phone=5531984585846&text=Quero%20saber%20mais%20sobre%20a%20corre%C3%A7%C3%A3o%20de%20Reda%C3%A7%C3%A3o"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-sm font-semibold text-background mt-4 flex items-center gap-1 group"
                 >
                   Adquirir correção{' '}
@@ -478,6 +480,15 @@ export default function LandingPage() {
                     Do zero à aprovação. Estruturas prontas...
                   </p>
                 </div>
+                <Link
+                  href="https://drive.google.com/drive/folders/1nt9Tek397SZFw5mOo14Y6fzCVdhsicLX?usp=drive_link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-semibold text-primary mt-4 flex items-center gap-1 group"
+                >
+                  Acessar Drive{' '}
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </Link>
               </Card>
             </div>
           </div>
