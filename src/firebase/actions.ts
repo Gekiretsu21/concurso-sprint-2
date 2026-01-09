@@ -22,6 +22,7 @@ import {
   increment,
   arrayUnion,
   FieldValue,
+  QueryConstraint,
 } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -442,36 +443,40 @@ async function getRandomQuestions(
   topics?: string[],
   cargos?: string[]
 ): Promise<string[]> {
-  const questionsCollection = collection(firestore, 'questoes');
+    const questionsCollection = collection(firestore, 'questoes');
+    const q = query(questionsCollection, where('Materia', '==', subject));
+    const snapshot = await getDocs(q);
 
-  // Build the query constraints
-  const constraints = [where('Materia', '==', subject)];
-  if (topics && topics.length > 0) {
-      constraints.push(where('Assunto', 'in', topics));
-  }
-  if (cargos && cargos.length > 0) {
-      constraints.push(where('Cargo', 'in', cargos));
-  }
-  
-  const q = query(questionsCollection, and(...constraints));
+    let filteredQuestions = snapshot.docs.filter(doc => doc.data().status !== 'hidden');
 
-  const snapshot = await getDocs(q);
-  
-  // Manually filter out hidden questions from the results.
-  const activeQuestions = snapshot.docs.filter(doc => doc.data().status !== 'hidden');
-  
-  const allQuestionIds = activeQuestions.map(doc => doc.id);
+    // Filter by cargos client-side if provided
+    if (cargos && cargos.length > 0) {
+        filteredQuestions = filteredQuestions.filter(doc => {
+            const cargo = doc.data().Cargo;
+            return cargo && cargos.includes(cargo);
+        });
+    }
 
-  if (allQuestionIds.length < count) {
-      let errorMsg = `Não há questões suficientes para a matéria '${subject}'`;
-      if (cargos && cargos.length > 0) errorMsg += ` para o(s) cargo(s) [${cargos.join(', ')}]`;
-      if (topics && topics.length > 0) errorMsg += ` nos tópicos [${topics.join(', ')}]`;
-      errorMsg += `. Encontradas: ${allQuestionIds.length}, Solicitadas: ${count}.`;
-      throw new Error(errorMsg);
-  }
+    // Filter by topics client-side if provided
+    if (topics && topics.length > 0) {
+        filteredQuestions = filteredQuestions.filter(doc => {
+            const assunto = doc.data().Assunto;
+            return assunto && topics.includes(assunto);
+        });
+    }
 
-  const shuffled = allQuestionIds.sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, count);
+    const allQuestionIds = filteredQuestions.map(doc => doc.id);
+
+    if (allQuestionIds.length < count) {
+        let errorMsg = `Não há questões suficientes para a matéria '${subject}'`;
+        if (cargos && cargos.length > 0) errorMsg += ` para o(s) cargo(s) [${cargos.join(', ')}]`;
+        if (topics && topics.length > 0) errorMsg += ` nos tópicos [${topics.join(', ')}]`;
+        errorMsg += `. Encontradas: ${allQuestionIds.length}, Solicitadas: ${count}.`;
+        throw new Error(errorMsg);
+    }
+
+    const shuffled = allQuestionIds.sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
 }
 
 interface CreateSimulatedExamDTO {
@@ -671,32 +676,6 @@ export async function deleteCommunitySimulados(firestore: Firestore, simuladoIds
   });
 }
 
-
-export async function deleteFlashcards(firestore: Firestore, flashcardIds: string[]): Promise<void> {
-  if (!flashcardIds || flashcardIds.length === 0) {
-    throw new Error("Nenhum flashcard foi selecionado para exclusão.");
-  }
-  
-  const batch = writeBatch(firestore);
-  
-  for (const flashcardId of flashcardIds) {
-    const flashcardRef = doc(firestore, 'flashcards', flashcardId);
-    batch.delete(flashcardRef);
-  }
-  
-  await batch.commit().catch(serverError => {
-    console.error('Firestore batch delete error for flashcards:', serverError);
-    const representativePath = `flashcards/${flashcardIds[0]}`;
-    const permissionError = new FirestorePermissionError({
-      path: representativePath,
-      operation: 'delete',
-      requestResourceData: { flashcardIds }
-    });
-    errorEmitter.emit('permission-error', permissionError);
-    throw permissionError;
-  });
-}
-
 export async function deleteAllFlashcards(firestore: Firestore): Promise<void> {
     const flashcardsRef = collection(firestore, 'flashcards');
     const snapshot = await getDocs(flashcardsRef);
@@ -719,6 +698,51 @@ export async function deleteAllFlashcards(firestore: Firestore): Promise<void> {
         errorEmitter.emit('permission-error', permissionError);
         throw permissionError;
     });
+}
+
+interface DeleteFlashcardsFilters {
+    subject?: string;
+    topic?: string;
+    cargo?: string;
+}
+
+export async function deleteFlashcardsByFilter(firestore: Firestore, filters: DeleteFlashcardsFilters): Promise<number> {
+    const { subject, topic, cargo } = filters;
+    const flashcardsRef = collection(firestore, 'flashcards');
+    
+    const constraints: QueryConstraint[] = [];
+    if (subject) constraints.push(where('subject', '==', subject));
+    if (topic) constraints.push(where('topic', '==', topic));
+    if (cargo) constraints.push(where('targetRole', '==', cargo));
+
+    if (constraints.length === 0) {
+        throw new Error("Pelo menos um filtro deve ser fornecido para exclusão.");
+    }
+
+    const q = query(flashcardsRef, and(...constraints));
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+        return 0;
+    }
+
+    const batch = writeBatch(firestore);
+    snapshot.docs.forEach(doc => {
+        batch.delete(doc.ref);
+    });
+
+    await batch.commit().catch(serverError => {
+        console.error('Firestore batch delete error for flashcards by filter:', serverError);
+        const permissionError = new FirestorePermissionError({
+            path: 'flashcards',
+            operation: 'delete',
+            requestResourceData: { filters }
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw permissionError;
+    });
+
+    return snapshot.size;
 }
 
 
@@ -790,5 +814,3 @@ export async function addQuestionComment(
       throw permissionError;
   });
 }
-
-    

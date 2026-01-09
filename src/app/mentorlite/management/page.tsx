@@ -16,7 +16,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
-import { importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteFlashcards, deleteAllFlashcards } from '@/firebase/actions';
+import { importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteAllFlashcards, deleteFlashcardsByFilter } from '@/firebase/actions';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
 import { SubjectCard } from '@/components/SubjectCard';
@@ -37,6 +37,8 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 
 // Helper to generate a URL-friendly slug from a subject name
 const createSubjectSlug = (subject: string) => {
@@ -67,6 +69,8 @@ interface Flashcard {
   id: string;
   front: string;
   subject: string;
+  topic: string;
+  targetRole: string;
 }
 
 
@@ -248,39 +252,57 @@ function DeleteCommunitySimuladosDialog() {
   );
 }
 
-function DeleteFlashcardsDialog() {
+function DeleteFlashcardsDialog({ availableResources, allFlashcards, isLoadingFlashcards }: { availableResources: any, allFlashcards: Flashcard[] | null, isLoadingFlashcards: boolean }) {
   const { firestore } = useFirebase();
-  const { user } = useUser();
   const { toast } = useToast();
 
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [selectedFlashcards, setSelectedFlashcards] = useState<string[]>([]);
   
-  const flashcardsQuery = useMemoFirebase(() =>
-      firestore && user ? query(collection(firestore, `flashcards`)) : null,
-    [firestore, user]
-  );
-  const { data: flashcards, isLoading } = useCollection<Flashcard>(flashcardsQuery);
+  const [filterSubject, setFilterSubject] = useState<string>('all');
+  const [filterTopic, setFilterTopic] = useState<string>('all');
+  const [filterCargo, setFilterCargo] = useState<string>('all');
 
-  const handleCheckboxChange = (flashcardId: string) => {
-    setSelectedFlashcards(prev => 
-      prev.includes(flashcardId) ? prev.filter(id => id !== flashcardId) : [...prev, flashcardId]
-    );
-  };
+  useEffect(() => {
+    // Reset topic and cargo filters when subject changes
+    setFilterTopic('all');
+    setFilterCargo('all');
+  }, [filterSubject]);
+  
+  const filteredFlashcards = useMemo(() => {
+    if (!allFlashcards) return [];
+    return allFlashcards.filter(fc => {
+      const subjectMatch = filterSubject === 'all' || fc.subject === filterSubject;
+      const topicMatch = filterTopic === 'all' || fc.topic === filterTopic;
+      const cargoMatch = filterCargo === 'all' || fc.targetRole === filterCargo;
+      return subjectMatch && topicMatch && cargoMatch;
+    });
+  }, [allFlashcards, filterSubject, filterTopic, filterCargo]);
 
-  const handleDelete = async () => {
-    if (!firestore || selectedFlashcards.length === 0) return;
+  const handleDeleteByFilter = async () => {
+    if (!firestore) return;
+    if (filterSubject === 'all' && filterTopic === 'all' && filterCargo === 'all') {
+      toast({
+        variant: 'destructive',
+        title: 'Ação Necessária',
+        description: 'Selecione pelo menos um filtro para exclusão em massa, ou use "Excluir Todos".'
+      });
+      return;
+    }
     
     setIsDeleting(true);
     try {
-      await deleteFlashcards(firestore, selectedFlashcards);
+      const deletedCount = await deleteFlashcardsByFilter(firestore, {
+        subject: filterSubject === 'all' ? undefined : filterSubject,
+        topic: filterTopic === 'all' ? undefined : filterTopic,
+        cargo: filterCargo === 'all' ? undefined : filterCargo,
+      });
       toast({
         title: "Sucesso!",
-        description: `${selectedFlashcards.length} flashcard(s) foram excluídos.`
+        description: `${deletedCount} flashcard(s) foram excluídos com base nos filtros.`
       });
-      setSelectedFlashcards([]);
-      // Do not close the dialog, just refresh the list.
+      // Reset filters after deletion
+      setFilterSubject('all');
     } catch (error) {
        toast({
         variant: 'destructive',
@@ -301,7 +323,6 @@ function DeleteFlashcardsDialog() {
         title: "Sucesso!",
         description: "Todos os flashcards foram excluídos."
       });
-      setSelectedFlashcards([]);
       setIsOpen(false);
     } catch (error) {
        toast({
@@ -317,39 +338,59 @@ function DeleteFlashcardsDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="destructive" size="sm" disabled={!user}>
+        <Button variant="destructive" size="sm" disabled={isLoadingFlashcards}>
           <Layers />
           Excluir Flashcards
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>Excluir Flashcards</DialogTitle>
           <DialogDescription>
-            Selecione os flashcards que você deseja excluir permanentemente ou apague todos.
+            Selecione filtros para excluir flashcards em massa, ou apague todos de uma vez.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="max-h-72 my-4">
-            <div className="space-y-4 pr-6">
-            {isLoading && <div className="flex items-center justify-center p-4"><Loader2 className="h-6 w-6 animate-spin"/></div>}
-            {!isLoading && flashcards && flashcards.length > 0 ? flashcards.map(flashcard => (
-                <div key={flashcard.id} className="flex items-center space-x-2 rounded-md border p-3">
-                    <Checkbox
-                        id={`flashcard-${flashcard.id}`}
-                        checked={selectedFlashcards.includes(flashcard.id)}
-                        onCheckedChange={() => handleCheckboxChange(flashcard.id)}
-                    />
-                    <Label htmlFor={`flashcard-${flashcard.id}`} className="flex-1 cursor-pointer truncate">
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
+            <Select value={filterSubject} onValueChange={setFilterSubject}>
+                <SelectTrigger><SelectValue placeholder="Matéria" /></SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">Todas as Matérias</SelectItem>
+                    {availableResources.flashcardSubjects.map((s: string) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+            </Select>
+            <Select value={filterTopic} onValueChange={setFilterTopic} disabled={filterSubject === 'all'}>
+                <SelectTrigger><SelectValue placeholder="Assunto" /></SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">Todos os Assuntos</SelectItem>
+                    {(availableResources.topicsByFlashcardSubject[filterSubject] || []).map((t: string) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                </SelectContent>
+            </Select>
+            <Select value={filterCargo} onValueChange={setFilterCargo}>
+                <SelectTrigger><SelectValue placeholder="Cargo" /></SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">Todos os Cargos</SelectItem>
+                    {availableResources.flashcardCargos.map((r: string) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                </SelectContent>
+            </Select>
+        </div>
+
+        <ScrollArea className="max-h-72 my-4 border rounded-md">
+            <div className="space-y-2 p-4">
+            {isLoadingFlashcards && <div className="flex items-center justify-center p-4"><Loader2 className="h-6 w-6 animate-spin"/></div>}
+            {!isLoadingFlashcards && filteredFlashcards.length > 0 ? filteredFlashcards.map(flashcard => (
+                <div key={flashcard.id} className="flex items-center space-x-2 rounded-md border p-3 bg-muted/50">
+                    <Label htmlFor={`flashcard-${flashcard.id}`} className="flex-1 cursor-default text-sm truncate">
                         {flashcard.front}
                     </Label>
                 </div>
-            )) : !isLoading && <p className="text-sm text-muted-foreground text-center py-4">Nenhum flashcard encontrado.</p>}
+            )) : !isLoadingFlashcards && <p className="text-sm text-muted-foreground text-center py-4">Nenhum flashcard corresponde aos filtros.</p>}
             </div>
         </ScrollArea>
         <DialogFooter className="sm:justify-between">
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="destructive" disabled={isDeleting || !flashcards || flashcards.length === 0}>
+              <Button variant="destructive" disabled={isDeleting || isLoadingFlashcards || !allFlashcards || allFlashcards.length === 0}>
                 Excluir Todos
               </Button>
             </AlertDialogTrigger>
@@ -371,9 +412,9 @@ function DeleteFlashcardsDialog() {
           </AlertDialog>
           <div className="flex gap-2">
             <DialogClose asChild><Button variant="outline">Fechar</Button></DialogClose>
-            <Button onClick={handleDelete} disabled={isDeleting || selectedFlashcards.length === 0}>
+            <Button variant="destructive" onClick={handleDeleteByFilter} disabled={isDeleting || filteredFlashcards.length === 0}>
               {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Excluir ({selectedFlashcards.length})
+              Excluir {filteredFlashcards.length > 0 ? `(${filteredFlashcards.length})` : ''}
             </Button>
           </div>
         </DialogFooter>
@@ -404,6 +445,13 @@ export default function ManagementPage() {
     [firestore, user]
   );
   const { data: allQuestions, isLoading: isLoadingSubjects } = useCollection<DocumentData>(questionsQuery);
+  
+  const flashcardsQuery = useMemoFirebase(
+    () => (firestore && user ? collection(firestore, 'flashcards') : null),
+    [firestore, user]
+  );
+  const { data: allFlashcards, isLoading: isLoadingFlashcards } = useCollection<Flashcard>(flashcardsQuery);
+
 
   const availableSubjects = useMemo((): SubjectWithCount[] => {
     if (!allQuestions) return [];
@@ -459,6 +507,38 @@ export default function ManagementPage() {
     return Object.values(subjectCounts)
         .sort((a, b) => a.name.localeCompare(b.name));
   }, [allQuestions]);
+
+  const availableFlashcardResources = useMemo(() => {
+    if (!allFlashcards) return { flashcardSubjects: [], topicsByFlashcardSubject: {}, flashcardCargos: [] };
+    
+    const subjects = new Set<string>();
+    const topicsBySubject: Record<string, Set<string>> = {};
+    const cargos = new Set<string>();
+
+    for (const fc of allFlashcards) {
+        if(fc.subject) {
+            subjects.add(fc.subject);
+            if (!topicsBySubject[fc.subject]) {
+                topicsBySubject[fc.subject] = new Set();
+            }
+            if(fc.topic) {
+                topicsBySubject[fc.subject].add(fc.topic);
+            }
+        }
+        if(fc.targetRole) {
+            cargos.add(fc.targetRole);
+        }
+    }
+
+    return {
+        flashcardSubjects: Array.from(subjects).sort(),
+        topicsByFlashcardSubject: Object.entries(topicsBySubject).reduce((acc, [subject, topicsSet]) => {
+            acc[subject] = Array.from(topicsSet).sort();
+            return acc;
+        }, {} as Record<string, string[]>),
+        flashcardCargos: Array.from(cargos).sort(),
+    };
+}, [allFlashcards]);
 
   const handleImportQuestions = () => {
     if (!firestore || !user) {
@@ -746,7 +826,11 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
                         <h4 className="font-semibold">Excluir Flashcards</h4>
                         <p className="text-sm text-muted-foreground mt-1">Gerencie os flashcards importados.</p>
                     </div>
-                    <DeleteFlashcardsDialog />
+                    <DeleteFlashcardsDialog 
+                      availableResources={availableFlashcardResources} 
+                      allFlashcards={allFlashcards}
+                      isLoadingFlashcards={isLoadingFlashcards}
+                    />
                 </div>
             </CardContent>
         </Card>
