@@ -176,7 +176,7 @@ export async function importQuestions(
     );
   }
 
-  const questionsStr = text.trim().split(';');
+  const questionsStr = text.trim().split('\n'); // Each line is a question
   const questionsCollection = collection(firestore, 'questoes');
   const batch = writeBatch(firestore);
   const newQuestionIds: string[] = [];
@@ -184,7 +184,7 @@ export async function importQuestions(
   for (const qStr of questionsStr) {
     if (qStr.trim() === '') continue;
 
-    const parts = qStr.split('/');
+    const parts = qStr.split('|'); // Use '|' as the field separator
     if (parts.length < 11) {
       console.warn(
         'Skipping invalid question format (less than 11 parts):',

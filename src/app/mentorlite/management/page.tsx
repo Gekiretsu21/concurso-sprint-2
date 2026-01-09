@@ -562,11 +562,11 @@ export default function ManagementPage() {
                              <DialogHeader>
                                 <DialogTitle>Modelo de Importação</DialogTitle>
                                 <DialogDescription>
-                                    Use o formato abaixo, separando cada campo com uma barra (`/`). Cada questão deve terminar com um ponto e vírgula (`;`).
+                                  Use o formato abaixo, separando cada campo com um pipe (`|`). Cada questão deve estar em uma nova linha.
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="rounded-md bg-muted p-4 text-sm font-mono mt-4 break-words">
-                                Materia/Ano/Assunto/Cargo/Enunciado/a/b/c/d/e/correctAnswer;
+                                Materia | Ano | Assunto | Cargo | Enunciado | a | b | c | d | e | correctAnswer
                             </div>
                         </DialogContent>
                     </Dialog>
