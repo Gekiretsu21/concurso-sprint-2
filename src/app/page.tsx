@@ -6,17 +6,18 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   ArrowRight,
+  BrainCircuit,
   Crown,
   Library,
   Lock,
   MessageCircle,
   Rocket,
+  Scale,
   Shield,
   ShieldCheck,
   Sparkles,
   XCircle,
   Zap,
-  Scale,
   Menu,
 } from 'lucide-react';
 import { AuthButton } from '@/components/AuthButton';
@@ -405,38 +406,30 @@ export default function LandingPage() {
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div className="space-y-8">
                 <Card className="flex items-center gap-6 p-6 bg-card shadow-sm">
-                  <img
-                    src="https://picsum.photos/seed/mentor1/100/100"
-                    alt="Prof. Willian Toledo"
-                    className="w-24 h-24 rounded-full object-cover"
-                  />
+                  <div className="flex h-24 w-24 flex-shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <Scale className="h-12 w-12 text-primary" />
+                  </div>
                   <div>
                     <h3 className="text-xl font-bold">Prof. Willian Toledo</h3>
                     <p className="text-primary font-semibold">
-                      1º Tenente da PMMG
+                      1º Tenente PM
                     </p>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Bacharel em Direito Público.
-                      <br />
-                      Pós-graduado em Ciências Militares.
+                      Aprovado na PMMG com 18 anos, CTSP (2X), CFO e OAB. Bacharel em Direito, Bacharel em Ciências Militares e Pós-Graduado em Direito Público.
                     </p>
                   </div>
                 </Card>
                 <Card className="flex items-center gap-6 p-6 bg-card shadow-sm">
-                  <img
-                    src="https://picsum.photos/seed/mentor2/100/100"
-                    alt="Prof. Álvaro Torres"
-                    className="w-24 h-24 rounded-full object-cover"
-                  />
+                  <div className="flex h-24 w-24 flex-shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <BrainCircuit className="h-12 w-12 text-primary" />
+                  </div>
                   <div>
                     <h3 className="text-xl font-bold">Prof. Álvaro Torres</h3>
                     <p className="text-primary font-semibold">
-                      Aprovado PM, CBM, GCM, ANALI. SIST.
+                     Aprovado PMMG, PMGO, CBMMG, CBMERJ, CBMGO, GCM, ANALI. SIST, CAM. MUN.
                     </p>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Bacharel em Sistemas de Informação.
-                      <br />
-                      Pós-Graduado em Inteligência e Segurança.
+                      Bacharel em Sistemas de Informação. Pós-Graduado em Inteligência e Segurança.
                     </p>
                   </div>
                 </Card>
