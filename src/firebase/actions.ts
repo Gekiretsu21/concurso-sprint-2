@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -438,7 +439,8 @@ async function getRandomQuestions(
   firestore: Firestore,
   subject: string,
   count: number,
-  topics?: string[]
+  topics?: string[],
+  cargo?: string
 ): Promise<string[]> {
   const questionsCollection = collection(firestore, 'questoes');
 
@@ -446,6 +448,9 @@ async function getRandomQuestions(
   const constraints = [where('Materia', '==', subject)];
   if (topics && topics.length > 0) {
       constraints.push(where('Assunto', 'in', topics));
+  }
+  if (cargo) {
+      constraints.push(where('Cargo', '==', cargo));
   }
   
   const q = query(questionsCollection, and(...constraints));
@@ -458,8 +463,11 @@ async function getRandomQuestions(
   const allQuestionIds = activeQuestions.map(doc => doc.id);
 
   if (allQuestionIds.length < count) {
-      const topicInfo = topics && topics.length > 0 ? ` nos tópicos [${topics.join(', ')}]` : '';
-      throw new Error(`Não há questões suficientes para a matéria '${subject}'${topicInfo}. Encontradas: ${allQuestionIds.length}, Solicitadas: ${count}.`);
+      let errorMsg = `Não há questões suficientes para a matéria '${subject}'`;
+      if (cargo) errorMsg += ` para o cargo '${cargo}'`;
+      if (topics && topics.length > 0) errorMsg += ` nos tópicos [${topics.join(', ')}]`;
+      errorMsg += `. Encontradas: ${allQuestionIds.length}, Solicitadas: ${count}.`;
+      throw new Error(errorMsg);
   }
 
   const shuffled = allQuestionIds.sort(() => 0.5 - Math.random());
@@ -468,6 +476,7 @@ async function getRandomQuestions(
 
 interface CreateSimulatedExamDTO {
   name: string;
+  cargo?: string;
   subjects: { 
     [subject: string]: {
       count: number;
@@ -486,7 +495,7 @@ export async function createSimulatedExam(
 
   for (const [subject, selection] of Object.entries(dto.subjects)) {
     if (selection.count > 0) {
-      const questionIds = await getRandomQuestions(firestore, subject, selection.count, selection.topics);
+      const questionIds = await getRandomQuestions(firestore, subject, selection.count, selection.topics, dto.cargo);
       allQuestionIds.push(...questionIds);
       totalQuestions += selection.count;
     }

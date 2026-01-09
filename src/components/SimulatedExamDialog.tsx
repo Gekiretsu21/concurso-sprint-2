@@ -55,6 +55,7 @@ export function SimulatedExamDialog() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [examName, setExamName] = useState('');
+  const [selectedCargo, setSelectedCargo] = useState<string>('all');
   const [subjectSelections, setSubjectSelections] = useState<SubjectSelection>(
     {}
   );
@@ -65,16 +66,22 @@ export function SimulatedExamDialog() {
   );
   const { data: allQuestions, isLoading: isLoadingQuestions } = useCollection<DocumentData>(questionsQuery);
   
-  const availableSubjectsAndTopics = useMemo(() => {
-    if (!allQuestions) return { subjects: [], topicsBySubject: {} };
+  const availableResources = useMemo(() => {
+    if (!allQuestions) return { subjects: [], topicsBySubject: {}, cargos: [] };
     
     const subjectCounts: Record<string, { name: string; count: number }> = {};
     const topicsBySubject: Record<string, Set<string>> = {};
+    const cargosSet = new Set<string>();
 
     allQuestions.forEach(q => {
         const subject = q.Materia;
         const topic = q.Assunto;
+        const cargo = q.Cargo;
         const isHidden = q.status === 'hidden';
+
+        if (cargo && cargo.trim() && !isHidden) {
+            cargosSet.add(cargo.trim());
+        }
 
         if (subject && subject.trim() && !isHidden) {
             let subjectName = subject.trim();
@@ -104,6 +111,7 @@ export function SimulatedExamDialog() {
             acc[subject] = Array.from(topicsSet).sort();
             return acc;
         }, {} as Record<string, string[]>),
+        cargos: Array.from(cargosSet).sort(),
     };
   }, [allQuestions]);
 
@@ -142,6 +150,7 @@ export function SimulatedExamDialog() {
     try {
         const examData = {
             name: examName,
+            cargo: selectedCargo === 'all' ? undefined : selectedCargo,
             subjects: Object.fromEntries(selectedSubjects.map(([subject, selection]) => [subject, selection])),
         };
         const newExamId = await createSimulatedExam(firestore, user.uid, examData);
@@ -152,6 +161,7 @@ export function SimulatedExamDialog() {
         });
         setExamName('');
         setSubjectSelections({});
+        setSelectedCargo('all');
         setIsOpen(false);
         router.push(`/mentorlite/community-simulados`);
 
@@ -196,6 +206,7 @@ export function SimulatedExamDialog() {
     if (!isOpen) {
       setExamName('');
       setSubjectSelections({});
+      setSelectedCargo('all');
     }
   }, [isOpen]);
 
@@ -226,14 +237,30 @@ export function SimulatedExamDialog() {
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-6 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="exam-name">Nome do Simulado</Label>
-            <Input
-              id="exam-name"
-              placeholder="Ex: Simulado PPMG 2024"
-              value={examName}
-              onChange={e => setExamName(e.target.value)}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="exam-name">Nome do Simulado</Label>
+              <Input
+                id="exam-name"
+                placeholder="Ex: Simulado PPMG 2024"
+                value={examName}
+                onChange={e => setExamName(e.target.value)}
+              />
+            </div>
+             <div className="space-y-2">
+                <Label htmlFor="cargo-select">Cargo Alvo</Label>
+                <Select value={selectedCargo} onValueChange={setSelectedCargo}>
+                    <SelectTrigger id="cargo-select">
+                        <SelectValue placeholder="Selecione o Cargo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Todos os Cargos</SelectItem>
+                        {availableResources.cargos.map(cargo => (
+                            <SelectItem key={cargo} value={cargo}>{cargo}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -246,7 +273,7 @@ export function SimulatedExamDialog() {
                  <div className="flex items-center justify-center p-4"><Loader2 className="h-6 w-6 animate-spin"/></div>
             ) : (
                 <div className="space-y-3 max-h-72 overflow-y-auto pr-2">
-                {availableSubjectsAndTopics.subjects.map(subject => (
+                {availableResources.subjects.map(subject => (
                     <div
                     key={subject}
                     className="grid grid-cols-3 items-center gap-4"
@@ -263,7 +290,7 @@ export function SimulatedExamDialog() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="w-56" align="start">
-                        {(availableSubjectsAndTopics.topicsBySubject[subject] || []).map(topic => (
+                        {(availableResources.topicsBySubject[subject] || []).map(topic => (
                           <DropdownMenuCheckboxItem
                             key={topic}
                             checked={(subjectSelections[subject]?.topics || []).includes(topic)}
