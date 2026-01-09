@@ -94,7 +94,7 @@ export default function LandingPage() {
     );
   };
   
-  const handleProtectedLinkClick = (e: React.MouseEvent<HTMLButtonElement>, href: string) => {
+  const handleProtectedLinkClick = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>, href: string) => {
     if (!user) {
       e.preventDefault();
       handleGoogleLogin();
@@ -190,10 +190,7 @@ export default function LandingPage() {
                        <Link
                           href="/mentorlite"
                           onClick={(e) => {
-                            if (!user) {
-                              e.preventDefault();
-                              handleGoogleLogin();
-                            }
+                            handleProtectedLinkClick(e, '/mentorlite');
                             setIsMobileMenuOpen(false);
                           }}
                           className='font-bold text-accent'
@@ -412,10 +409,10 @@ export default function LandingPage() {
                   <div>
                     <h3 className="text-xl font-bold">Prof. Willian Toledo</h3>
                     <p className="text-primary font-semibold">
-                      1º Tenente PM
+                      Aprovado na PMMG com 18 anos, CTSP (2X), CFO e OAB.
                     </p>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Aprovado na PMMG com 18 anos, CTSP (2X), CFO e OAB. Bacharel em Direito, Bacharel em Ciências Militares e Pós-Graduado em Direito Público.
+                      Bacharel em Direito, Bacharel em Ciências Militares e Pós-Graduado em Direito Público.
                     </p>
                   </div>
                 </Card>
@@ -466,13 +463,14 @@ export default function LandingPage() {
                     Use nossas ferramentas de IA para praticar com questões, flashcards e mais.
                   </p>
                 </div>
-                <button
+                <a
+                    href="/mentorlite"
                     onClick={(e) => handleProtectedLinkClick(e, '/mentorlite')}
                     className="text-sm font-semibold text-primary mt-4 flex items-center gap-1 group"
                     >
                     Acessar Agora{' '}
                     <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </button>
+                </a>
               </Card>
               
                <Card className="bg-primary/10 p-6 flex flex-col text-left shadow-sm">
@@ -485,13 +483,14 @@ export default function LandingPage() {
                     A prática leva à aprovação. Teste seu conhecimento com simulados reais e vença a concorrência.
                   </p>
                 </div>
-                <button
+                <a
+                    href="/mentorlite/community-simulados"
                     onClick={(e) => handleProtectedLinkClick(e, '/mentorlite/community-simulados')}
                     className="text-sm font-semibold text-primary mt-4 flex items-center gap-1 group"
                     >
                     Encarar o Desafio{' '}
                     <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </button>
+                </a>
               </Card>
 
               <Card className="bg-accent text-accent-foreground p-6 flex flex-col text-left shadow-sm">
@@ -574,8 +573,7 @@ export default function LandingPage() {
       {/* Mobile FAB for Mentor Lite */}
        <button 
         onClick={() => {
-          if (!user) handleGoogleLogin();
-          else window.location.href = '/mentorlite';
+          handleProtectedLinkClick({} as React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>, '/mentorlite');
         }}
         className="lg:hidden fixed bottom-4 right-4 h-14 w-14 rounded-full shadow-lg z-50 bg-accent text-accent-foreground animate-pulse-glow inline-flex items-center justify-center">
         <Sparkles />
