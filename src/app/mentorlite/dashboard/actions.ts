@@ -46,27 +46,25 @@ export async function getDashboardAnalytics(userId: string): Promise<DashboardAn
     let minAccuracy = 101;
     let maxAccuracy = -1;
 
-    for (const subjectName in stats.subjectsPerformance) {
-      const subjectData = stats.subjectsPerformance[subjectName];
-      // Regra de Negócio: Considerar apenas matérias com mais de 10 questões
-      if (subjectData.total > 10) {
-        const accuracy = calculateAccuracy(subjectData.correct, subjectData.total);
+    // Check if subjectsPerformance exists before iterating
+    if (stats.subjectsPerformance) {
+      for (const subjectName in stats.subjectsPerformance) {
+        const subjectData = stats.subjectsPerformance[subjectName];
+        // Regra de Negócio: Considerar apenas matérias com mais de 10 questões
+        if (subjectData.total > 10) {
+          const accuracy = calculateAccuracy(subjectData.correct, subjectData.total);
 
-        if (accuracy < minAccuracy) {
-          minAccuracy = accuracy;
-          weakestSubject = { subject: subjectName, accuracy };
-        }
-        if (accuracy > maxAccuracy) {
-          maxAccuracy = accuracy;
-          strongestSubject = { subject: subjectName, accuracy };
+          if (accuracy < minAccuracy) {
+            minAccuracy = accuracy;
+            weakestSubject = { subject: subjectName, accuracy };
+          }
+          if (accuracy > maxAccuracy) {
+            maxAccuracy = accuracy;
+            strongestSubject = { subject: subjectName, accuracy };
+          }
         }
       }
     }
-
-    // Convert Timestamps to ISO strings if needed, though for this structure it's not required for the client.
-    // For simplicity, we return the stats as is, since recharts can handle it.
-    // However, if we had client-side date logic, we'd convert Timestamps here.
-    // For `evolutionHistory`, we assume `date` is already a "DD/MM" string.
 
     return {
       stats,
