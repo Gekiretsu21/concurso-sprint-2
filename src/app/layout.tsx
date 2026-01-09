@@ -4,11 +4,11 @@ import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
-  title: 'Concurso Sprint',
-  description: 'Sua plataforma completa para preparação de concursos.',
+  title: 'MentorIA Academy Lite',
+  description: 'Estude com estratégia e inteligência',
   openGraph: {
-    title: 'Concurso Sprint | MentorIA Academy',
-    description: 'Acelere sua aprovação com o método de estudo ativo e estratégico.',
+    title: 'MentorIA Lite | MentorIA Academy',
+    description: 'Estude com estratégia e inteligência.',
     url: 'https://my-web-app--studio-6116545318-c4cd8.us-central1.hosted.app/',
     siteName: 'MentorIA Academy',
     images: [
