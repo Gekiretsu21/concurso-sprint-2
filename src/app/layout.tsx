@@ -4,16 +4,16 @@ import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
-  title: 'MentorIA Academy Lite',
+  title: 'MentorIA Academy',
   description: 'Estude com estratégia e inteligência',
   openGraph: {
-    title: 'MentorIA Lite | MentorIA Academy',
+    title: 'MentorIA Academy',
     description: 'Estude com estratégia e inteligência.',
     url: 'https://my-web-app--studio-6116545318-c4cd8.us-central1.hosted.app/',
     siteName: 'MentorIA Academy',
     images: [
       {
-        url: 'https://my-web-app--studio-6116545318-c4cd8.us-central1.hosted.app/LOGO/logotipo%20site.png',
+        url: 'https://i.imgur.com/gL3211N.png',
         width: 1200,
         height: 630,
         alt: 'MentorIA Academy Logo',
