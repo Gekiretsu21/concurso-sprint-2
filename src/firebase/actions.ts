@@ -591,6 +591,7 @@ export async function deleteDuplicateQuestions(firestore: Firestore): Promise<nu
 
     for (const [enunciado, duplicates] of questionsByEnunciado.entries()) {
       if (duplicates.length > 1) {
+        // Keep the first one, delete the rest
         const [first, ...rest] = duplicates;
         
         rest.forEach(dup => {
@@ -615,6 +616,55 @@ export async function deleteDuplicateQuestions(firestore: Firestore): Promise<nu
 
     return deletedCount;
 }
+
+export async function deleteDuplicateFlashcards(firestore: Firestore): Promise<number> {
+    const flashcardsRef = collection(firestore, 'flashcards');
+    const snapshot = await getDocs(flashcardsRef);
+  
+    const flashcardsByFront = new Map<string, any[]>();
+
+    snapshot.docs.forEach(doc => {
+      const data = doc.data();
+      const frontText = data.front;
+      if (!frontText) return;
+
+      if (!flashcardsByFront.has(frontText)) {
+        flashcardsByFront.set(frontText, []);
+      }
+      flashcardsByFront.get(frontText)!.push({ id: doc.id, ...data });
+    });
+
+    const batch = writeBatch(firestore);
+    let deletedCount = 0;
+
+    for (const [frontText, duplicates] of flashcardsByFront.entries()) {
+      if (duplicates.length > 1) {
+        // Keep the first one, delete the rest
+        const [first, ...rest] = duplicates;
+        
+        rest.forEach(dup => {
+          const docRef = doc(firestore, 'flashcards', dup.id);
+          batch.delete(docRef);
+          deletedCount++;
+        });
+      }
+    }
+
+    if (deletedCount > 0) {
+      await batch.commit().catch(serverError => {
+         console.error('Firestore batch delete error for flashcards:', serverError);
+          const permissionError = new FirestorePermissionError({
+              path: 'flashcards',
+              operation: 'delete',
+          });
+          errorEmitter.emit('permission-error', permissionError);
+          throw permissionError;
+      });
+    }
+
+    return deletedCount;
+}
+
 
 export async function deleteQuestionsBySubject(firestore: Firestore, subject: string): Promise<number> {
     const questionsRef = collection(firestore, 'questoes');

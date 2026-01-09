@@ -14,9 +14,9 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle } from 'lucide-react';
+import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle, Sparkles } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
-import { importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteAllFlashcards, deleteFlashcardsByFilter, deleteFlashcardsByIds, deleteQuestionsByIds } from '@/firebase/actions';
+import { importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteAllFlashcards, deleteFlashcardsByFilter, deleteFlashcardsByIds, deleteQuestionsByIds, deleteDuplicateQuestions, deleteDuplicateFlashcards } from '@/firebase/actions';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
 import { SubjectCard } from '@/components/SubjectCard';
@@ -79,6 +79,7 @@ interface Question {
   Materia: string;
   Ano: string;
   Cargo: string;
+  status?: 'active' | 'hidden';
 }
 
 
@@ -143,6 +144,27 @@ function DeleteQuestionsDialog({ availableResources, allQuestions, isLoadingQues
     }
   }
 
+  const handleDeleteDuplicates = async () => {
+    if (!firestore) return;
+    setIsDeleting(true);
+    try {
+        const deletedCount = await deleteDuplicateQuestions(firestore);
+        toast({
+            title: "Limpeza Concluída",
+            description: `${deletedCount} questão(ões) duplicada(s) foram excluídas.`,
+        });
+        setIsOpen(false);
+    } catch (error) {
+        toast({
+            variant: 'destructive',
+            title: 'Erro na Limpeza',
+            description: 'Ocorreu um erro ao tentar excluir questões duplicadas.',
+        });
+    } finally {
+        setIsDeleting(false);
+    }
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -200,7 +222,12 @@ function DeleteQuestionsDialog({ availableResources, allQuestions, isLoadingQues
             )) : !isLoadingQuestions && <p className="text-sm text-muted-foreground text-center py-4">Nenhuma questão corresponde aos filtros.</p>}
             </div>
         </ScrollArea>
-        <DialogFooter className="sm:justify-end">
+        <DialogFooter className="sm:justify-between flex-wrap gap-2">
+            <Button variant="outline" onClick={handleDeleteDuplicates} disabled={isDeleting}>
+                {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <Sparkles className="mr-2 h-4 w-4" />
+                Excluir Duplicadas
+            </Button>
           <div className="flex gap-2">
             <DialogClose asChild><Button variant="outline">Fechar</Button></DialogClose>
              <Button variant="destructive" onClick={handleDeleteSelected} disabled={isDeleting || selectedQuestions.length === 0}>
@@ -512,6 +539,27 @@ function DeleteFlashcardsDialog({ availableResources, allFlashcards, isLoadingFl
     }
   }
 
+  const handleDeleteDuplicates = async () => {
+    if (!firestore) return;
+    setIsDeleting(true);
+    try {
+        const deletedCount = await deleteDuplicateFlashcards(firestore);
+        toast({
+            title: "Limpeza Concluída",
+            description: `${deletedCount} flashcard(s) duplicado(s) foram excluídos.`,
+        });
+        setIsOpen(false);
+    } catch (error) {
+        toast({
+            variant: 'destructive',
+            title: 'Erro na Limpeza',
+            description: 'Ocorreu um erro ao tentar excluir flashcards duplicados.',
+        });
+    } finally {
+        setIsDeleting(false);
+    }
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -570,28 +618,35 @@ function DeleteFlashcardsDialog({ availableResources, allFlashcards, isLoadingFl
             </div>
         </ScrollArea>
         <DialogFooter className="sm:justify-between flex-wrap gap-2">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" disabled={isDeleting || isLoadingFlashcards || !allFlashcards || allFlashcards.length === 0}>
-                Excluir Todos
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Tem certeza absoluta?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Esta ação é irreversível e apagará todos os flashcards da plataforma.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDeleteAll} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
-                  {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Sim, excluir tudo
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+            <div>
+                 <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                    <Button variant="destructive" disabled={isDeleting || isLoadingFlashcards || !allFlashcards || allFlashcards.length === 0}>
+                        Excluir Todos
+                    </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Tem certeza absoluta?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                        Esta ação é irreversível e apagará todos os flashcards da plataforma.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteAll} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+                        {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Sim, excluir tudo
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+                <Button variant="outline" onClick={handleDeleteDuplicates} disabled={isDeleting} className="ml-2">
+                    {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Excluir Duplicadas
+                </Button>
+            </div>
           <div className="flex gap-2">
             <DialogClose asChild><Button variant="outline">Fechar</Button></DialogClose>
              <Button variant="destructive" onClick={handleDeleteSelected} disabled={isDeleting || selectedFlashcards.length === 0}>
