@@ -501,7 +501,7 @@ export default function LandingPage() {
                 asChild
               >
                 <Link
-                  href="https://wa.me/5531989916924"
+                  href="https://api.whatsapp.com/send?phone=5531984585846&text=Quero%20ser%20aprovado%20em%20Concurso%20P%C3%BAblico"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
