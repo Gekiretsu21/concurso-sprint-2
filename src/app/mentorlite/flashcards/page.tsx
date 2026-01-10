@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -151,8 +152,7 @@ export default function FlashcardsPage() {
 
   const incorrectSubjects = useMemo(() => {
     if (!incorrectProgress) return [];
-    const subjects = new Set(incorrectProgress.map(p => p.subject));
-    return Array.from(subjects).sort();
+    return Array.from(new Set(incorrectProgress.map(p => p.subject))).sort();
   }, [incorrectProgress]);
 
 
@@ -192,7 +192,7 @@ export default function FlashcardsPage() {
       // Use a timeout to ensure state updates are processed before starting the session
       setTimeout(() => startStudySession('all', { subject: subjectFromParams, tier: 'plus' }), 0);
     }
-  }, [searchParams, view]);
+  }, [searchParams, view, startStudySession]);
 
 
   const startStudySession = useCallback(async (mode: 'all' | 'incorrect', options: { subject?: string, topic?: string, targetRole?: string, tier?: string, reviewSubject?: string } = {}) => {
@@ -367,7 +367,7 @@ export default function FlashcardsPage() {
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">Todas as Matérias</SelectItem>
-                        {incorrectSubjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                        {incorrectSubjects.map((s, index) => <SelectItem key={`${s}-${index}`} value={s}>{s}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 <Button onClick={() => startStudySession('incorrect', { reviewSubject: reviewSubject })} disabled={view === 'loading' || isLoadingIncorrectProgress}>
@@ -399,3 +399,5 @@ export default function FlashcardsPage() {
     </div>
   );
 }
+
+    
