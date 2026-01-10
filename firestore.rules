@@ -65,5 +65,14 @@ service cloud.firestore {
       allow read, list: if resource.data.accessTier == 'standard' || isPlusSubscriber() || isAdmin();
       allow write: if isSignedIn();
     }
+
+    match /feed_posts/{postId} {
+      allow read: if resource.data.active == true && 
+                    (resource.data.targetTier == 'all' || 
+                     resource.data.targetTier == 'standard' ||
+                     (resource.data.targetTier == 'plus' && isPlusSubscriber()));
+      allow list: if isSignedIn(); // Allow listing for all signed-in users, client will filter
+      allow write, update, delete: if isAdmin();
+    }
   }
 }

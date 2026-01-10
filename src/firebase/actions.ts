@@ -27,11 +27,36 @@ import {
 import { User } from 'firebase/auth';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { FeedPost } from '@/types';
 
 interface ExamDetails {
   isPreviousExam: boolean;
   examName: string;
 }
+
+export async function createFeedPost(firestore: Firestore, postData: Omit<FeedPost, 'id' | 'createdAt'>): Promise<string> {
+    const feedCollection = collection(firestore, 'feed_posts');
+    const newPostRef = doc(feedCollection);
+
+    const dataToSave = {
+        ...postData,
+        id: newPostRef.id,
+        createdAt: serverTimestamp(),
+    };
+
+    setDoc(newPostRef, dataToSave).catch(serverError => {
+        const permissionError = new FirestorePermissionError({
+            path: newPostRef.path,
+            operation: 'create',
+            requestResourceData: dataToSave,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw permissionError;
+    });
+
+    return newPostRef.id;
+}
+
 
 export async function updateUserPlan(firestore: Firestore, userId: string, newPlan: 'standard' | 'plus'): Promise<void> {
     if (!userId) {
@@ -159,16 +184,22 @@ export async function saveQuestionAttempt(
   questionId: string,
   isCorrect: boolean,
   selectedOption: string,
-  subject: string
+  subject: string | string[]
 ) {
   if (!userId || !questionId) return;
+
+  const subjectToSave = Array.isArray(subject) ? subject[0] : subject;
+  if (!subjectToSave) {
+      console.error("No valid subject found for saving question attempt.");
+      return;
+  }
 
   const attemptRef = doc(firestore, `users/${userId}/question_attempts/${questionId}`);
   const attemptData = {
     questionId,
     isCorrect,
     selectedOption,
-    subject,
+    subject: subjectToSave,
     timestamp: serverTimestamp(),
   };
 
@@ -183,7 +214,7 @@ export async function saveQuestionAttempt(
   });
 
   // Also update the aggregated stats
-  await registerQuestionAnswer(firestore, userId, subject, isCorrect);
+  await registerQuestionAnswer(firestore, userId, subjectToSave, isCorrect);
 }
 
 
@@ -191,7 +222,8 @@ export async function importQuestions(
   firestore: Firestore,
   text: string,
   userId: string,
-  examDetails?: ExamDetails
+  accessTier: 'standard' | 'plus',
+  examDetails?: ExamDetails,
 ): Promise<void> {
   if (!text) {
     throw new Error('O texto não pode estar vazio.');
@@ -247,6 +279,7 @@ export async function importQuestions(
       e: e.trim(),
       correctAnswer: correctAnswer.trim(),
       status: 'active',
+      accessTier: accessTier,
     };
 
     if (examDetails?.isPreviousExam) {
@@ -264,6 +297,7 @@ export async function importQuestions(
         createdAt: serverTimestamp(),
         questionIds: newQuestionIds,
         questionCount: newQuestionIds.length,
+        accessTier: accessTier,
       };
       const publicExamRef = doc(collection(firestore, 'previousExams'));
       batch.set(publicExamRef, examData);
@@ -293,10 +327,11 @@ interface Flashcard {
   back: string;
   searchKeywords: string[];
   createdAt: any; // serverTimestamp
+  accessTier: 'standard' | 'plus';
 }
 
 
-export async function importFlashcards(firestore: Firestore, text: string): Promise<{ successCount: number; errorCount: number; errors: string[] }> {
+export async function importFlashcards(firestore: Firestore, text: string, accessTier: 'standard' | 'plus'): Promise<{ successCount: number; errorCount: number; errors: string[] }> {
   if (!text) {
     throw new Error('O texto não pode estar vazio.');
   }
@@ -343,6 +378,7 @@ export async function importFlashcards(firestore: Firestore, text: string): Prom
       back,
       searchKeywords: uniqueKeywords,
       createdAt: serverTimestamp(),
+      accessTier: accessTier,
     };
 
     currentBatch.set(newFlashcardDocRef, newFlashcard);
@@ -512,6 +548,7 @@ interface CreateSimulatedExamDTO {
       topics: string[];
     } 
   };
+   accessTier: 'standard' | 'plus';
 }
 
 export async function createSimulatedExam(
@@ -577,6 +614,7 @@ export async function createSimulatedExam(
     createdAt: serverTimestamp(),
     questionIds: allQuestionIds,
     questionCount: totalQuestions,
+    accessTier: dto.accessTier,
   };
 
   setDoc(examDocRef, examData).catch(serverError => {
@@ -970,5 +1008,3 @@ export async function addQuestionComment(
       throw permissionError;
   });
 }
-
-    

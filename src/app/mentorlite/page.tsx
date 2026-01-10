@@ -20,12 +20,15 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
-import { useUser, useDoc, useFirebase, useMemoFirebase } from '@/firebase';
+import { useUser, useDoc, useFirebase, useMemoFirebase, useCollection } from '@/firebase';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { doc } from 'firebase/firestore';
+import { doc, collection, query, where, orderBy } from 'firebase/firestore';
 import { updateDailyStreak } from '../actions/update-user-stats';
 import { PremiumFeature } from '@/components/PremiumFeature';
+import { FeedPost } from '@/types';
+import { FeedCard } from '@/components/FeedCard';
+
 
 const mainFeatures = [
   {
@@ -100,8 +103,27 @@ export default function Home() {
         (user && firestore) ? doc(firestore, `users/${user.uid}`) : null,
     [user, firestore]);
 
-    const { data: userData, isLoading: isStatsLoading } = useDoc<{stats?: UserStats}>(userDocRef);
+    const { data: userData, isLoading: isStatsLoading } = useDoc<{stats?: UserStats, subscription?: { plan: 'standard' | 'plus' }}>(userDocRef);
     const [dailyStreak, setDailyStreak] = useState(userData?.stats?.dailyStreak ?? 0);
+    
+    const userPlan = userData?.subscription?.plan || 'standard';
+
+    const feedQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        
+        const tiersForUser = userPlan === 'plus' ? ['all', 'standard', 'plus'] : ['all', 'standard'];
+        
+        return query(
+            collection(firestore, 'feed_posts'), 
+            where('active', '==', true),
+            where('targetTier', 'in', tiersForUser),
+            orderBy('isPinned', 'desc'),
+            orderBy('createdAt', 'desc')
+        );
+    }, [firestore, userPlan]);
+
+    const { data: feedPosts, isLoading: isLoadingFeed } = useCollection<FeedPost>(feedQuery);
+
 
     useEffect(() => {
         if (user && !isUserLoading) {
@@ -174,6 +196,20 @@ export default function Home() {
             )}
         </div>
       </section>
+
+      <section className="space-y-6">
+        <h2 className="text-2xl font-bold tracking-tight">
+          Mural de Avisos
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {isLoadingFeed && Array.from({length: 2}).map((_, i) => <Skeleton key={i} className="h-64 w-full" />)}
+            {feedPosts && feedPosts.length > 0 ? (
+                feedPosts.map(post => <FeedCard key={post.id} post={post} />)
+            ) : (
+                !isLoadingFeed && <p className="text-muted-foreground md:col-span-2">Nenhuma novidade por aqui ainda.</p>
+            )}
+        </div>
+      </section>
       
       <section>
         <h2 className="text-2xl font-bold tracking-tight mb-4">
@@ -224,6 +260,3 @@ export default function Home() {
     </div>
   );
 }
-
-
-    

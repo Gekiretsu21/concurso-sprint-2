@@ -226,6 +226,11 @@
         "Prova": {
           "type": "string",
           "description": "The name of the exam the question belongs to (optional)."
+        },
+        "accessTier": {
+            "type": "string",
+            "description": "Determines who can access this question.",
+            "enum": ["standard", "plus"]
         }
       },
       "required": [
@@ -313,6 +318,11 @@
           "type": "string",
           "description": "Date the simulated exam was taken.",
           "format": "date-time"
+        },
+        "accessTier": {
+            "type": "string",
+            "description": "Determines who can access this simulated exam.",
+            "enum": ["standard", "plus"]
         }
       },
       "required": [
@@ -366,6 +376,11 @@
           "type": "string",
           "description": "Timestamp of when the flashcard was created.",
           "format": "date-time"
+        },
+        "accessTier": {
+            "type": "string",
+            "description": "Determines who can access this flashcard.",
+            "enum": ["standard", "plus"]
         }
       },
       "required": [
@@ -535,6 +550,25 @@
         }
       },
       "required": ["examId", "userId", "completedAt", "score", "userAnswers"]
+    },
+    "FeedPost": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "FeedPost",
+      "description": "A post in the user-facing feed/dashboard.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the feed post." },
+        "title": { "type": "string", "description": "The main headline of the post." },
+        "body": { "type": "string", "description": "The main text content of the post, can contain markdown." },
+        "type": { "type": "string", "enum": ["video", "link", "notice"], "description": "The type of content the post represents." },
+        "contentUrl": { "type": "string", "format": "uri", "description": "URL for video or link types (e.g., YouTube URL, external article URL)." },
+        "actionLabel": { "type": "string", "description": "The text for the call-to-action button (e.g., 'Read More')." },
+        "targetTier": { "type": "string", "enum": ["all", "standard", "plus"], "description": "Which user subscription tier can see this post." },
+        "isPinned": { "type": "boolean", "description": "If true, this post should be displayed at the top of the feed." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of when the post was created." },
+        "active": { "type": "boolean", "description": "Whether the post is currently active and should be displayed." }
+      },
+      "required": ["id", "title", "body", "type", "targetTier", "createdAt", "active"]
     }
   },
   "auth": {
@@ -729,10 +763,24 @@
             }
           ]
         }
+      },
+       {
+        "path": "/feed_posts/{postId}",
+        "definition": {
+          "entityName": "FeedPost",
+          "schema": {
+            "$ref": "#/backend/entities/FeedPost"
+          },
+          "description": "Stores posts for the main user feed. Controls visibility via targetTier.",
+          "params": [
+            {
+              "name": "postId",
+              "description": "The unique ID of the feed post."
+            }
+          ]
+        }
       }
     ],
     "reasoning": "The Firestore data structure is designed to support the 'MentorIA Academy' app, focusing on secure, scalable, and debuggable data access. The structure leverages path-based ownership for user-specific data and denormalization to ensure authorization independence, eliminating the need for `get()` calls in security rules.\n\n1.  **Users (`/users/{userId}`):** Stores user profiles. This is the root for all user-owned data and now includes an aggregated `stats` object for performance tracking.\n2.  **Questions (`/questoes/{questionId}`):**  Stores the question bank. Open for browsing to every authenticated user. A subcollection for comments (`/questoes/{questionId}/comments/{commentId}`) has been added to facilitate discussions.\n3.  **Simulated Exams (`/users/{userId}/simulatedExams/{simulatedExamId}`):** Each simulated exam is stored as a subcollection under the user who created it, ensuring clear ownership.\n4.  **Community Simulados (`/communitySimulados/{simuladoId}`):**  A public collection where a copy of user-created simulados is stored for community access.\n5.  **Flashcards (`/flashcards/{flashcardId}`):** Public collection of all flashcards, readable by any authenticated user.\n6. **Flashcard Progress (`/users/{userId}/flashcard_progress/{flashcardId}`):** Tracks individual user progress for each flashcard, enabling features like spaced repetition and review modes without polluting the main user document.\n7.  **Study Sessions (`/users/{userId}/studySessions/{studySessionId}`):** Study session data is stored under each user to track individual study habits and progress.\n8.  **AI Study Plans (`/users/{userId}/aiStudyPlans/{aiStudyPlanId}`):** AI study plans are nested under each user, providing personalized plans.\n\n**Authorization Independence and QAPs:**\n\n*   **Path-Based Ownership:**  Using paths like `/users/{userId}/...` directly encodes ownership into the data structure. Security rules can simply check if `request.auth.uid == userId` to grant access, eliminating the need to read parent documents. This directly addresses Authorization Independence.\n*   **Structural Segregation:**  Questions and Flashcards are stored in global collections, separate from user-specific data. This segregation allows for different security rules: open read access for all authenticated users, while user-specific collections are restricted to the owning user. This ensures that listing public content does not require complex filtering logic in rules (QAPs: Rules are Not Filters)."
   }
 }
-
-    

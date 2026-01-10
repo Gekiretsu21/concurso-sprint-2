@@ -14,9 +14,9 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle, Sparkles, User, Crown, Search, Lock } from 'lucide-react';
+import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle, Sparkles, User, Crown, Search, Lock, Megaphone } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
-import { importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteAllFlashcards, deleteFlashcardsByFilter, deleteFlashcardsByIds, deleteQuestionsByIds, deleteDuplicateQuestions, deleteDuplicateFlashcards, updateUserPlan } from '@/firebase/actions';
+import { createFeedPost, importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteAllFlashcards, deleteFlashcardsByFilter, deleteFlashcardsByIds, deleteQuestionsByIds, deleteDuplicateQuestions, deleteDuplicateFlashcards, updateUserPlan } from '@/firebase/actions';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
 import { SubjectCard } from '@/components/SubjectCard';
@@ -41,6 +41,29 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { useForm, Controller } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
+
+const feedPostSchema = z.object({
+    title: z.string().min(5, "O título deve ter pelo menos 5 caracteres."),
+    body: z.string().min(10, "O corpo do post deve ter pelo menos 10 caracteres."),
+    type: z.enum(['video', 'link', 'notice']),
+    contentUrl: z.string().optional(),
+    actionLabel: z.string().optional(),
+    targetTier: z.enum(['all', 'standard', 'plus']),
+    isPinned: z.boolean(),
+    active: z.boolean(),
+}).refine(data => {
+    if (data.type === 'video' || data.type === 'link') {
+        return !!data.contentUrl && data.contentUrl.length > 0;
+    }
+    return true;
+}, {
+    message: "A URL é obrigatória para posts do tipo 'Vídeo' ou 'Link'.",
+    path: ["contentUrl"],
+});
 
 
 // Helper to generate a URL-friendly slug from a subject name
@@ -96,6 +119,172 @@ interface UserProfile {
     };
 }
 
+
+function FeedPostDialog() {
+    const { toast } = useToast();
+    const { firestore } = useFirebase();
+    const [isOpen, setIsOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const form = useForm<z.infer<typeof feedPostSchema>>({
+        resolver: zodResolver(feedPostSchema),
+        defaultValues: {
+            title: "",
+            body: "",
+            type: "notice",
+            contentUrl: "",
+            actionLabel: "",
+            targetTier: "all",
+            isPinned: false,
+            active: true,
+        },
+    });
+
+    const postType = form.watch('type');
+    
+    const onSubmit = async (data: z.infer<typeof feedPostSchema>) => {
+        if (!firestore) return;
+        setIsSubmitting(true);
+        try {
+            await createFeedPost(firestore, data);
+            toast({ title: "Sucesso!", description: "Post do feed criado com sucesso." });
+            form.reset();
+            setIsOpen(false);
+        } catch (error) {
+            toast({ variant: "destructive", title: "Erro", description: "Não foi possível criar o post." });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+    
+    useEffect(() => {
+        if (!isOpen) {
+            form.reset();
+        }
+    }, [isOpen, form]);
+
+    return (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+                <Button size="sm" className="mt-4"><Megaphone /> Gerenciar Feed</Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Criar Novo Post para o Feed</DialogTitle>
+                    <DialogDescription>Crie avisos, compartilhe vídeos ou links com os alunos.</DialogDescription>
+                </DialogHeader>
+                <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <FormField name="title" control={form.control} render={({ field }) => (
+                        <FormItem>
+                            <Label>Título</Label>
+                            <Input {...field} placeholder="Título do post" />
+                            {form.formState.errors.title && <p className="text-sm text-destructive">{form.formState.errors.title.message}</p>}
+                        </FormItem>
+                    )} />
+                     <FormField name="body" control={form.control} render={({ field }) => (
+                        <FormItem>
+                            <Label>Corpo do Post</Label>
+                            <Textarea {...field} placeholder="Escreva o conteúdo aqui. Aceita Markdown básico." rows={5} />
+                             {form.formState.errors.body && <p className="text-sm text-destructive">{form.formState.errors.body.message}</p>}
+                        </FormItem>
+                    )} />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <FormField name="type" control={form.control} render={({ field }) => (
+                            <FormItem>
+                                <Label>Tipo de Post</Label>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="notice">Aviso</SelectItem>
+                                        <SelectItem value="link">Link Externo</SelectItem>
+                                        <SelectItem value="video">Vídeo do YouTube</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </FormItem>
+                        )} />
+                        
+                         <FormField name="targetTier" control={form.control} render={({ field }) => (
+                            <FormItem>
+                                <Label>Audiência</Label>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="all">Todos</SelectItem>
+                                        <SelectItem value="standard">Standard</SelectItem>
+                                        <SelectItem value="plus">MentorIA+</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </FormItem>
+                        )} />
+                    </div>
+
+                    {postType === 'video' && (
+                        <FormField name="contentUrl" control={form.control} render={({ field }) => (
+                            <FormItem>
+                                <Label>Link do Vídeo (YouTube)</Label>
+                                <Input {...field} placeholder="https://www.youtube.com/watch?v=..." />
+                                {form.formState.errors.contentUrl && <p className="text-sm text-destructive">{form.formState.errors.contentUrl.message}</p>}
+                            </FormItem>
+                        )} />
+                    )}
+
+                    {postType === 'link' && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <FormField name="contentUrl" control={form.control} render={({ field }) => (
+                                <FormItem>
+                                    <Label>URL de Destino</Label>
+                                    <Input {...field} placeholder="https://..." />
+                                     {form.formState.errors.contentUrl && <p className="text-sm text-destructive">{form.formState.errors.contentUrl.message}</p>}
+                                </FormItem>
+                            )} />
+                             <FormField name="actionLabel" control={form.control} render={({ field }) => (
+                                <FormItem>
+                                    <Label>Texto do Botão (Opcional)</Label>
+                                    <Input {...field} placeholder="Ex: Baixar PDF" />
+                                </FormItem>
+                            )} />
+                        </div>
+                    )}
+                    
+                    <div className="flex items-center justify-between">
+                         <FormField name="isPinned" control={form.control} render={({ field }) => (
+                            <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                                <FormControl>
+                                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                                </FormControl>
+                                <Label className="font-normal">Fixar no topo do feed?</Label>
+                            </FormItem>
+                        )} />
+                        <FormField name="active" control={form.control} render={({ field }) => (
+                            <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                                <FormControl>
+                                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                                </FormControl>
+                                <Label className="font-normal">Post Ativo?</Label>
+                            </FormItem>
+                        )} />
+                    </div>
+
+
+                    <DialogFooter>
+                        <DialogClose asChild><Button variant="outline">Cancelar</Button></DialogClose>
+                        <Button type="submit" disabled={isSubmitting}>
+                            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Criar Post
+                        </Button>
+                    </DialogFooter>
+                </form>
+                </Form>
+            </DialogContent>
+        </Dialog>
+    );
+}
 
 function DeleteQuestionsDialog({ availableResources, allQuestions, isLoadingQuestions }: { availableResources: any, allQuestions: Question[] | null, isLoadingQuestions: boolean }) {
   const { firestore } = useFirebase();
@@ -940,7 +1129,7 @@ export default function ManagementPage() {
                 <CardTitle>Ações Rápidas</CardTitle>
                 <CardDescription>Principais ferramentas para gerenciamento de conteúdo.</CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 
                 {/* Importar Questões */}
                 <div className="relative flex flex-col justify-between p-4 rounded-lg border h-full">
@@ -1120,6 +1309,19 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
+                </div>
+                
+                 {/* Gerenciar Feed */}
+                <div className="flex flex-col justify-between p-4 rounded-lg border h-full">
+                    <div>
+                        <h4 className="font-semibold">Gerenciar Feed</h4>
+                        <p className="text-sm text-muted-foreground mt-1">Crie e edite posts do feed.</p>
+                    </div>
+                     {isClient ? (
+                        <FeedPostDialog />
+                    ) : (
+                        <Button size="sm" className="mt-4" disabled={true}><Megaphone /> Gerenciar Feed</Button>
+                    )}
                 </div>
 
             </CardContent>
