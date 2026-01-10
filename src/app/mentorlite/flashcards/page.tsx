@@ -59,6 +59,7 @@ function FlashcardViewer({ flashcards, onResponse }: { flashcards: Flashcard[], 
 
   const handleResponseClick = (result: 'correct' | 'incorrect') => {
     const card = flashcards[currentIndex];
+    if (!card) return;
     onResponse(card, result); // Pass the full flashcard object
     // Automatically move to the next card after responding, but only if it's not the last card
     if (currentIndex < flashcards.length -1) {
@@ -77,6 +78,17 @@ function FlashcardViewer({ flashcards, onResponse }: { flashcards: Flashcard[], 
   }
 
   const card = flashcards[currentIndex];
+
+  // Add a check to ensure card exists before rendering
+  if (!card) {
+      return (
+          <Card className="mt-6">
+              <CardContent className="flex flex-col items-center justify-center h-40 p-6">
+                  <p className="text-muted-foreground">Carregando flashcard...</p>
+              </CardContent>
+          </Card>
+      );
+  }
 
   return (
      <div className="flex flex-col gap-8 items-center mt-6">
@@ -398,5 +410,7 @@ export default function FlashcardsPage() {
     </div>
   );
 }
+
+    
 
     
