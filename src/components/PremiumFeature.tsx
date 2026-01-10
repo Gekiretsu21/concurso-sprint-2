@@ -37,7 +37,7 @@ export function PremiumFeature({ children, fallback = null }: PremiumFeatureProp
     return null; 
   }
   
-  const isPremium = userProfile?.subscription?.plan === 'plus' && userProfile?.subscription?.status === 'active';
+  const isPremium = authUser && userProfile?.subscription?.plan === 'plus' && userProfile?.subscription?.status === 'active';
 
   return isPremium ? <>{children}</> : <>{fallback}</>;
 }
