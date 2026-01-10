@@ -74,8 +74,8 @@ service cloud.firestore {
                     (resource.data.targetTier == 'all' || 
                      resource.data.targetTier == 'standard' ||
                      (resource.data.targetTier == 'plus' && isPlusSubscriber()));
-      allow list: if isSignedIn(); // Allow listing for all signed-in users, client will filter
-      allow write, update, delete: if isAdmin();
+      allow list: if isSignedIn();
+      allow create, update, delete: if isAdmin();
     }
   }
 }
