@@ -168,6 +168,16 @@ export default function FlashcardsPage() {
     setView('loading');
     setStudyMode(mode);
 
+    // Fisher-Yates Shuffle Algorithm
+    const shuffleArray = <T,>(array: T[]): T[] => {
+      const newArray = [...array];
+      for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+      }
+      return newArray;
+    };
+
     let flashcardsToStudy: Flashcard[] = [];
 
     if (mode === 'incorrect') {
@@ -207,7 +217,7 @@ export default function FlashcardsPage() {
         flashcardsToStudy = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Flashcard));
     }
 
-    setActiveFlashcards(flashcardsToStudy);
+    setActiveFlashcards(shuffleArray(flashcardsToStudy));
     setView('studying');
 
   }, [firestore, user, filterSubject, filterTopic, filterTargetRole]);
