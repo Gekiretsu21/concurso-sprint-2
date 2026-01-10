@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/card';
 import { useCollection, useFirebase, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, where } from 'firebase/firestore';
-import { Check, Loader2, RefreshCw } from 'lucide-react';
+import { Check, Loader2, RefreshCw, ShieldOff } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -45,7 +45,7 @@ export default function SimuladosPage() {
       firestore
         ? query(
             collection(firestore, 'communitySimulados'),
-            where('accessTier', '==', 'standard'),
+            where('accessTier', 'in', ['standard', null]),
             orderBy('createdAt', 'desc')
           )
         : null,
@@ -74,8 +74,10 @@ export default function SimuladosPage() {
 
   const handleRedo = (event: React.MouseEvent, examId: string) => {
     event.preventDefault();
-    window.location.href = `/mentorlite/simulated-exams/${examId}?from=community-simulados`;
+    window.location.href = `/mentorlite/simulated-exams/${examId}?from=simulados`;
   };
+
+  const isAdmin = user?.email === 'amentoriaacademy@gmail.com';
 
 
   return (
@@ -146,13 +148,18 @@ export default function SimuladosPage() {
           </div>
         ) : (
           !isLoading && (
-            <Card className="flex flex-col items-center justify-center h-40 border-dashed">
-              <CardContent className="text-center p-6">
-                <p className="text-muted-foreground">
-                  Nenhum simulado público disponível no momento.
-                </p>
-              </CardContent>
-            </Card>
+            <div className="flex flex-col items-center justify-center text-center py-16 px-6 rounded-lg border-2 border-dashed bg-card">
+              <ShieldOff className="h-16 w-16 text-muted-foreground" />
+              <h3 className="mt-4 text-xl font-semibold">Nenhum Simulado na Área</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Ainda não há simulados públicos disponíveis. Volte em breve ou, se for um administrador, crie um novo.
+              </p>
+              <Button asChild disabled={!isAdmin} className="mt-6">
+                <Link href="/mentorlite/management">
+                  Criar Novo Simulado
+                </Link>
+              </Button>
+            </div>
           )
         )}
       </div>
