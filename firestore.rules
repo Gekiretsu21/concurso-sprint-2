@@ -56,8 +56,7 @@ service cloud.firestore {
     }
     
     match /communitySimulados/{simuladoId} {
-       allow read: if resource.data.accessTier == 'standard' || isPlusSubscriber() || isAdmin() || resource.data.accessTier == null;
-       allow list: if isSignedIn();
+       allow read, list: if isSignedIn();
        allow create: if isSignedIn();
        allow update: if false;
        allow delete: if isAdmin();
