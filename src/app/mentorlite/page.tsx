@@ -113,16 +113,29 @@ export default function Home() {
         
         const tiersForUser = userPlan === 'plus' ? ['all', 'standard', 'plus'] : ['all', 'standard'];
         
+        // Firestore requires a composite index for queries with multiple orderBy clauses on different fields.
+        // To simplify and avoid index configuration, we'll order by creation date and handle pinning on the client if necessary.
+        // For now, let's just order by date.
         return query(
             collection(firestore, 'feed_posts'), 
             where('active', '==', true),
             where('targetTier', 'in', tiersForUser),
-            orderBy('isPinned', 'desc'),
             orderBy('createdAt', 'desc')
         );
     }, [firestore, userPlan]);
 
     const { data: feedPosts, isLoading: isLoadingFeed } = useCollection<FeedPost>(feedQuery);
+
+    const sortedFeedPosts = useMemo(() => {
+        if (!feedPosts) return [];
+        // Manually sort pinned posts to the top
+        return [...feedPosts].sort((a, b) => {
+            if (a.isPinned && !b.isPinned) return -1;
+            if (!a.isPinned && b.isPinned) return 1;
+            // For posts with same pinned status, createdAt is already handled by the query
+            return 0;
+        });
+    }, [feedPosts]);
 
 
     useEffect(() => {
@@ -203,8 +216,8 @@ export default function Home() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {isLoadingFeed && Array.from({length: 2}).map((_, i) => <Skeleton key={i} className="h-64 w-full" />)}
-            {feedPosts && feedPosts.length > 0 ? (
-                feedPosts.map(post => <FeedCard key={post.id} post={post} />)
+            {sortedFeedPosts && sortedFeedPosts.length > 0 ? (
+                sortedFeedPosts.map(post => <FeedCard key={post.id} post={post} />)
             ) : (
                 !isLoadingFeed && <p className="text-muted-foreground md:col-span-2">Nenhuma novidade por aqui ainda.</p>
             )}
