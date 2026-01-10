@@ -2,7 +2,7 @@
 
 import { useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, DocumentData } from 'firebase/firestore';
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useEffect, useState } from 'react';
 import { useFirebase } from '@/firebase/provider';
 
 interface Subscription {
@@ -23,6 +23,11 @@ interface PremiumFeatureProps {
 export function PremiumFeature({ children, fallback = null }: PremiumFeatureProps) {
   const { user: authUser, isUserLoading: isAuthLoading } = useUser();
   const { firestore } = useFirebase();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const userDocRef = useMemoFirebase(
     () => (firestore && authUser) ? doc(firestore, `users/${authUser.uid}`) : null,
@@ -33,7 +38,7 @@ export function PremiumFeature({ children, fallback = null }: PremiumFeatureProp
 
   const isLoading = isAuthLoading || isProfileLoading;
   
-  if (isLoading) {
+  if (!isClient || isLoading) {
     return null; 
   }
   
@@ -41,5 +46,3 @@ export function PremiumFeature({ children, fallback = null }: PremiumFeatureProp
 
   return isPremium ? <>{children}</> : <>{fallback}</>;
 }
-
-    
