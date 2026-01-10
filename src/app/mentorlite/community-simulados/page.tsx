@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useCollection, useFirebase, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy, where } from 'firebase/firestore';
 import { Check, Loader2, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo } from 'react';
@@ -41,7 +41,11 @@ export default function CommunitySimuladosPage() {
   const communityExamsQuery = useMemoFirebase(
     () =>
       firestore
-        ? query(collection(firestore, 'communitySimulados'), orderBy('createdAt', 'desc'))
+        ? query(
+            collection(firestore, 'communitySimulados'),
+            where('accessTier', '==', 'standard'),
+            orderBy('createdAt', 'desc')
+          )
         : null,
     [firestore]
   );
