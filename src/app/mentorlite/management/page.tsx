@@ -1176,8 +1176,8 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
                                                 <AvatarFallback>{u.name?.charAt(0) || 'U'}</AvatarFallback>
                                             </Avatar>
                                             <div>
-                                                <p className="font-medium">{u.name}</p>
-                                                <p className="text-sm text-muted-foreground">{u.email}</p>
+                                                <p className="font-medium">{u.name || 'Usuário sem nome'}</p>
+                                                <p className="text-sm text-muted-foreground">{u.email || 'E-mail não disponível'}</p>
                                             </div>
                                         </div>
                                     </TableCell>
@@ -1245,5 +1245,3 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
     </div>
   );
 }
-
-    
