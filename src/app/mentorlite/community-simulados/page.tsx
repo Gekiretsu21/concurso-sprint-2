@@ -24,6 +24,7 @@ interface CommunitySimulatedExam {
   questionCount: number;
   userId: string;
   originalExamId: string;
+  accessTier?: 'standard' | 'plus';
 }
 
 interface ExamResult {
@@ -44,6 +45,7 @@ export default function CommunitySimuladosPage() {
         ? query(
             collection(firestore, 'communitySimulados'),
             where('accessTier', '!=', 'plus'),
+            orderBy('accessTier'), // Firestore requires ordering by the inequality field
             orderBy('createdAt', 'desc')
           )
         : null,
