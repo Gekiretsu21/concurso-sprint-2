@@ -8,7 +8,15 @@ function isOwner(userId) {
   return request.auth.uid == userId;
 }
 
-// Placeholder for admin logic. We will implement this later.
+function getUserData() {
+  return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+}
+
+function isPlusSubscriber() {
+  let userData = getUserData();
+  return isSignedIn() && userData.subscription.plan == 'plus';
+}
+
 function isAdmin() {
   return request.auth != null && request.auth.token.email == 'amentoriaacademy@gmail.com';
 }
@@ -16,32 +24,24 @@ function isAdmin() {
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // User data is private.
-    // An admin can read or write anyone's profile for management purposes.
-    // A user can read and write their own profile.
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
       allow write: if isOwner(userId) || isAdmin();
     }
-    // Only admins can list all users.
-     match /users/{document=**} {
+    
+    match /users/{document=**} {
       allow list: if isAdmin();
     }
     
-    // User-specific subcollections are only accessible by the owner.
-    // This now explicitly includes 'list' for collections like flashcards.
     match /users/{userId}/{collection}/{docId} {
-      allow read, write, list: if isOwner(userId);
+      allow read, write, list: if isOwner(userId) || isAdmin();
     }
 
-    // Questions are public to any authenticated user for reading and writing.
     match /questoes/{questionId} {
-      allow read, list: if isSignedIn();
+      allow read, list: if resource.data.accessTier == 'standard' || isPlusSubscriber() || isAdmin();
       allow write: if isSignedIn(); 
     }
     
-    // Comments can be read by any signed-in user.
-    // A user can create a comment and can only delete their own comments.
     match /questoes/{questionId}/comments/{commentId} {
       allow read, list: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
@@ -49,26 +49,21 @@ service cloud.firestore {
       allow update: if false;
     }
 
-
-    // Flashcards are public to any authenticated user for reading and writing.
     match /flashcards/{flashcardId} {
-      allow read, write: if isSignedIn();
+      allow read, list: if resource.data.accessTier == 'standard' || isPlusSubscriber() || isAdmin();
+      allow write: if isSignedIn();
     }
     
-    // Community simulados can be read by any authenticated user.
-    // Any authenticated user can create a community simulado.
-    // Only admins can delete community simulados.
     match /communitySimulados/{simuladoId} {
-       allow read, create: if isSignedIn();
+       allow read, list: if resource.data.accessTier == 'standard' || isPlusSubscriber() || isAdmin();
+       allow create: if isSignedIn();
        allow update: if false;
        allow delete: if isAdmin();
     }
     
-    // Previous exams are public to any authenticated user.
-    // Only admins or specific logic should write to this. For now, open read.
     match /previousExams/{examId} {
-      allow read, list: if isSignedIn();
-      allow write: if isSignedIn(); // Or restrict to admin
+      allow read, list: if resource.data.accessTier == 'standard' || isPlusSubscriber() || isAdmin();
+      allow write: if isSignedIn();
     }
   }
 }

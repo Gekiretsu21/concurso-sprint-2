@@ -13,6 +13,8 @@ import {
   Settings,
   Shield,
   User as UserIcon,
+  Crown,
+  Lock,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import {
@@ -44,6 +46,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { signOut } from 'firebase/auth';
 import { useStudyTimeTracker } from '@/hooks/use-study-time-tracker';
+import { PremiumFeature } from './PremiumFeature';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
 
 const menuItems = [
@@ -54,6 +58,12 @@ const menuItems = [
   { href: '/mentorlite/flashcards', icon: Layers, label: 'Flashcards' },
   { href: '/mentorlite/study-plan', icon: BrainCircuit, label: 'Plano de Estudo IA' },
 ];
+
+const vipMenuItem = {
+  href: '/mentorlite/arsenal-vip',
+  icon: Crown,
+  label: 'Arsenal VIP',
+};
 
 const adminMenuItem = {
   href: '/mentorlite/management',
@@ -115,6 +125,46 @@ function MainSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
           ))}
+           <SidebarMenuItem>
+            <PremiumFeature
+              fallback={
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <SidebarMenuButton
+                              isActive={pathname === vipMenuItem.href}
+                              tooltip={{ children: 'Conteúdo VIP para assinantes Plus' }}
+                              className="text-amber-500/70 hover:text-amber-500"
+                              disabled
+                            >
+                              <Lock />
+                              <span className={cn('transition-opacity duration-200', state === 'collapsed' ? 'opacity-0' : 'opacity-100')}>
+                                {vipMenuItem.label}
+                              </span>
+                            </SidebarMenuButton>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" align="center">
+                          Exclusivo para MentorIA+
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+              }
+            >
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === vipMenuItem.href}
+                tooltip={{ children: vipMenuItem.label }}
+                className="text-amber-500 hover:bg-amber-500/10 hover:text-amber-500"
+              >
+                <Link href={vipMenuItem.href}>
+                  <vipMenuItem.icon />
+                  <span className={cn('transition-opacity duration-200', state === 'collapsed' ? 'opacity-0' : 'opacity-100')}>
+                    {vipMenuItem.label}
+                  </span>
+                </Link>
+              </SidebarMenuButton>
+            </PremiumFeature>
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>

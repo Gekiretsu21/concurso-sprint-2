@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { handleFlashcardResponse } from '@/firebase/actions';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 interface Flashcard {
   id: string;
@@ -21,6 +21,7 @@ interface Flashcard {
   subject: string;
   topic: string;
   targetRole: string;
+  accessTier?: 'standard' | 'plus';
 }
 
 interface FlashcardProgress {
@@ -119,7 +120,8 @@ function FlashcardViewer({ flashcards, onResponse }: { flashcards: Flashcard[], 
 export default function FlashcardsPage() {
   const { firestore } = useFirebase();
   const { user } = useUser();
-  
+  const searchParams = useSearchParams();
+
   const [view, setView] = useState<'initial' | 'loading' | 'studying'>('initial');
   const [filterSubject, setFilterSubject] = useState<string>('all');
   const [filterTopic, setFilterTopic] = useState<string>('all');
@@ -160,9 +162,20 @@ export default function FlashcardsPage() {
     setFilterTopic('all');
     setFilterTargetRole('all');
   }, [filterSubject]);
+  
+  // Effect to handle deep linking from Arsenal VIP
+  useEffect(() => {
+    const subjectFromParams = searchParams.get('subject');
+    const tierFromParams = searchParams.get('tier');
+    
+    if (subjectFromParams && tierFromParams === 'plus') {
+      setFilterSubject(subjectFromParams);
+      startStudySession('all', subjectFromParams, 'plus');
+    }
+  }, [searchParams]);
 
 
-  const startStudySession = useCallback(async (mode: 'all' | 'incorrect') => {
+  const startStudySession = useCallback(async (mode: 'all' | 'incorrect', subject?: string, tier?: string) => {
     if (!firestore || !user) return;
 
     setView('loading');
@@ -200,14 +213,19 @@ export default function FlashcardsPage() {
 
     } else { // mode is 'all'
         const constraints: QueryConstraint[] = [];
-        if (filterSubject !== 'all') {
-            constraints.push(where('subject', '==', filterSubject));
+        const subjectToFilter = subject || filterSubject;
+        
+        if (subjectToFilter !== 'all') {
+            constraints.push(where('subject', '==', subjectToFilter));
         }
         if (filterTopic !== 'all') {
             constraints.push(where('topic', '==', filterTopic));
         }
         if (filterTargetRole !== 'all') {
             constraints.push(where('targetRole', '==', filterTargetRole));
+        }
+        if (tier === 'plus') {
+            constraints.push(where('accessTier', '==', 'plus'));
         }
         
         const baseQuery = collection(firestore, 'flashcards');

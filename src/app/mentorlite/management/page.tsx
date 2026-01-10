@@ -14,7 +14,7 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle, Sparkles, User, Crown, Search } from 'lucide-react';
+import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle, Sparkles, User, Crown, Search, Lock } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteAllFlashcards, deleteFlashcardsByFilter, deleteFlashcardsByIds, deleteQuestionsByIds, deleteDuplicateQuestions, deleteDuplicateFlashcards, updateUserPlan } from '@/firebase/actions';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
@@ -89,6 +89,7 @@ interface UserProfile {
     id: string;
     name: string;
     email: string;
+    photoURL?: string;
     subscription?: {
         plan: 'standard' | 'plus';
         status: 'active' | 'inactive' | 'canceled';
@@ -684,6 +685,7 @@ export default function ManagementPage() {
   const [isImportingFlashcards, setIsImportingFlashcards] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [isPreviousExam, setIsPreviousExam] = useState(false);
+  const [isVipContent, setIsVipContent] = useState(false);
   const [examName, setExamName] = useState('');
   const [userSearchQuery, setUserSearchQuery] = useState('');
 
@@ -840,8 +842,9 @@ export default function ManagementPage() {
     setIsImportingQuestions(true);
     
     const examDetails = isPreviousExam ? { isPreviousExam, examName } : undefined;
-    
-    importQuestions(firestore, questionText, user.uid, examDetails)
+    const accessTier = isVipContent ? 'plus' : 'standard';
+
+    importQuestions(firestore, questionText, user.uid, accessTier, examDetails)
       .then(() => {
         toast({
             title: 'Importação Iniciada',
@@ -850,6 +853,7 @@ export default function ManagementPage() {
         setQuestionText('');
         setExamName('');
         setIsPreviousExam(false);
+        setIsVipContent(false);
       })
       .catch((error) => {
         let message = 'Ocorreu um erro ao importar as questões.';
@@ -877,13 +881,15 @@ export default function ManagementPage() {
       return;
     }
     setIsImportingFlashcards(true);
+    const accessTier = isVipContent ? 'plus' : 'standard';
     try {
-      await importFlashcards(firestore, flashcardText);
+      await importFlashcards(firestore, flashcardText, accessTier);
       toast({
         title: 'Importação Concluída',
         description: 'Os flashcards foram importados com sucesso!',
       });
       setFlashcardText('');
+       setIsVipContent(false);
     } catch (error) {
       let message = 'Ocorreu um erro ao importar os flashcards.';
       if (error instanceof Error) {
@@ -989,10 +995,10 @@ export default function ManagementPage() {
                                 onChange={e => setQuestionText(e.target.value)}
                                 />
                             </div>
-                            <div className="space-y-4">
+                             <div className="space-y-4">
                                 <div className="flex items-center space-x-2">
                                     <Checkbox id="is-previous-exam" checked={isPreviousExam} onCheckedChange={(checked) => setIsPreviousExam(checked as boolean)} />
-                                    <Label htmlFor="is-previous-exam">Prova Anterior</Label>
+                                    <Label htmlFor="is-previous-exam">É uma Prova Anterior?</Label>
                                 </div>
                                 <div className={cn("transition-all duration-300 ease-in-out", isPreviousExam ? "max-h-40 opacity-100" : "max-h-0 opacity-0 overflow-hidden")}>
                                     {isPreviousExam && (
@@ -1001,6 +1007,12 @@ export default function ManagementPage() {
                                         <Input id="exam-name" value={examName} onChange={(e) => setExamName(e.target.value)} placeholder="Ex: PMMG Soldado 2023"/>
                                         </div>
                                     )}
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox id="is-vip-content-q" checked={isVipContent} onCheckedChange={(checked) => setIsVipContent(checked as boolean)} />
+                                    <Label htmlFor="is-vip-content-q" className="flex items-center gap-1 font-bold text-amber-600">
+                                        <Crown className="h-4 w-4" /> Conteúdo Exclusivo MentorIA+ (VIP)?
+                                    </Label>
                                 </div>
                             </div>
                             </div>
@@ -1088,6 +1100,12 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
                                 value={flashcardText}
                                 onChange={e => setFlashcardText(e.target.value)}
                                 />
+                            </div>
+                             <div className="flex items-center space-x-2">
+                                <Checkbox id="is-vip-content-fc" checked={isVipContent} onCheckedChange={(checked) => setIsVipContent(checked as boolean)} />
+                                <Label htmlFor="is-vip-content-fc" className="flex items-center gap-1 font-bold text-amber-600">
+                                    <Crown className="h-4 w-4" /> Conteúdo Exclusivo MentorIA+ (VIP)?
+                                </Label>
                             </div>
                             </div>
                             <DialogFooter>
@@ -1195,7 +1213,7 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
                                         <TableCell>
                                             <div className="flex items-center gap-3">
                                                 <Avatar>
-                                                    <AvatarImage src={(u as any).photoURL || ''} />
+                                                    <AvatarImage src={u.photoURL || ''} />
                                                     <AvatarFallback>{u.name?.charAt(0) || 'U'}</AvatarFallback>
                                                 </Avatar>
                                                 <div>

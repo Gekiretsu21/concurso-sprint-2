@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -13,7 +12,7 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { Button } from './ui/button';
-import { FileText, Loader2, ChevronDown } from 'lucide-react';
+import { FileText, Loader2, ChevronDown, Crown } from 'lucide-react';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import {
@@ -38,6 +37,7 @@ import { collection, DocumentData, query, where } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from './ui/scroll-area';
+import { Checkbox } from './ui/checkbox';
 
 
 const QUESTION_COUNTS = Array.from({ length: 20 }, (_, i) => i + 1);
@@ -62,6 +62,7 @@ export function SimulatedExamDialog() {
   const [subjectSelections, setSubjectSelections] = useState<SubjectSelection>(
     {}
   );
+  const [isVipContent, setIsVipContent] = useState(false);
   
   const questionsQuery = useMemoFirebase(
     () => (firestore && user ? query(collection(firestore, 'questoes')) : null),
@@ -155,6 +156,7 @@ export function SimulatedExamDialog() {
             name: examName,
             cargos: selectedCargos,
             subjects: Object.fromEntries(selectedSubjects.map(([subject, selection]) => [subject, selection])),
+            accessTier: isVipContent ? 'plus' : 'standard',
         };
         const newExamId = await createSimulatedExam(firestore, user.uid, examData);
         
@@ -165,6 +167,7 @@ export function SimulatedExamDialog() {
         setExamName('');
         setSubjectSelections({});
         setSelectedCargos([]);
+        setIsVipContent(false);
         setIsOpen(false);
         router.push(`/mentorlite/community-simulados`);
 
@@ -210,6 +213,7 @@ export function SimulatedExamDialog() {
       setExamName('');
       setSubjectSelections({});
       setSelectedCargos([]);
+      setIsVipContent(false);
     }
   }, [isOpen]);
 
@@ -291,6 +295,13 @@ export function SimulatedExamDialog() {
                   </DropdownMenuContent>
                 </DropdownMenu>
             </div>
+          </div>
+          
+           <div className="flex items-center space-x-2">
+              <Checkbox id="is-vip-content-sim" checked={isVipContent} onCheckedChange={(checked) => setIsVipContent(checked as boolean)} />
+              <Label htmlFor="is-vip-content-sim" className="flex items-center gap-1 font-bold text-amber-600">
+                  <Crown className="h-4 w-4" /> Conteúdo Exclusivo MentorIA+ (VIP)?
+              </Label>
           </div>
 
           <div className="space-y-4">
@@ -375,5 +386,3 @@ export function SimulatedExamDialog() {
     </Dialog>
   );
 }
-
-    
