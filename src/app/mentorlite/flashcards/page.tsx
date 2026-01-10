@@ -182,19 +182,6 @@ export default function FlashcardsPage() {
     setFilterTargetRole('all');
   }, [filterSubject]);
   
-  // Effect to handle deep linking from Arsenal VIP
-  useEffect(() => {
-    const subjectFromParams = searchParams.get('subject');
-    const tierFromParams = searchParams.get('tier');
-    
-    if (subjectFromParams && tierFromParams === 'plus' && view === 'initial') {
-      setFilterSubject(subjectFromParams);
-      // Use a timeout to ensure state updates are processed before starting the session
-      setTimeout(() => startStudySession('all', { subject: subjectFromParams, tier: 'plus' }), 0);
-    }
-  }, [searchParams, view, startStudySession]);
-
-
   const startStudySession = useCallback(async (mode: 'all' | 'incorrect', options: { subject?: string, topic?: string, targetRole?: string, tier?: string, reviewSubject?: string } = {}) => {
     if (!firestore || !user) return;
 
@@ -265,6 +252,18 @@ export default function FlashcardsPage() {
     setView('studying');
 
   }, [firestore, user, filterSubject, filterTopic, filterTargetRole]);
+
+  // Effect to handle deep linking from Arsenal VIP
+  useEffect(() => {
+    const subjectFromParams = searchParams.get('subject');
+    const tierFromParams = searchParams.get('tier');
+    
+    if (subjectFromParams && tierFromParams === 'plus' && view === 'initial') {
+      setFilterSubject(subjectFromParams);
+      // Use a timeout to ensure state updates are processed before starting the session
+      setTimeout(() => startStudySession('all', { subject: subjectFromParams, tier: 'plus' }), 0);
+    }
+  }, [searchParams, view, startStudySession]);
 
 
   const handleFlashcardResponseCallback = useCallback((flashcard: Flashcard, result: 'correct' | 'incorrect') => {
