@@ -930,3 +930,17 @@ export async function addQuestionComment(
       throw permissionError;
   });
 }
+
+export async function updateQuestion(firestore: Firestore, questionId: string, data: Partial<Omit<Question, 'id'>>): Promise<void> {
+    const questionRef = doc(firestore, 'questoes', questionId);
+    
+    updateDoc(questionRef, data).catch(serverError => {
+        const permissionError = new FirestorePermissionError({
+            path: questionRef.path,
+            operation: 'update',
+            requestResourceData: data,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw permissionError;
+    });
+}

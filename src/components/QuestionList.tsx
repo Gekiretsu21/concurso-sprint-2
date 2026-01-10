@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Loader2, MessageSquare, Trash2, Undo2 } from 'lucide-react';
+import { Loader2, MessageSquare, Pencil, Trash2, Undo2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,11 +30,12 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { QuestionComments } from './QuestionComments';
+import { EditQuestionDialog } from './EditQuestionDialog';
 import type { StatusFilter } from '@/app/mentorlite/questions/page';
 
 type AttemptStatus = 'correct' | 'incorrect' | null;
 
-interface Question {
+export interface Question {
   id: string;
   Materia: string;
   Ano: string;
@@ -78,6 +79,7 @@ export function QuestionList({ subject, topics, statusFilter = 'all' }: Question
   const questionsPerPage = 10;
   
   const [userAttempts, setUserAttempts] = useState<Map<string, QuestionAttempt>>(new Map());
+  const isAdmin = user?.email === 'amentoriaacademy@gmail.com';
 
   // 1. Fetch base questions based on subject and topics
   const questionsQuery = useMemoFirebase(() => {
@@ -323,6 +325,9 @@ export function QuestionList({ subject, topics, statusFilter = 'all' }: Question
                         <QuestionComments questionId={q.id} />
                       </DialogContent>
                     </Dialog>
+                    {isAdmin && (
+                        <EditQuestionDialog question={q} />
+                    )}
                   </div>
                 </CardFooter>
               </Card>
