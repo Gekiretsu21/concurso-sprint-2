@@ -105,6 +105,7 @@ interface Question {
   Materia: string;
   Ano: string;
   Cargo: string;
+  Assunto: string;
   status?: 'active' | 'hidden';
 }
 
@@ -294,7 +295,7 @@ function DeleteQuestionsDialog({ availableResources, allQuestions, isLoadingQues
   const [isDeleting, setIsDeleting] = useState(false);
   
   const [filterSubject, setFilterSubject] = useState<string>('all');
-  const [filterAno, setFilterAno] = useState<string>('all');
+  const [filterAssunto, setFilterAssunto] = useState<string>('all');
   const [filterCargo, setFilterCargo] = useState<string>('all');
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
 
@@ -302,7 +303,7 @@ function DeleteQuestionsDialog({ availableResources, allQuestions, isLoadingQues
   useEffect(() => {
     if (!isOpen) {
       setFilterSubject('all');
-      setFilterAno('all');
+      setFilterAssunto('all');
       setFilterCargo('all');
       setSelectedQuestions([]);
     }
@@ -312,11 +313,11 @@ function DeleteQuestionsDialog({ availableResources, allQuestions, isLoadingQues
     if (!allQuestions) return [];
     return allQuestions.filter(q => {
       const subjectMatch = filterSubject === 'all' || q.Materia === filterSubject;
-      const anoMatch = filterAno === 'all' || q.Ano === filterAno;
+      const assuntoMatch = filterAssunto === 'all' || q.Assunto === filterAssunto;
       const cargoMatch = filterCargo === 'all' || q.Cargo === filterCargo;
-      return subjectMatch && anoMatch && cargoMatch;
+      return subjectMatch && assuntoMatch && cargoMatch;
     });
-  }, [allQuestions, filterSubject, filterAno, filterCargo]);
+  }, [allQuestions, filterSubject, filterAssunto, filterCargo]);
 
   const handleCheckboxChange = (questionId: string) => {
     setSelectedQuestions(prev => 
@@ -392,11 +393,11 @@ function DeleteQuestionsDialog({ availableResources, allQuestions, isLoadingQues
                     {availableResources.questionSubjects.map((s: string) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                 </SelectContent>
             </Select>
-            <Select value={filterAno} onValueChange={setFilterAno}>
-                <SelectTrigger><SelectValue placeholder="Ano" /></SelectTrigger>
+            <Select value={filterAssunto} onValueChange={setFilterAssunto}>
+                <SelectTrigger><SelectValue placeholder="Assunto" /></SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="all">Todos os Anos</SelectItem>
-                    {availableResources.questionAnos.map((y: string) => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+                    <SelectItem value="all">Todos os Assuntos</SelectItem>
+                    {availableResources.questionAssuntos.map((y: string) => <SelectItem key={y} value={y}>{y}</SelectItem>)}
                 </SelectContent>
             </Select>
             <Select value={filterCargo} onValueChange={setFilterCargo}>
@@ -1000,22 +1001,25 @@ export default function ManagementPage() {
 }, [allFlashcards]);
 
   const availableQuestionResources = useMemo(() => {
-    if (!allQuestions) return { questionSubjects: [], questionAnos: [], questionCargos: [] };
+    if (!allQuestions) return { questionSubjects: [], questionAnos: [], questionCargos: [], questionAssuntos: [] };
     
     const subjects = new Set<string>();
     const anos = new Set<string>();
     const cargos = new Set<string>();
+    const assuntos = new Set<string>();
 
     for (const q of allQuestions) {
         if(q.Materia) subjects.add(q.Materia);
         if(q.Ano) anos.add(q.Ano);
         if(q.Cargo) cargos.add(q.Cargo);
+        if(q.Assunto) assuntos.add(q.Assunto);
     }
 
     return {
         questionSubjects: Array.from(subjects).sort(),
         questionAnos: Array.from(anos).sort((a,b) => b.localeCompare(a)), // sort descending
         questionCargos: Array.from(cargos).sort(),
+        questionAssuntos: Array.from(assuntos).sort(),
     };
   }, [allQuestions]);
 
