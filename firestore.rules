@@ -38,7 +38,8 @@ service cloud.firestore {
     }
 
     match /questoes/{questionId} {
-      allow read, list: if resource.data.accessTier == 'standard' || isPlusSubscriber() || isAdmin() || resource.data.accessTier == null;
+      allow read: if resource.data.accessTier == 'standard' || isPlusSubscriber() || isAdmin() || resource.data.accessTier == null;
+      allow list: if isSignedIn();
       allow write: if isSignedIn(); 
     }
     
