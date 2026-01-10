@@ -14,6 +14,8 @@ import { handleFlashcardResponse } from '@/firebase/actions';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Flashcard {
   id: string;
@@ -138,7 +140,7 @@ function FlashcardsContent() {
 
   const [view, setView] = useState<'initial' | 'loading' | 'studying'>('initial');
   const [filterSubject, setFilterSubject] = useState<string>('all');
-  const [filterTopic, setFilterTopic] = useState<string>('all');
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [filterTargetRole, setFilterTargetRole] = useState<string>('all');
   
   const [reviewSubject, setReviewSubject] = useState<string>('all');
@@ -190,11 +192,11 @@ function FlashcardsContent() {
 
   // Reset dependent filters when the main filter changes
   useEffect(() => {
-    setFilterTopic('all');
+    setSelectedTopics([]);
     setFilterTargetRole('all');
   }, [filterSubject]);
   
-  const startStudySession = useCallback(async (mode: 'all' | 'incorrect', options: { subject?: string, topic?: string, targetRole?: string, tier?: string, reviewSubject?: string } = {}) => {
+  const startStudySession = useCallback(async (mode: 'all' | 'incorrect', options: { subject?: string, topics?: string[], targetRole?: string, tier?: string, reviewSubject?: string } = {}) => {
     if (!firestore || !user) return;
 
     setView('loading');
@@ -236,15 +238,15 @@ function FlashcardsContent() {
     } else { // mode is 'all'
         const constraints: QueryConstraint[] = [];
         const subjectToFilter = options.subject || filterSubject;
-        const topicToFilter = options.topic || filterTopic;
+        const topicsToFilter = options.topics || selectedTopics;
         const targetRoleToFilter = options.targetRole || filterTargetRole;
         const tierToFilter = options.tier;
         
         if (subjectToFilter !== 'all') {
             constraints.push(where('subject', '==', subjectToFilter));
         }
-        if (topicToFilter !== 'all') {
-            constraints.push(where('topic', '==', topicToFilter));
+        if (topicsToFilter && topicsToFilter.length > 0) {
+            constraints.push(where('topic', 'in', topicsToFilter));
         }
         if (targetRoleToFilter !== 'all') {
             constraints.push(where('targetRole', '==', targetRoleToFilter));
@@ -263,7 +265,7 @@ function FlashcardsContent() {
     setActiveFlashcards(shuffleArray(flashcardsToStudy));
     setView('studying');
 
-  }, [firestore, user, filterSubject, filterTopic, filterTargetRole]);
+  }, [firestore, user, filterSubject, selectedTopics, filterTargetRole]);
 
   // Effect to handle deep linking from Arsenal VIP
   useEffect(() => {
@@ -286,6 +288,17 @@ function FlashcardsContent() {
     setActiveFlashcards(prev => prev.filter(fc => fc.id !== flashcard.id));
 
   }, [firestore, user]);
+  
+  const getTopicButtonLabel = () => {
+    if (selectedTopics.length === 0) {
+      return "Todos os Assuntos";
+    }
+    if (selectedTopics.length === 1) {
+      return selectedTopics[0];
+    }
+    return `${selectedTopics.length} assuntos selecionados`;
+  };
+
 
   if (isLoadingAll) {
     return (
@@ -340,15 +353,37 @@ function FlashcardsContent() {
                                 {filterOptions.subjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                             </SelectContent>
                         </Select>
-                        <Select value={filterTopic} onValueChange={setFilterTopic} disabled={filterSubject === 'all' && filterOptions.topics.length === 0}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Assunto" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Todos os Assuntos</SelectItem>
-                                {filterOptions.topics.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
+                        
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" disabled={filterSubject === 'all' && filterOptions.topics.length === 0} className="w-full justify-start font-normal truncate">
+                                    {getTopicButtonLabel()}
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-56" align="start">
+                                <DropdownMenuLabel>Assuntos Disponíveis</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <ScrollArea className="h-72">
+                                {filterOptions.topics.map(topic => (
+                                    <DropdownMenuCheckboxItem
+                                    key={topic}
+                                    checked={selectedTopics.includes(topic)}
+                                    onCheckedChange={(checked) => {
+                                        if (checked) {
+                                            setSelectedTopics(prev => [...prev, topic]);
+                                        } else {
+                                            setSelectedTopics(prev => prev.filter(t => t !== topic));
+                                        }
+                                    }}
+                                    onSelect={(e) => e.preventDefault()}
+                                    >
+                                    {topic}
+                                    </DropdownMenuCheckboxItem>
+                                ))}
+                                </ScrollArea>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
                          <Select value={filterTargetRole} onValueChange={setFilterTargetRole} disabled={filterSubject === 'all' && filterOptions.targetRoles.length === 0}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Cargo" />
@@ -359,7 +394,7 @@ function FlashcardsContent() {
                             </SelectContent>
                         </Select>
                     </div>
-                     <Button onClick={() => startStudySession('all', { subject: filterSubject, topic: filterTopic, targetRole: filterTargetRole })} disabled={view === 'loading'}>
+                     <Button onClick={() => startStudySession('all', { subject: filterSubject, topics: selectedTopics, targetRole: filterTargetRole })} disabled={view === 'loading'}>
                         {view === 'loading' && studyMode === 'all' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                         Iniciar Estudo
                     </Button>
