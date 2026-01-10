@@ -15,6 +15,7 @@ import {
   User as UserIcon,
   Crown,
   Lock,
+  Users,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import {
@@ -54,6 +55,7 @@ const menuItems = [
   { href: '/mentorlite', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/mentorlite/questions', icon: ClipboardList, label: 'Questões' },
   { href: '/mentorlite/simulados', icon: Shield, label: 'Simulados'},
+  { href: '/mentorlite/community-simulados', icon: Users, label: 'Simulados da Comunidade'},
   { href: '/mentorlite/previous-exams', icon: FileText, label: 'Provas Anteriores' },
   { href: '/mentorlite/flashcards', icon: Layers, label: 'Flashcards' },
   { href: '/mentorlite/study-plan', icon: BrainCircuit, label: 'Plano de Estudo IA' },

@@ -45,7 +45,6 @@ export default function CommunitySimuladosPage() {
       firestore
         ? query(
             collection(firestore, 'communitySimulados'),
-            where('accessTier', 'in', ['standard', null]),
             orderBy('createdAt', 'desc')
           )
         : null,
@@ -116,6 +115,7 @@ export default function CommunitySimuladosPage() {
                         <p className="text-sm text-muted-foreground">
                             {exam.questionCount} questões
                         </p>
+                         {exam.accessTier === 'plus' && <Badge variant="destructive" className="bg-amber-500/20 text-amber-700 hover:bg-amber-500/30">VIP</Badge>}
                     </CardContent>
                     <CardFooter className="p-4 pt-0">
                        {isCompleted && result ? (
