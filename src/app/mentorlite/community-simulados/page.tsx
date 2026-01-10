@@ -44,8 +44,7 @@ export default function CommunitySimuladosPage() {
       firestore
         ? query(
             collection(firestore, 'communitySimulados'),
-            where('accessTier', '!=', 'plus'),
-            orderBy('accessTier'), // Firestore requires ordering by the inequality field
+            where('accessTier', '==', 'standard'),
             orderBy('createdAt', 'desc')
           )
         : null,

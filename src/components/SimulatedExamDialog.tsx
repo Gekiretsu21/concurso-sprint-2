@@ -33,11 +33,11 @@ import {
 import { useFirebase, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import { createSimulatedExam } from '@/firebase/actions';
 import { useToast } from '@/hooks/use-toast';
-import { collection, DocumentData, query, where } from 'firebase/firestore';
+import { collection, DocumentData, query } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
-import { cn } from '@/lib/utils';
 import { ScrollArea } from './ui/scroll-area';
 import { Checkbox } from './ui/checkbox';
+import { PremiumFeature } from './PremiumFeature';
 
 
 const QUESTION_COUNTS = Array.from({ length: 20 }, (_, i) => i + 1);
@@ -169,6 +169,7 @@ export function SimulatedExamDialog() {
         setSelectedCargos([]);
         setIsVipContent(false);
         setIsOpen(false);
+        
         // Navigate to the correct page after creation
         if (examData.accessTier === 'plus') {
             router.push(`/mentorlite/arsenal-vip`);
@@ -302,12 +303,14 @@ export function SimulatedExamDialog() {
             </div>
           </div>
           
-           <div className="flex items-center space-x-2">
-              <Checkbox id="is-vip-content-sim" checked={isVipContent} onCheckedChange={(checked) => setIsVipContent(checked as boolean)} />
-              <Label htmlFor="is-vip-content-sim" className="flex items-center gap-1 font-bold text-amber-600">
-                  <Crown className="h-4 w-4" /> Conteúdo Exclusivo MentorIA+ (VIP)?
-              </Label>
-          </div>
+            <PremiumFeature>
+                <div className="flex items-center space-x-2">
+                    <Checkbox id="is-vip-content-sim" checked={isVipContent} onCheckedChange={(checked) => setIsVipContent(checked as boolean)} />
+                    <Label htmlFor="is-vip-content-sim" className="flex items-center gap-1 font-bold text-amber-600">
+                        <Crown className="h-4 w-4" /> Conteúdo Exclusivo MentorIA+ (VIP)?
+                    </Label>
+                </div>
+            </PremiumFeature>
 
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-4 px-2 font-medium">
@@ -318,7 +321,8 @@ export function SimulatedExamDialog() {
             {isLoadingQuestions ? (
                  <div className="flex items-center justify-center p-4"><Loader2 className="h-6 w-6 animate-spin"/></div>
             ) : (
-                <div className="space-y-3 max-h-72 overflow-y-auto pr-2">
+                <ScrollArea className="h-72 pr-4">
+                <div className="space-y-3">
                 {availableResources.subjects.map(subject => (
                     <div
                     key={subject}
@@ -370,6 +374,7 @@ export function SimulatedExamDialog() {
                     </div>
                 ))}
                 </div>
+                </ScrollArea>
             )}
           </div>
         </div>

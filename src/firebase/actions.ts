@@ -497,49 +497,6 @@ export async function handleFlashcardResponse(
   });
 }
 
-async function getRandomQuestions(
-  firestore: Firestore,
-  subject: string,
-  count: number,
-  topics?: string[],
-  cargos?: string[]
-): Promise<string[]> {
-    const questionsCollection = collection(firestore, 'questoes');
-    const q = query(questionsCollection, where('Materia', '==', subject));
-    const snapshot = await getDocs(q);
-
-    let filteredQuestions = snapshot.docs.filter(doc => doc.data().status !== 'hidden');
-
-    // Filter by cargos client-side if provided
-    if (cargos && cargos.length > 0) {
-        filteredQuestions = filteredQuestions.filter(doc => {
-            const cargo = doc.data().Cargo;
-            return cargo && cargos.includes(cargo);
-        });
-    }
-
-    // Filter by topics client-side if provided
-    if (topics && topics.length > 0) {
-        filteredQuestions = filteredQuestions.filter(doc => {
-            const assunto = doc.data().Assunto;
-            return assunto && topics.includes(assunto);
-        });
-    }
-
-    const allQuestionIds = filteredQuestions.map(doc => doc.id);
-
-    if (allQuestionIds.length < count) {
-        let errorMsg = `Não há questões suficientes para a matéria '${subject}'`;
-        if (cargos && cargos.length > 0) errorMsg += ` para o(s) cargo(s) [${cargos.join(', ')}]`;
-        if (topics && topics.length > 0) errorMsg += ` nos tópicos [${topics.join(', ')}]`;
-        errorMsg += `. Encontradas: ${allQuestionIds.length}, Solicitadas: ${count}.`;
-        throw new Error(errorMsg);
-    }
-
-    const shuffled = allQuestionIds.sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, count);
-}
-
 interface CreateSimulatedExamDTO {
   name: string;
   cargos: string[];
@@ -615,7 +572,7 @@ export async function createSimulatedExam(
     createdAt: serverTimestamp(),
     questionIds: allQuestionIds,
     questionCount: totalQuestions,
-    accessTier: dto.accessTier,
+    accessTier: dto.accessTier || 'standard',
   };
 
   setDoc(examDocRef, examData).catch(serverError => {
