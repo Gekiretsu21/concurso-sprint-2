@@ -28,8 +28,7 @@ function ExclusiveSimuladosList() {
       firestore
         ? query(
             collection(firestore, 'communitySimulados'),
-            where('accessTier', '==', 'plus'),
-            orderBy('createdAt', 'desc')
+            where('accessTier', '==', 'plus')
           )
         : null,
     [firestore]
