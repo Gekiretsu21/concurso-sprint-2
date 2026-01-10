@@ -10,13 +10,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { useCollection, useFirebase, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, orderBy, where } from 'firebase/firestore';
-import { Check, Loader2, RefreshCw } from 'lucide-react';
+import { useCollection, useFirebase, useMemoFirebase, useUser, useDoc } from '@/firebase';
+import { collection, query, orderBy, where, doc } from 'firebase/firestore';
+import { Check, Loader2, RefreshCw, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { PremiumFeature } from '@/components/PremiumFeature';
 
 interface CommunitySimulatedExam {
   id: string;
@@ -35,10 +36,24 @@ interface ExamResult {
     completedAt: any;
 }
 
+interface UserProfile {
+    id: string;
+    subscription?: {
+        plan: 'standard' | 'plus';
+        status: 'active' | 'inactive' | 'canceled';
+    };
+}
+
 
 export default function CommunitySimuladosPage() {
   const { firestore } = useFirebase();
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
+
+  const userDocRef = useMemoFirebase(
+    () => (firestore && user) ? doc(firestore, `users/${user.uid}`) : null,
+    [firestore, user]
+  );
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
 
   const communityExamsQuery = useMemoFirebase(
     () =>
@@ -69,7 +84,8 @@ export default function CommunitySimuladosPage() {
       return new Map(results.map(r => [r.examId, r]));
   }, [results]);
 
-  const isLoading = isLoadingExams || isLoadingResults;
+  const isLoading = isLoadingExams || isLoadingResults || isUserLoading || isProfileLoading;
+  const isPlusUser = userProfile?.subscription?.plan === 'plus';
 
   const handleRedo = (event: React.MouseEvent, examId: string) => {
     event.preventDefault();
@@ -97,9 +113,11 @@ export default function CommunitySimuladosPage() {
             {exams.map(exam => {
               const result = resultsMap.get(exam.id);
               const isCompleted = !!result;
+              const isVip = exam.accessTier === 'plus';
+              const canAccess = !isVip || isPlusUser;
 
               return (
-                <Card key={exam.id} className={cn("flex flex-col", isCompleted && "bg-muted/40")}>
+                <Card key={exam.id} className={cn("flex flex-col", isCompleted && "bg-muted/40", !canAccess && "bg-muted/60 border-dashed")}>
                     <CardHeader className="p-4">
                         <div className="flex items-center justify-between">
                             <CardTitle className="text-lg font-semibold">{exam.name}</CardTitle>
@@ -115,10 +133,10 @@ export default function CommunitySimuladosPage() {
                         <p className="text-sm text-muted-foreground">
                             {exam.questionCount} questões
                         </p>
-                         {exam.accessTier === 'plus' && <Badge variant="destructive" className="bg-amber-500/20 text-amber-700 hover:bg-amber-500/30">VIP</Badge>}
+                         {isVip && <Badge variant="destructive" className="bg-amber-500/20 text-amber-700 hover:bg-amber-500/30">VIP</Badge>}
                     </CardContent>
                     <CardFooter className="p-4 pt-0">
-                       {isCompleted && result ? (
+                       {isCompleted && canAccess && result ? (
                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
                                <Button asChild>
                                   <Link href={`/mentorlite/simulated-exams/results/${result.id}`}>
@@ -132,11 +150,18 @@ export default function CommunitySimuladosPage() {
                            </div>
                        ) : (
                            <div className="w-full flex justify-end">
-                                <Button asChild className="w-1/2">
-                                <Link href={`/mentorlite/simulated-exams/${exam.id}?from=community-simulados`}>
-                                    Iniciar Simulado
-                                </Link>
-                                </Button>
+                               {canAccess ? (
+                                   <Button asChild className="w-1/2">
+                                       <Link href={`/mentorlite/simulated-exams/${exam.id}?from=community-simulados`}>
+                                           Iniciar Simulado
+                                       </Link>
+                                   </Button>
+                               ) : (
+                                   <Button className="w-full" disabled>
+                                       <Lock className="mr-2" />
+                                       Exclusivo para MentorIA+
+                                   </Button>
+                               )}
                            </div>
                        )}
                     </CardFooter>
