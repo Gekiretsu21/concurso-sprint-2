@@ -189,7 +189,7 @@ export default function SimulatedExamPage() {
   const from = searchParams.get('from');
 
   const isPreviousExam = from === 'previous-exams';
-  const isCommunitySimulado = from === 'community-simulados';
+  const isCommunitySimulado = from === 'community-simulados' || from === 'simulados';
 
   const { firestore } = useFirebase();
   const { user } = useUser();
@@ -267,7 +267,7 @@ export default function SimulatedExamPage() {
 
   const getBackHref = () => {
     if (isPreviousExam) return '/mentorlite/previous-exams';
-    if (isCommunitySimulado) return '/mentorlite/community-simulados';
+    if (isCommunitySimulado) return '/mentorlite/simulados';
     return '/mentorlite'; // Default to dashboard
   };
 

@@ -63,6 +63,7 @@ export function SimulatedExamDialog() {
     {}
   );
   const [isVipContent, setIsVipContent] = useState(false);
+  const [isCommunityContent, setIsCommunityContent] = useState(true);
   
   const questionsQuery = useMemoFirebase(
     () => (firestore && user ? query(collection(firestore, 'questoes')) : null),
@@ -148,34 +149,58 @@ export function SimulatedExamDialog() {
       });
       return;
     }
+     if (!isVipContent && !isCommunityContent) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro de Validação',
+        description: 'Selecione pelo menos uma audiência (Comunidade ou VIP).',
+      });
+      return;
+    }
 
     setIsLoading(true);
 
     try {
-        const examData = {
-            name: examName,
-            cargos: selectedCargos,
-            subjects: Object.fromEntries(selectedSubjects.map(([subject, selection]) => [subject, selection])),
-            accessTier: isVipContent ? 'plus' : 'standard',
-        };
-        const newExamId = await createSimulatedExam(firestore, user.uid, examData);
-        
+        if (isCommunityContent) {
+            const examData = {
+                name: examName,
+                cargos: selectedCargos,
+                subjects: Object.fromEntries(selectedSubjects.map(([subject, selection]) => [subject, selection])),
+                accessTier: 'standard',
+            };
+            await createSimulatedExam(firestore, user.uid, examData);
+        }
+
+        if (isVipContent) {
+            const examData = {
+                name: examName,
+                cargos: selectedCargos,
+                subjects: Object.fromEntries(selectedSubjects.map(([subject, selection]) => [subject, selection])),
+                accessTier: 'plus',
+            };
+             await createSimulatedExam(firestore, user.uid, examData);
+        }
+
         toast({
             title: 'Sucesso!',
-            description: `Simulado "${examName}" criado.`,
+            description: `Simulado "${examName}" criado e publicado.`,
         });
         setExamName('');
         setSubjectSelections({});
         setSelectedCargos([]);
         setIsVipContent(false);
+        setIsCommunityContent(true); // Reset to default
         setIsOpen(false);
         
-        // Navigate to the correct page after creation
-        if (examData.accessTier === 'plus') {
-            router.push(`/mentorlite/arsenal-vip`);
+        // Navigate to the most relevant page after creation
+        if (isCommunityContent && !isVipContent) {
+            router.push('/mentorlite/simulados');
+        } else if (isVipContent) {
+             router.push('/mentorlite/arsenal-vip');
         } else {
-            router.push(`/mentorlite/community-simulados`);
+             router.push('/mentorlite/simulados');
         }
+
 
     } catch (error) {
         console.error(error);
@@ -220,6 +245,7 @@ export function SimulatedExamDialog() {
       setSubjectSelections({});
       setSelectedCargos([]);
       setIsVipContent(false);
+      setIsCommunityContent(true);
     }
   }, [isOpen]);
 
@@ -244,6 +270,8 @@ export function SimulatedExamDialog() {
     return `${selectedCargos.length} cargos selecionados`;
   };
 
+  const isPublishDisabled = isLoading || isLoadingQuestions || !examName.trim() || Object.values(subjectSelections).reduce((acc, s) => acc + s.count, 0) === 0 || (!isVipContent && !isCommunityContent);
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -256,7 +284,7 @@ export function SimulatedExamDialog() {
         <DialogHeader>
           <DialogTitle>Gerar Novo Simulado para Comunidade</DialogTitle>
           <DialogDescription>
-            Este simulado ficará disponível para todos os usuários.
+            Defina os parâmetros e a audiência do seu simulado.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-6 py-4">
@@ -303,14 +331,27 @@ export function SimulatedExamDialog() {
             </div>
           </div>
           
-            <PremiumFeature>
-                <div className="flex items-center space-x-2">
-                    <Checkbox id="is-vip-content-sim" checked={isVipContent} onCheckedChange={(checked) => setIsVipContent(checked as boolean)} />
-                    <Label htmlFor="is-vip-content-sim" className="flex items-center gap-1 font-bold text-amber-600">
-                        <Crown className="h-4 w-4" /> Conteúdo Exclusivo MentorIA+ (VIP)?
-                    </Label>
+            <div className="space-y-4 rounded-md border p-4">
+                <Label className="font-semibold">Audiência do Simulado</Label>
+                <p className="text-sm text-muted-foreground">Escolha para quem este simulado será visível. Você pode marcar ambas as opções.</p>
+                <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="flex items-center space-x-2">
+                        <Checkbox id="is-community-content" checked={isCommunityContent} onCheckedChange={(checked) => setIsCommunityContent(checked as boolean)} />
+                        <Label htmlFor="is-community-content" className="font-medium">
+                            Publicar para a Comunidade (Grátis)
+                        </Label>
+                    </div>
+                    <PremiumFeature>
+                        <div className="flex items-center space-x-2">
+                            <Checkbox id="is-vip-content-sim" checked={isVipContent} onCheckedChange={(checked) => setIsVipContent(checked as boolean)} />
+                            <Label htmlFor="is-vip-content-sim" className="flex items-center gap-1 font-bold text-amber-600">
+                                <Crown className="h-4 w-4" /> Conteúdo Exclusivo MentorIA+ (VIP)
+                            </Label>
+                        </div>
+                    </PremiumFeature>
                 </div>
-            </PremiumFeature>
+            </div>
+
 
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-4 px-2 font-medium">
@@ -384,7 +425,7 @@ export function SimulatedExamDialog() {
           </DialogClose>
           <Button
             onClick={handleGenerate}
-            disabled={isLoading || isLoadingQuestions}
+            disabled={isPublishDisabled}
           >
             {isLoading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
