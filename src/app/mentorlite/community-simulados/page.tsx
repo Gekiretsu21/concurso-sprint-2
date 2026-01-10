@@ -45,7 +45,7 @@ export default function CommunitySimuladosPage() {
       firestore
         ? query(
             collection(firestore, 'communitySimulados'),
-            where('accessTier', '==', 'standard'),
+            where('accessTier', 'in', ['standard', null]),
             orderBy('createdAt', 'desc')
           )
         : null,
