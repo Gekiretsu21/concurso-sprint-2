@@ -14,9 +14,9 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle, Sparkles } from 'lucide-react';
+import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle, Sparkles, User, Crown } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
-import { importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteAllFlashcards, deleteFlashcardsByFilter, deleteFlashcardsByIds, deleteQuestionsByIds, deleteDuplicateQuestions, deleteDuplicateFlashcards } from '@/firebase/actions';
+import { importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteAllFlashcards, deleteFlashcardsByFilter, deleteFlashcardsByIds, deleteQuestionsByIds, deleteDuplicateQuestions, deleteDuplicateFlashcards, updateUserPlan } from '@/firebase/actions';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
 import { SubjectCard } from '@/components/SubjectCard';
@@ -38,6 +38,9 @@ import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 
 
 // Helper to generate a URL-friendly slug from a subject name
@@ -80,6 +83,16 @@ interface Question {
   Ano: string;
   Cargo: string;
   status?: 'active' | 'hidden';
+}
+
+interface UserProfile {
+    id: string;
+    name: string;
+    email: string;
+    subscription?: {
+        plan: 'standard' | 'plus';
+        status: 'active' | 'inactive' | 'canceled';
+    };
 }
 
 
@@ -688,7 +701,12 @@ export default function ManagementPage() {
     [firestore, user]
   );
   const { data: allFlashcards, isLoading: isLoadingFlashcards } = useCollection<Flashcard>(flashcardsQuery);
-
+  
+  const usersQuery = useMemoFirebase(
+    () => (firestore && user ? query(collection(firestore, 'users')) : null),
+    [firestore, user]
+  );
+  const { data: allUsers, isLoading: isLoadingUsers } = useCollection<UserProfile>(usersQuery);
 
   const availableSubjects = useMemo((): SubjectWithCount[] => {
     if (!allQuestions) return [];
@@ -868,6 +886,24 @@ export default function ManagementPage() {
     }
   };
 
+  const handlePlanChange = async (userId: string, currentPlan: 'standard' | 'plus') => {
+    if (!firestore) return;
+    const newPlan = currentPlan === 'plus' ? 'standard' : 'plus';
+    try {
+        await updateUserPlan(firestore, userId, newPlan);
+        toast({
+            title: 'Sucesso!',
+            description: `Plano do usuário atualizado para ${newPlan}.`
+        });
+    } catch (error) {
+        toast({
+            variant: 'destructive',
+            title: 'Erro ao Atualizar Plano',
+            description: 'Não foi possível alterar o plano do usuário.'
+        });
+    }
+  };
+
   const isButtonDisabled = !user || isUserLoading;
 
   return (
@@ -880,7 +916,7 @@ export default function ManagementPage() {
       </header>
 
       <div className="grid grid-cols-1 gap-6">
-        <Card className="md:col-span-2">
+        <Card>
             <CardHeader>
                 <CardTitle>Ações Rápidas</CardTitle>
                 <CardDescription>Principais ferramentas para gerenciamento de conteúdo.</CardDescription>
@@ -1058,7 +1094,7 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
             </CardContent>
         </Card>
 
-        <Card className="md:col-span-2">
+        <Card>
             <CardHeader>
                 <CardTitle>Ferramentas de Manutenção</CardTitle>
                 <CardDescription>Ações para organizar e limpar seus dados.</CardDescription>
@@ -1104,6 +1140,75 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
         </Card>
       </div>
 
+      <Card>
+        <CardHeader>
+            <CardTitle>Gerenciamento de Usuários</CardTitle>
+            <CardDescription>Visualize e gerencie os planos de assinatura dos usuários.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Usuário</TableHead>
+                        <TableHead>Plano</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {isLoadingUsers ? (
+                        Array.from({ length: 3 }).map((_, i) => (
+                            <TableRow key={i}>
+                                <TableCell><Skeleton className="h-8 w-48" /></TableCell>
+                                <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                                <TableCell className="text-right"><Skeleton className="h-8 w-24" /></TableCell>
+                            </TableRow>
+                        ))
+                    ) : allUsers && allUsers.length > 0 ? (
+                        allUsers.map(u => {
+                            const plan = u.subscription?.plan || 'standard';
+                            const isPlus = plan === 'plus';
+                            return (
+                                <TableRow key={u.id}>
+                                    <TableCell>
+                                        <div className="flex items-center gap-3">
+                                            <Avatar>
+                                                <AvatarImage src={(u as any).photoURL || ''} />
+                                                <AvatarFallback>{u.name?.charAt(0) || 'U'}</AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <p className="font-medium">{u.name}</p>
+                                                <p className="text-sm text-muted-foreground">{u.email}</p>
+                                            </div>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge variant={isPlus ? 'default' : 'secondary'} className={cn(isPlus && 'bg-accent text-accent-foreground')}>
+                                            {isPlus && <Crown className="mr-1 h-3 w-3" />}
+                                            {plan === 'plus' ? 'MentorIA+' : 'Standard'}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => handlePlanChange(u.id, plan)}
+                                        >
+                                            {isPlus ? 'Rebaixar para Standard' : 'Promover para Plus'}
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            )
+                        })
+                    ) : (
+                       <TableRow>
+                            <TableCell colSpan={3} className="text-center h-24">Nenhum usuário encontrado.</TableCell>
+                       </TableRow> 
+                    )}
+                </TableBody>
+            </Table>
+        </CardContent>
+      </Card>
+
 
       <div className="space-y-6">
         <h3 className="text-2xl font-bold tracking-tight">Recursos</h3>
@@ -1140,3 +1245,5 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
     </div>
   );
 }
+
+    

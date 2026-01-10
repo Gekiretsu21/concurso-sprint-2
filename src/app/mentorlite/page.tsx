@@ -7,6 +7,8 @@ import {
   FileText,
   Flame,
   Layers,
+  Lock,
+  Sparkles,
   Timer,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -23,6 +25,7 @@ import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { doc } from 'firebase/firestore';
 import { updateDailyStreak } from '../actions/update-user-stats';
+import { PremiumFeature } from '@/components/PremiumFeature';
 
 const mainFeatures = [
   {
@@ -193,9 +196,34 @@ export default function Home() {
               </CardContent>
             </Card>
           ))}
+            <Card className="flex flex-col">
+              <CardHeader>
+                <div className="bg-accent/10 p-3 rounded-lg w-fit mb-4">
+                  <Sparkles className="h-6 w-6 text-accent" />
+                </div>
+                <CardTitle className="text-xl">Gerar Relatório IA</CardTitle>
+                <CardDescription>Obtenha uma análise detalhada do seu desempenho com IA.</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-grow flex items-end">
+                <PremiumFeature
+                    fallback={
+                        <Button className="w-full md:w-auto mt-auto" disabled>
+                            <Lock className="mr-2" />
+                            Exclusivo para MentorIA+
+                        </Button>
+                    }
+                    >
+                    <Button className="w-full md:w-auto mt-auto bg-accent text-accent-foreground hover:bg-accent/90">
+                        Gerar Relatório
+                    </Button>
+                </PremiumFeature>
+              </CardContent>
+            </Card>
         </div>
       </section>
     </div>
   );
 }
 
+
+    

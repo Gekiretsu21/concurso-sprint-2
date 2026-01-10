@@ -33,6 +33,30 @@ interface ExamDetails {
   examName: string;
 }
 
+export async function updateUserPlan(firestore: Firestore, userId: string, newPlan: 'standard' | 'plus'): Promise<void> {
+    if (!userId) {
+        throw new Error('User ID is required.');
+    }
+    const userRef = doc(firestore, 'users', userId);
+
+    const subscriptionData = {
+        plan: newPlan,
+        status: 'active', // Assume changing the plan makes it active
+        updatedAt: serverTimestamp(),
+    };
+
+    updateDoc(userRef, { subscription: subscriptionData }).catch(serverError => {
+        const permissionError = new FirestorePermissionError({
+            path: userRef.path,
+            operation: 'update',
+            requestResourceData: { subscription: subscriptionData }
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw permissionError;
+    });
+}
+
+
 export async function updateStudyTime(firestore: Firestore, userId: string, seconds: number): Promise<void> {
   if (!userId || seconds <= 0) return;
 
@@ -946,3 +970,5 @@ export async function addQuestionComment(
       throw permissionError;
   });
 }
+
+    
