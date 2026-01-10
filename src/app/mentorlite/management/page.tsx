@@ -14,7 +14,7 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle, Sparkles, User, Crown } from 'lucide-react';
+import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle, Sparkles, User, Crown, Search } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteAllFlashcards, deleteFlashcardsByFilter, deleteFlashcardsByIds, deleteQuestionsByIds, deleteDuplicateQuestions, deleteDuplicateFlashcards, updateUserPlan } from '@/firebase/actions';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
@@ -685,6 +685,8 @@ export default function ManagementPage() {
   const [isClient, setIsClient] = useState(false);
   const [isPreviousExam, setIsPreviousExam] = useState(false);
   const [examName, setExamName] = useState('');
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+
 
   useEffect(() => {
     setIsClient(true);
@@ -707,6 +709,17 @@ export default function ManagementPage() {
     [firestore, user]
   );
   const { data: allUsers, isLoading: isLoadingUsers } = useCollection<UserProfile>(usersQuery);
+  
+  const filteredUsers = useMemo(() => {
+    if (!allUsers) return [];
+    if (!userSearchQuery) return allUsers;
+    
+    const lowercasedQuery = userSearchQuery.toLowerCase();
+    return allUsers.filter(u => 
+      u.name?.toLowerCase().includes(lowercasedQuery) || 
+      u.email?.toLowerCase().includes(lowercasedQuery)
+    );
+  }, [allUsers, userSearchQuery]);
 
   const availableSubjects = useMemo((): SubjectWithCount[] => {
     if (!allQuestions) return [];
@@ -1146,66 +1159,79 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
             <CardDescription>Visualize e gerencie os planos de assinatura dos usuários.</CardDescription>
         </CardHeader>
         <CardContent>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Usuário</TableHead>
-                        <TableHead>Plano</TableHead>
-                        <TableHead className="text-right">Ações</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {isLoadingUsers ? (
-                        Array.from({ length: 3 }).map((_, i) => (
-                            <TableRow key={i}>
-                                <TableCell><Skeleton className="h-8 w-48" /></TableCell>
-                                <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                                <TableCell className="text-right"><Skeleton className="h-8 w-24" /></TableCell>
-                            </TableRow>
-                        ))
-                    ) : allUsers && allUsers.length > 0 ? (
-                        allUsers.map(u => {
-                            const plan = u.subscription?.plan || 'standard';
-                            const isPlus = plan === 'plus';
-                            return (
-                                <TableRow key={u.id}>
-                                    <TableCell>
-                                        <div className="flex items-center gap-3">
-                                            <Avatar>
-                                                <AvatarImage src={(u as any).photoURL || ''} />
-                                                <AvatarFallback>{u.name?.charAt(0) || 'U'}</AvatarFallback>
-                                            </Avatar>
-                                            <div>
-                                                <p className="font-medium">{u.name || 'Usuário sem nome'}</p>
-                                                <p className="text-sm text-muted-foreground">{u.email || 'E-mail não disponível'}</p>
-                                            </div>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge variant={isPlus ? 'default' : 'secondary'} className={cn(isPlus && 'bg-accent text-accent-foreground')}>
-                                            {isPlus && <Crown className="mr-1 h-3 w-3" />}
-                                            {plan === 'plus' ? 'MentorIA+' : 'Standard'}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => handlePlanChange(u.id, plan)}
-                                        >
-                                            {isPlus ? 'Rebaixar para Standard' : 'Promover para Plus'}
-                                        </Button>
-                                    </TableCell>
+             <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                    placeholder="Pesquisar por nome ou e-mail..."
+                    value={userSearchQuery}
+                    onChange={(e) => setUserSearchQuery(e.target.value)}
+                    className="pl-10"
+                />
+            </div>
+             <ScrollArea className="h-96">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Usuário</TableHead>
+                            <TableHead>Plano</TableHead>
+                            <TableHead className="text-right">Ações</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {isLoadingUsers ? (
+                            Array.from({ length: 5 }).map((_, i) => (
+                                <TableRow key={i}>
+                                    <TableCell><Skeleton className="h-8 w-48" /></TableCell>
+                                    <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                                    <TableCell className="text-right"><Skeleton className="h-8 w-24" /></TableCell>
                                 </TableRow>
-                            )
-                        })
-                    ) : (
-                       <TableRow>
-                            <TableCell colSpan={3} className="text-center h-24">Nenhum usuário encontrado.</TableCell>
-                       </TableRow> 
-                    )}
-                </TableBody>
-            </Table>
+                            ))
+                        ) : filteredUsers && filteredUsers.length > 0 ? (
+                            filteredUsers.map(u => {
+                                const plan = u.subscription?.plan || 'standard';
+                                const isPlus = plan === 'plus';
+                                return (
+                                    <TableRow key={u.id}>
+                                        <TableCell>
+                                            <div className="flex items-center gap-3">
+                                                <Avatar>
+                                                    <AvatarImage src={(u as any).photoURL || ''} />
+                                                    <AvatarFallback>{u.name?.charAt(0) || 'U'}</AvatarFallback>
+                                                </Avatar>
+                                                <div>
+                                                    <p className="font-medium">{u.name || 'Usuário sem nome'}</p>
+                                                    <p className="text-sm text-muted-foreground">{u.email || 'E-mail não disponível'}</p>
+                                                </div>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge variant={isPlus ? 'default' : 'secondary'} className={cn(isPlus && 'bg-accent text-accent-foreground')}>
+                                                {isPlus && <Crown className="mr-1 h-3 w-3" />}
+                                                {plan === 'plus' ? 'MentorIA+' : 'Standard'}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => handlePlanChange(u.id, plan)}
+                                            >
+                                                {isPlus ? 'Rebaixar para Standard' : 'Promover para Plus'}
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                )
+                            })
+                        ) : (
+                           <TableRow>
+                                <TableCell colSpan={3} className="text-center h-24">
+                                  {userSearchQuery ? 'Nenhum usuário encontrado para sua busca.' : 'Nenhum usuário encontrado.'}
+                                </TableCell>
+                           </TableRow> 
+                        )}
+                    </TableBody>
+                </Table>
+            </ScrollArea>
         </CardContent>
       </Card>
 
