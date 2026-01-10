@@ -162,14 +162,19 @@ export function SimulatedExamDialog() {
         
         toast({
             title: 'Sucesso!',
-            description: `Simulado "${examName}" criado para a comunidade.`,
+            description: `Simulado "${examName}" criado.`,
         });
         setExamName('');
         setSubjectSelections({});
         setSelectedCargos([]);
         setIsVipContent(false);
         setIsOpen(false);
-        router.push(`/mentorlite/community-simulados`);
+        // Navigate to the correct page after creation
+        if (examData.accessTier === 'plus') {
+            router.push(`/mentorlite/arsenal-vip`);
+        } else {
+            router.push(`/mentorlite/community-simulados`);
+        }
 
     } catch (error) {
         console.error(error);
