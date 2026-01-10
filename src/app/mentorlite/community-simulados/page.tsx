@@ -25,6 +25,7 @@ interface CommunitySimulatedExam {
   userId: string;
   originalExamId: string;
   accessTier?: 'standard' | 'plus';
+  createdAt: any;
 }
 
 interface ExamResult {
@@ -100,7 +101,7 @@ export default function CommunitySimuladosPage() {
 
               return (
                 <Card key={exam.id} className={cn("flex flex-col", isCompleted && "bg-muted/40")}>
-                    <CardHeader className="p-2">
+                    <CardHeader className="p-4">
                         <div className="flex items-center justify-between">
                             <CardTitle className="text-lg font-semibold">{exam.name}</CardTitle>
                             {isCompleted && (
@@ -111,12 +112,12 @@ export default function CommunitySimuladosPage() {
                             )}
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-1 p-0 px-2 flex-grow">
+                    <CardContent className="space-y-1 p-4 pt-0 flex-grow">
                         <p className="text-sm text-muted-foreground">
                             {exam.questionCount} questões
                         </p>
                     </CardContent>
-                    <CardFooter className="p-2">
+                    <CardFooter className="p-4 pt-0">
                        {isCompleted && result ? (
                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
                                <Button asChild>
