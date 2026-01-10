@@ -151,11 +151,6 @@ export default function CommunitySimuladosPage() {
                 <p className="text-muted-foreground">
                   Nenhum simulado na comunidade ainda.
                 </p>
-                <Button variant="link" asChild>
-                  <Link href="/mentorlite/management">
-                    Seja o primeiro a criar um!
-                  </Link>
-                </Button>
               </CardContent>
             </Card>
           )
