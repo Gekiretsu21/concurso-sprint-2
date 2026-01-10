@@ -440,6 +440,7 @@ export async function handleFlashcardResponse(
     lastResult: result,
     reviewCount: increment(1),
     lastReviewedAt: serverTimestamp(),
+    subject: subject, // Store subject for easier querying of incorrect cards by subject
   };
   batch.set(progressRef, progressData, { merge: true });
 

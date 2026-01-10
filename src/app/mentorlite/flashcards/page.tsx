@@ -28,6 +28,7 @@ interface FlashcardProgress {
   id: string; // flashcardId
   status: 'learned' | 'reviewing';
   lastResult: 'correct' | 'incorrect';
+  subject: string;
 }
 
 function FlashcardViewer({ flashcards, onResponse }: { flashcards: Flashcard[], onResponse: (flashcard: Flashcard, result: 'correct' | 'incorrect') => void }) {
@@ -126,6 +127,9 @@ export default function FlashcardsPage() {
   const [filterSubject, setFilterSubject] = useState<string>('all');
   const [filterTopic, setFilterTopic] = useState<string>('all');
   const [filterTargetRole, setFilterTargetRole] = useState<string>('all');
+  
+  const [reviewSubject, setReviewSubject] = useState<string>('all');
+
 
   const [studyMode, setStudyMode] = useState<'all' | 'incorrect'>('all');
   const [activeFlashcards, setActiveFlashcards] = useState<Flashcard[]>([]);
@@ -136,6 +140,21 @@ export default function FlashcardsPage() {
   ), [firestore]);
 
   const { data: allFlashcards, isLoading: isLoadingAll } = useCollection<Flashcard>(allFlashcardsQuery);
+
+  const incorrectFlashcardsProgressQuery = useMemoFirebase(() =>
+    (firestore && user)
+      ? query(collection(firestore, `users/${user.uid}/flashcard_progress`), where('lastResult', '==', 'incorrect'))
+      : null,
+  [firestore, user]);
+
+  const { data: incorrectProgress, isLoading: isLoadingIncorrectProgress } = useCollection<FlashcardProgress>(incorrectFlashcardsProgressQuery);
+
+  const incorrectSubjects = useMemo(() => {
+    if (!incorrectProgress) return [];
+    const subjects = new Set(incorrectProgress.map(p => p.subject));
+    return Array.from(subjects).sort();
+  }, [incorrectProgress]);
+
 
   const filterOptions = useMemo(() => {
     if (!allFlashcards) return { subjects: [], topics: [], targetRoles: [] };
@@ -168,14 +187,15 @@ export default function FlashcardsPage() {
     const subjectFromParams = searchParams.get('subject');
     const tierFromParams = searchParams.get('tier');
     
-    if (subjectFromParams && tierFromParams === 'plus') {
+    if (subjectFromParams && tierFromParams === 'plus' && view === 'initial') {
       setFilterSubject(subjectFromParams);
-      startStudySession('all', subjectFromParams, 'plus');
+      // Use a timeout to ensure state updates are processed before starting the session
+      setTimeout(() => startStudySession('all', { subject: subjectFromParams, tier: 'plus' }), 0);
     }
-  }, [searchParams]);
+  }, [searchParams, view]);
 
 
-  const startStudySession = useCallback(async (mode: 'all' | 'incorrect', subject?: string, tier?: string) => {
+  const startStudySession = useCallback(async (mode: 'all' | 'incorrect', options: { subject?: string, topic?: string, targetRole?: string, tier?: string, reviewSubject?: string } = {}) => {
     if (!firestore || !user) return;
 
     setView('loading');
@@ -194,10 +214,13 @@ export default function FlashcardsPage() {
     let flashcardsToStudy: Flashcard[] = [];
 
     if (mode === 'incorrect') {
-      const responsesQuery = query(
-        collection(firestore, `users/${user.uid}/flashcard_progress`),
-        where('lastResult', '==', 'incorrect')
-      );
+      const incorrectConstraints: QueryConstraint[] = [where('lastResult', '==', 'incorrect')];
+      if (options.reviewSubject && options.reviewSubject !== 'all') {
+        incorrectConstraints.push(where('subject', '==', options.reviewSubject));
+      }
+
+      const responsesQuery = query(collection(firestore, `users/${user.uid}/flashcard_progress`), ...incorrectConstraints);
+      
       const responsesSnapshot = await getDocs(responsesQuery);
       const incorrectFlashcardIds = responsesSnapshot.docs.map(doc => doc.data().flashcardId);
 
@@ -213,18 +236,21 @@ export default function FlashcardsPage() {
 
     } else { // mode is 'all'
         const constraints: QueryConstraint[] = [];
-        const subjectToFilter = subject || filterSubject;
+        const subjectToFilter = options.subject || filterSubject;
+        const topicToFilter = options.topic || filterTopic;
+        const targetRoleToFilter = options.targetRole || filterTargetRole;
+        const tierToFilter = options.tier;
         
         if (subjectToFilter !== 'all') {
             constraints.push(where('subject', '==', subjectToFilter));
         }
-        if (filterTopic !== 'all') {
-            constraints.push(where('topic', '==', filterTopic));
+        if (topicToFilter !== 'all') {
+            constraints.push(where('topic', '==', topicToFilter));
         }
-        if (filterTargetRole !== 'all') {
-            constraints.push(where('targetRole', '==', filterTargetRole));
+        if (targetRoleToFilter !== 'all') {
+            constraints.push(where('targetRole', '==', targetRoleToFilter));
         }
-        if (tier === 'plus') {
+        if (tierToFilter === 'plus') {
             constraints.push(where('accessTier', '==', 'plus'));
         }
         
@@ -322,8 +348,8 @@ export default function FlashcardsPage() {
                             </SelectContent>
                         </Select>
                     </div>
-                     <Button onClick={() => startStudySession('all')} disabled={view === 'loading'}>
-                        {view === 'loading' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                     <Button onClick={() => startStudySession('all', { subject: filterSubject, topic: filterTopic, targetRole: filterTargetRole })} disabled={view === 'loading'}>
+                        {view === 'loading' && studyMode === 'all' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                         Iniciar Estudo
                     </Button>
                 </CardContent>
@@ -334,9 +360,18 @@ export default function FlashcardsPage() {
                 <CardTitle>Revisar Meus Erros</CardTitle>
                 <CardDescription>Estude apenas os flashcards que você marcou como "Errei" anteriormente.</CardDescription>
                 </CardHeader>
-                <CardContent>
-                <Button onClick={() => startStudySession('incorrect')} disabled={view === 'loading'}>
-                        {view === 'loading' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4"/>}
+                <CardContent className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                 <Select value={reviewSubject} onValueChange={setReviewSubject} disabled={incorrectSubjects.length === 0}>
+                    <SelectTrigger className="w-full sm:w-[240px]">
+                        <SelectValue placeholder="Filtrar por matéria" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Todas as Matérias</SelectItem>
+                        {incorrectSubjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                <Button onClick={() => startStudySession('incorrect', { reviewSubject: reviewSubject })} disabled={view === 'loading' || isLoadingIncorrectProgress}>
+                        {(view === 'loading' && studyMode === 'incorrect') || isLoadingIncorrectProgress ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4"/>}
                         Revisar Meus Erros
                 </Button>
                 </CardContent>
