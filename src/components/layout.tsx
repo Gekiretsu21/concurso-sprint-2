@@ -233,8 +233,8 @@ function UserNav() {
 }
 
 export function AppLayout({ children }: { children: ReactNode }) {
-  const { firestore, user } = useFirebase();
-  useStudyTimeTracker(user?.uid, firestore);
+  const { user } = useUser();
+  useStudyTimeTracker(user?.uid);
 
   return (
     <SidebarProvider>

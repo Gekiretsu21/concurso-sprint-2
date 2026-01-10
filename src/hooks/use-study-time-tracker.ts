@@ -1,20 +1,20 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { updateStudyTime } from '@/firebase/actions';
-import { Firestore } from 'firebase/firestore';
+import { updateUserStudyTime } from '@/app/actions/update-user-stats';
 
 const UPDATE_INTERVAL = 60 * 1000; // 60 seconds
 
-export function useStudyTimeTracker(userId: string | undefined, firestore: Firestore | null) {
+export function useStudyTimeTracker(userId: string | undefined) {
   const [time, setTime] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const isVisibleRef = useRef(true);
 
-  // Function to save accumulated time
+  // Function to save accumulated time via Server Action
   const saveTime = (timeToSave: number) => {
-    if (userId && firestore && timeToSave > 0) {
-      updateStudyTime(firestore, userId, Math.floor(timeToSave / 1000));
+    if (userId && timeToSave > 0) {
+      // No need to pass firestore instance anymore
+      updateUserStudyTime(userId, Math.floor(timeToSave / 1000));
     }
   };
 
@@ -46,11 +46,11 @@ export function useStudyTimeTracker(userId: string | undefined, firestore: Fires
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [userId, time, firestore]);
+  }, [userId, time]);
 
   // Effect to manage the timer and periodic updates
   useEffect(() => {
-    if (userId && firestore) {
+    if (userId) {
       // Start timer
       if (!intervalRef.current) {
         intervalRef.current = setInterval(() => {
@@ -82,7 +82,7 @@ export function useStudyTimeTracker(userId: string | undefined, firestore: Fires
         setTime(0);
       }
     };
-  }, [userId, time, firestore]);
+  }, [userId, time]);
 
   // Save any remaining time when the user navigates away
   useEffect(() => {
@@ -91,5 +91,5 @@ export function useStudyTimeTracker(userId: string | undefined, firestore: Fires
         saveTime(time);
       }
     };
-  }, [time, saveTime]);
+  }, [time]);
 }

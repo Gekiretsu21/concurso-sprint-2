@@ -1,7 +1,7 @@
 'use server';
 
 import { adminFirestore } from '@/firebase/admin';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 
 function isSameDay(date1: Date, date2: Date): boolean {
     return date1.getFullYear() === date2.getFullYear() &&
@@ -27,20 +27,26 @@ export async function updateDailyStreak(userId: string): Promise<{ dailyStreak: 
     
     try {
         const doc = await userRef.get();
-        const userData = doc.data();
+        if (!doc.exists) {
+             await userRef.set({
+                stats: {
+                    dailyStreak: 1,
+                    lastLoginDate: today
+                }
+            }, { merge: true });
+            return { dailyStreak: 1 };
+        }
 
-        // Get last login date from stats, or use a very old date if not present
-        const lastLoginTimestamp = userData?.stats?.lastLoginDate;
+        const userData = doc.data();
+        const lastLoginTimestamp = userData?.stats?.lastLoginDate as Timestamp | undefined;
         const lastLoginDate = lastLoginTimestamp ? lastLoginTimestamp.toDate() : new Date(0);
 
         let newStreak = userData?.stats?.dailyStreak || 0;
 
         if (!isSameDay(lastLoginDate, today)) {
             if (isYesterday(lastLoginDate, today)) {
-                // Logged in yesterday, increment streak
                 newStreak++;
             } else {
-                // Missed a day, reset streak to 1
                 newStreak = 1;
             }
             
@@ -56,8 +62,7 @@ export async function updateDailyStreak(userId: string): Promise<{ dailyStreak: 
 
     } catch (error) {
         console.error(`Failed to update daily streak for user ${userId}:`, error);
-        // If an error occurs, try to set initial values
-         try {
+        try {
             await userRef.set({
                 stats: {
                     dailyStreak: 1,
@@ -67,7 +72,37 @@ export async function updateDailyStreak(userId: string): Promise<{ dailyStreak: 
             return { dailyStreak: 1 };
         } catch (initError) {
             console.error(`Failed to initialize stats for user ${userId}:`, initError);
-            return { dailyStreak: 0 }; // Return 0 on failure
+            return { dailyStreak: 0 };
         }
     }
+}
+
+export async function updateUserStudyTime(userId: string, seconds: number): Promise<void> {
+  if (!userId || seconds <= 0) {
+    console.warn(`updateUserStudyTime called with invalid arguments: userId=${userId}, seconds=${seconds}`);
+    return;
+  }
+
+  const userRef = adminFirestore.collection('users').doc(userId);
+  const updatePayload = {
+    'stats.totalStudyTime': FieldValue.increment(seconds)
+  };
+
+  try {
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) {
+        // If the user document doesn't exist, create it with the initial study time.
+        await userRef.set({
+            stats: {
+                totalStudyTime: seconds
+            }
+        }, { merge: true });
+    } else {
+        // Otherwise, update the existing document.
+        await userRef.update(updatePayload);
+    }
+  } catch (error) {
+    console.error(`Failed to update study time for user ${userId}:`, error);
+    // You might want to add more specific error handling or re-throwing logic here.
+  }
 }
