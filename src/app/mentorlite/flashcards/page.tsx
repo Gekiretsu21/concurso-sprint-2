@@ -4,7 +4,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check, ChevronLeft, ChevronRight, Loader2, RefreshCw, ThumbsDown, ThumbsUp, X } from 'lucide-react';
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, Suspense } from 'react';
 import './flashcard.css';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
@@ -131,7 +131,7 @@ function FlashcardViewer({ flashcards, onResponse }: { flashcards: Flashcard[], 
   );
 }
 
-export default function FlashcardsPage() {
+function FlashcardsContent() {
   const { firestore } = useFirebase();
   const { user } = useUser();
   const searchParams = useSearchParams();
@@ -411,6 +411,13 @@ export default function FlashcardsPage() {
   );
 }
 
-    
-
-    
+export default function FlashcardsPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-4 text-muted-foreground">Carregando...</p>
+      </div>}>
+      <FlashcardsContent />
+    </Suspense>
+  )
+}
