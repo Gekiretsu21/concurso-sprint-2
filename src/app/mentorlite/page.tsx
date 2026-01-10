@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -21,7 +20,7 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { useUser, useDoc, useFirebase, useMemoFirebase, useCollection } from '@/firebase';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { doc, collection, query, where, orderBy } from 'firebase/firestore';
 import { updateDailyStreak } from '../actions/update-user-stats';
@@ -113,9 +112,8 @@ export default function Home() {
         
         const tiersForUser = userPlan === 'plus' ? ['all', 'standard', 'plus'] : ['all', 'standard'];
         
-        // Firestore requires a composite index for queries with multiple orderBy clauses on different fields.
-        // To simplify and avoid index configuration, we'll order by creation date and handle pinning on the client if necessary.
-        // For now, let's just order by date.
+        // We will fetch ordered by date and then sort for pinned posts on the client-side
+        // to avoid needing a composite index in Firestore for this view.
         return query(
             collection(firestore, 'feed_posts'), 
             where('active', '==', true),
@@ -128,11 +126,11 @@ export default function Home() {
 
     const sortedFeedPosts = useMemo(() => {
         if (!feedPosts) return [];
-        // Manually sort pinned posts to the top
+        // Manually sort pinned posts to the top, then by date (which is already done by the query)
         return [...feedPosts].sort((a, b) => {
             if (a.isPinned && !b.isPinned) return -1;
             if (!a.isPinned && b.isPinned) return 1;
-            // For posts with same pinned status, createdAt is already handled by the query
+            // For posts with same pinned status, the default order from query (createdAt desc) is maintained
             return 0;
         });
     }, [feedPosts]);
