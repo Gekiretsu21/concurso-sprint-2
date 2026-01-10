@@ -63,7 +63,8 @@ service cloud.firestore {
     }
     
     match /previousExams/{examId} {
-      allow read, list: if resource.data.accessTier == 'standard' || isPlusSubscriber() || isAdmin();
+      allow read: if resource.data.accessTier == 'standard' || isPlusSubscriber() || isAdmin();
+      allow list: if isSignedIn();
       allow write: if isSignedIn();
     }
 
