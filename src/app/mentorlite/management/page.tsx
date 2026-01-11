@@ -968,6 +968,11 @@ export default function ManagementPage() {
         .sort((a, b) => a.name.localeCompare(b.name));
   }, [allQuestions]);
 
+  const totalQuestionsCount = useMemo(() => {
+    return availableSubjects.reduce((total, subject) => total + subject.count, 0);
+  }, [availableSubjects]);
+
+
   const availableFlashcardResources = useMemo(() => {
     if (!allFlashcards) return { flashcardSubjects: [], topicsByFlashcardSubject: {}, flashcardCargos: [] };
     
@@ -1461,36 +1466,46 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
 
 
       <div className="space-y-6">
-        <h3 className="text-2xl font-bold tracking-tight">Recursos</h3>
+        <h3 className="text-2xl font-bold tracking-tight">Banco de Conteúdo</h3>
         {isLoadingSubjects ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-24 w-full" />
+          <div className="grid grid-cols-1 gap-6">
             <Skeleton className="h-24 w-full" />
             <Skeleton className="h-24 w-full" />
           </div>
         ) : (
-          availableSubjects.map(subject => (
-            <SubjectCard 
-              key={subject.name}
-              subject={subject.name}
-              questionCount={subject.count}
-              href={`/mentorlite/management/${createSubjectSlug(subject.name)}`}
-            />
-          ))
-        )}
-        <Card>
-            <Link href="/mentorlite/flashcards">
-                <CardHeader className="flex-row items-center justify-between">
-                    <div>
-                        <CardTitle className="flex items-center gap-2"><Layers /> Flashcards</CardTitle>
-                        <CardDescription className="mt-1">
-                        Acesse e estude todos os flashcards importados.
+            <div className="space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Questões</CardTitle>
+                        <CardDescription>
+                            Total de {totalQuestionsCount} questões cadastradas. Clique em uma matéria para visualizar e gerenciar.
                         </CardDescription>
-                    </div>
-                </CardHeader>
-            </Link>
-        </Card>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {availableSubjects.map(subject => (
+                            <SubjectCard 
+                            key={subject.name}
+                            subject={subject.name}
+                            questionCount={subject.count}
+                            href={`/mentorlite/management/${createSubjectSlug(subject.name)}`}
+                            />
+                        ))}
+                    </CardContent>
+                </Card>
+                <Card>
+                    <Link href="/mentorlite/flashcards">
+                        <CardHeader className="flex-row items-center justify-between">
+                            <div>
+                                <CardTitle className="flex items-center gap-2"><Layers /> Flashcards</CardTitle>
+                                <CardDescription className="mt-1">
+                                Acesse e estude todos os flashcards importados.
+                                </CardDescription>
+                            </div>
+                        </CardHeader>
+                    </Link>
+                </Card>
+            </div>
+        )}
       </div>
     </div>
   );
