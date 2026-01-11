@@ -151,7 +151,7 @@ function FeedPostDialog() {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button size="sm" className="mt-4"><Megaphone /> Gerenciar Feed</Button>
+                <Button size="icon" className="mt-4"><Megaphone /><span className="sr-only">Gerenciar Feed</span></Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-2xl">
                 <DialogHeader>
@@ -356,9 +356,9 @@ function DeleteQuestionsDialog({ availableResources, allQuestions, isLoadingQues
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="destructive" size="sm" disabled={isLoadingQuestions}>
+        <Button variant="destructive" size="icon" disabled={isLoadingQuestions}>
           <Trash2 />
-          Excluir Questões
+          <span className="sr-only">Excluir Questões</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-4xl">
@@ -479,9 +479,9 @@ function DeletePreviousExamsDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="destructive" size="sm" disabled={!user}>
+        <Button variant="destructive" size="icon" disabled={!user}>
           <ArchiveX />
-          Excluir Provas
+          <span className="sr-only">Excluir Provas</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
@@ -567,9 +567,9 @@ function DeleteCommunitySimuladosDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="destructive" size="sm" disabled={!user}>
+        <Button variant="destructive" size="icon" disabled={!user}>
           <Trash2 />
-          Excluir Simulados
+          <span className="sr-only">Excluir Simulados</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
@@ -751,9 +751,9 @@ function DeleteFlashcardsDialog({ availableResources, allFlashcards, isLoadingFl
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="destructive" size="sm" disabled={isLoadingFlashcards}>
+        <Button variant="destructive" size="icon" disabled={isLoadingFlashcards}>
           <Layers />
-          Excluir Flashcards
+          <span className="sr-only">Excluir Flashcards</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-4xl">
@@ -1102,13 +1102,13 @@ export default function ManagementPage() {
                      <Dialog>
                         {isClient ? (
                             <DialogTrigger asChild>
-                            <Button size="sm" className="mt-4" disabled={isButtonDisabled}>
-                                {isUserLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ClipboardPaste />}
-                                {isUserLoading ? 'Carregando...' : 'Importar'}
+                            <Button size="icon" className="mt-4" disabled={isButtonDisabled}>
+                                {isUserLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardPaste />}
+                                <span className="sr-only">Importar Questões</span>
                             </Button>
                             </DialogTrigger>
                         ) : (
-                            <Button size="sm" className="mt-4" disabled={true}><ClipboardPaste /> Importar</Button>
+                            <Button size="icon" className="mt-4" disabled={true}><ClipboardPaste /><span className="sr-only">Importar Questões</span></Button>
                         )}
                         <DialogContent className="sm:max-w-4xl">
                             <DialogHeader>
@@ -1172,7 +1172,7 @@ export default function ManagementPage() {
                      {isClient ? (
                         <SimulatedExamDialog />
                     ) : (
-                        <Button size="sm" className="mt-4" disabled><FileText />Gerar</Button>
+                        <Button size="icon" className="mt-4" disabled><FileText /><span className="sr-only">Gerar Simulado</span></Button>
                     )}
                 </div>
 
@@ -1207,13 +1207,13 @@ export default function ManagementPage() {
                     <Dialog>
                         {isClient ? (
                             <DialogTrigger asChild>
-                            <Button size="sm" className="mt-4" disabled={isButtonDisabled}>
-                                {isUserLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Layers />}
-                                {isUserLoading ? 'Carregando...' : 'Importar'}
+                            <Button size="icon" className="mt-4" disabled={isButtonDisabled}>
+                                {isUserLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Layers />}
+                                <span className="sr-only">Importar Flashcards</span>
                             </Button>
                             </DialogTrigger>
                         ) : (
-                            <Button size="sm" className="mt-4" disabled={true}><Layers />Importar</Button>
+                            <Button size="icon" className="mt-4" disabled={true}><Layers /><span className="sr-only">Importar Flashcards</span></Button>
                         )}
                         <DialogContent className="sm:max-w-4xl">
                             <DialogHeader>
@@ -1264,7 +1264,7 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
                      {isClient ? (
                         <FeedPostDialog />
                     ) : (
-                        <Button size="sm" className="mt-4" disabled={true}><Megaphone /> Gerenciar Feed</Button>
+                        <Button size="icon" className="mt-4" disabled={true}><Megaphone /><span className="sr-only">Gerenciar Feed</span></Button>
                     )}
                 </div>
 

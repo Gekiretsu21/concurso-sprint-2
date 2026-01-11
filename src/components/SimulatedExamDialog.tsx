@@ -275,9 +275,9 @@ export function SimulatedExamDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button disabled={!user}>
+        <Button size="icon" className="mt-4" disabled={!user}>
           <FileText />
-          Gerar
+          <span className="sr-only">Gerar Simulado</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-4xl">
