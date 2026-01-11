@@ -944,3 +944,22 @@ export async function updateQuestion(firestore: Firestore, questionId: string, d
         throw permissionError;
     });
 }
+
+interface FlashcardData {
+  front: string;
+  back: string;
+}
+
+export async function updateFlashcard(firestore: Firestore, flashcardId: string, data: FlashcardData): Promise<void> {
+    const flashcardRef = doc(firestore, 'flashcards', flashcardId);
+    
+    updateDoc(flashcardRef, data).catch(serverError => {
+        const permissionError = new FirestorePermissionError({
+            path: flashcardRef.path,
+            operation: 'update',
+            requestResourceData: data,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw permissionError;
+    });
+}

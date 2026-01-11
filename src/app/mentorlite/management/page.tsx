@@ -14,12 +14,11 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle, Sparkles, User, Crown, Search, Lock, Megaphone } from 'lucide-react';
+import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle, Sparkles, User, Crown, Search, Lock, Megaphone, ExternalLink } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { createFeedPost, importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteAllFlashcards, deleteFlashcardsByFilter, deleteFlashcardsByIds, deleteQuestionsByIds, deleteDuplicateQuestions, deleteDuplicateFlashcards, updateUserPlan } from '@/firebase/actions';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
-import { SubjectCard } from '@/components/SubjectCard';
 import { SimulatedExamDialog } from '@/components/SimulatedExamDialog';
 import {
   Card,
@@ -65,21 +64,6 @@ const feedPostSchema = z.object({
     path: ["contentUrl"],
 });
 
-
-// Helper to generate a URL-friendly slug from a subject name
-const createSubjectSlug = (subject: string) => {
-  return subject
-    .toLowerCase()
-    .replace(/ /g, '-') // Replace spaces with hyphens for URL
-    .normalize('NFD') // Normalize accents to separate them from letters
-    .replace(/[\u0300-\u036f]/g, '') // Remove the accents
-    .replace(/[^a-z0-9-]/g, ''); // Remove any remaining special characters
-};
-
-interface SubjectWithCount {
-    name: string;
-    count: number;
-}
 
 interface PreviousExam {
   id: string;
@@ -888,7 +872,7 @@ export default function ManagementPage() {
     () => (firestore && user ? collection(firestore, 'questoes') : null),
     [firestore, user]
   );
-  const { data: allQuestions, isLoading: isLoadingSubjects } = useCollection<Question>(questionsQuery);
+  const { data: allQuestions, isLoading: isLoadingQuestions } = useCollection<Question>(questionsQuery);
   
   const flashcardsQuery = useMemoFirebase(
     () => (firestore && user ? collection(firestore, 'flashcards') : null),
@@ -913,64 +897,15 @@ export default function ManagementPage() {
     );
   }, [allUsers, userSearchQuery]);
 
-  const availableSubjects = useMemo((): SubjectWithCount[] => {
-    if (!allQuestions) return [];
-
-    const subjectCounts = allQuestions.reduce((acc, q) => {
-        const subject = q.Materia;
-        const isHidden = q.status === 'hidden';
-
-        if (subject && subject.trim() && !isHidden) {
-            let subjectName = subject.trim();
-            
-            if (subjectName.toLowerCase() !== 'materia') {
-                if (!acc[subjectName]) {
-                    acc[subjectName] = { name: subjectName, count: 0 };
-                }
-                acc[subjectName].count++;
-            }
-        }
-        return acc;
-    }, {} as Record<string, {name: string, count: number}>);
-    
-    // Unify "Língua Portuguesa" variations
-    const portuguesComAcento = subjectCounts['Língua Portuguesa'];
-    const portuguesSemAcento = subjectCounts['Lingua Portuguesa'];
-    if (portuguesComAcento || portuguesSemAcento) {
-        const total = (portuguesComAcento?.count || 0) + (portuguesSemAcento?.count || 0);
-        if (portuguesComAcento) delete subjectCounts['Lingua Portuguesa'];
-        if (portuguesSemAcento) delete subjectCounts['Língua Portuguesa'];
-        subjectCounts['Língua Portuguesa'] = { name: 'Língua Portuguesa', count: total };
-    }
-
-    // Unify "Legislação Jurídica" variations
-    const legislacaoComAcento = subjectCounts['Legislação Jurídica'];
-    const legislacaoSemAcento = subjectCounts['Legislacao Juridica'];
-     if (legislacaoComAcento || legislacaoSemAcento) {
-        const total = (legislacaoComAcento?.count || 0) + (legislacaoSemAcento?.count || 0);
-        if (legislacaoComAcento) delete subjectCounts['Legislacao Juridica'];
-        if (legislacaoSemAcento) delete subjectCounts['Legislação Jurídica'];
-        subjectCounts['Legislação Jurídica'] = { name: 'Legislação Jurídica', count: total };
-    }
-    
-    // Unify "Legislação Institucional" variations
-    const institucionalComAcento = subjectCounts['Legislação Institucional'];
-    const institucionalSemAcento = subjectCounts['Legislacao Institucional'];
-    if (institucionalComAcento || institucionalSemAcento) {
-        const total = (institucionalComAcento?.count || 0) + (institucionalSemAcento?.count || 0);
-        if (institucionalComAcento) delete subjectCounts['Legislacao Institucional'];
-        if (institucionalSemAcento) delete subjectCounts['Legislação Institucional'];
-        subjectCounts['Legislação Institucional'] = { name: 'Legislação Institucional', count: total };
-    }
-
-
-    return Object.values(subjectCounts)
-        .sort((a, b) => a.name.localeCompare(b.name));
-  }, [allQuestions]);
 
   const totalQuestionsCount = useMemo(() => {
-    return availableSubjects.reduce((total, subject) => total + subject.count, 0);
-  }, [availableSubjects]);
+    if (!allQuestions) return 0;
+    return allQuestions.filter(q => q.status !== 'hidden').length;
+  }, [allQuestions]);
+
+  const totalFlashcardsCount = useMemo(() => {
+    return allFlashcards ? allFlashcards.length : 0;
+  }, [allFlashcards]);
 
 
   const availableFlashcardResources = useMemo(() => {
@@ -1350,7 +1285,7 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
                     <DeleteQuestionsDialog
                       availableResources={availableQuestionResources}
                       allQuestions={allQuestions}
-                      isLoadingQuestions={isLoadingSubjects}
+                      isLoadingQuestions={isLoadingQuestions}
                     />
                 </div>
                 <div className="flex flex-col justify-between p-4 rounded-lg border h-full">
@@ -1467,45 +1402,50 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
 
       <div className="space-y-6">
         <h3 className="text-2xl font-bold tracking-tight">Banco de Conteúdo</h3>
-        {isLoadingSubjects ? (
-          <div className="grid grid-cols-1 gap-6">
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-24 w-full" />
+          <div className="space-y-6">
+              <Card className="hover:bg-muted/50 transition-colors">
+                  <Link href="/mentorlite/management/questions" className="block p-6">
+                      <div className="flex items-center justify-between">
+                          <div>
+                              <CardTitle className="flex items-center gap-2"><FileText /> Banco de Questões</CardTitle>
+                              <CardDescription className="mt-1">
+                                  Gerencie todas as matérias e questões cadastradas na plataforma.
+                              </CardDescription>
+                          </div>
+                          <div className="flex items-center gap-4">
+                              {isLoadingQuestions ? <Skeleton className="h-8 w-20" /> : (
+                                  <div className="text-right">
+                                      <p className="text-2xl font-bold">{totalQuestionsCount}</p>
+                                      <p className="text-xs text-muted-foreground">Questões</p>
+                                  </div>
+                              )}
+                              <ExternalLink className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                      </div>
+                  </Link>
+              </Card>
+              <Card className="hover:bg-muted/50 transition-colors">
+                  <Link href="/mentorlite/management/flashcards" className="block p-6">
+                      <div className="flex items-center justify-between">
+                          <div>
+                              <CardTitle className="flex items-center gap-2"><Layers /> Banco de Flashcards</CardTitle>
+                              <CardDescription className="mt-1">
+                                  Visualize e gerencie todos os flashcards por matéria.
+                              </CardDescription>
+                          </div>
+                           <div className="flex items-center gap-4">
+                              {isLoadingFlashcards ? <Skeleton className="h-8 w-20" /> : (
+                                  <div className="text-right">
+                                      <p className="text-2xl font-bold">{totalFlashcardsCount}</p>
+                                      <p className="text-xs text-muted-foreground">Flashcards</p>
+                                  </div>
+                              )}
+                              <ExternalLink className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                      </div>
+                  </Link>
+              </Card>
           </div>
-        ) : (
-            <div className="space-y-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Questões</CardTitle>
-                        <CardDescription>
-                            Total de {totalQuestionsCount} questões cadastradas. Clique em uma matéria para visualizar e gerenciar.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {availableSubjects.map(subject => (
-                            <SubjectCard 
-                            key={subject.name}
-                            subject={subject.name}
-                            questionCount={subject.count}
-                            href={`/mentorlite/management/${createSubjectSlug(subject.name)}`}
-                            />
-                        ))}
-                    </CardContent>
-                </Card>
-                <Card>
-                    <Link href="/mentorlite/flashcards">
-                        <CardHeader className="flex-row items-center justify-between">
-                            <div>
-                                <CardTitle className="flex items-center gap-2"><Layers /> Flashcards</CardTitle>
-                                <CardDescription className="mt-1">
-                                Acesse e estude todos os flashcards importados.
-                                </CardDescription>
-                            </div>
-                        </CardHeader>
-                    </Link>
-                </Card>
-            </div>
-        )}
       </div>
     </div>
   );
