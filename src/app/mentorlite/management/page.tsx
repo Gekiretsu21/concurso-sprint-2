@@ -1087,8 +1087,12 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
                  {/* Gerenciar Feed */}
                 <div className="flex flex-col p-4 rounded-lg border min-h-[160px]">
                     <div className="flex-grow">
-                        <h4 className="font-semibold">Gerenciar Feed</h4>
-                        <p className="text-sm text-muted-foreground mt-1">Crie e edite posts do feed.</p>
+                        <div className="flex justify-between items-start">
+                             <div>
+                                <h4 className="font-semibold">Gerenciar Feed</h4>
+                                <p className="text-sm text-muted-foreground mt-1">Crie e edite posts do feed.</p>
+                            </div>
+                        </div>
                     </div>
                     <div className="flex justify-end">
                        <FeedPostDialog />

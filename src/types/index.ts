@@ -1,3 +1,5 @@
+'use client';
+
 import { Timestamp } from 'firebase/firestore';
 
 export interface FeedPost {

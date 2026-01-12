@@ -44,6 +44,7 @@ const formSchema = z.object({
   content: z.string().min(10, { message: 'O conteúdo deve ter pelo menos 10 caracteres.' }),
   type: z.enum(['text', 'youtube', 'link']),
   url: z.string().url({ message: 'Por favor, insira uma URL válida.' }).optional().or(z.literal('')),
+  imageUrl: z.string().url({ message: 'Por favor, insira uma URL de imagem válida.' }).optional().or(z.literal('')),
   audience: z.enum(['all', 'standard', 'plus']),
   isPinned: z.boolean().default(false),
   isActive: z.boolean().default(true),
@@ -62,6 +63,7 @@ export function FeedPostDialog() {
       content: '',
       type: 'text',
       url: '',
+      imageUrl: '',
       audience: 'all',
       isPinned: false,
       isActive: true,
@@ -75,6 +77,12 @@ export function FeedPostDialog() {
         toast({ variant: 'destructive', title: 'Erro', description: 'Você não está autenticado.' });
         return;
     }
+    // Validate URL for link and youtube types
+    if (values.type !== 'text' && !values.url) {
+        form.setError('url', { type: 'manual', message: 'A URL é obrigatória para posts do tipo link ou youtube.' });
+        return;
+    }
+
     try {
       await createFeedPost(firestore, values);
       toast({ title: 'Sucesso!', description: 'O post foi criado no feed.' });
@@ -176,24 +184,44 @@ export function FeedPostDialog() {
             </div>
 
             {watchType !== 'text' && (
-               <FormField
-                control={form.control}
-                name="url"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>URL</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://..." {...field} />
-                    </FormControl>
-                     <FormDescription>
-                        {watchType === 'youtube'
-                        ? 'Cole a URL completa do vídeo do YouTube.'
-                        : 'Cole o link para o site externo.'}
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <>
+                   <FormField
+                    control={form.control}
+                    name="url"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>URL</FormLabel>
+                        <FormControl>
+                          <Input placeholder="https://..." {...field} />
+                        </FormControl>
+                         <FormDescription>
+                            {watchType === 'youtube'
+                            ? 'Cole a URL completa do vídeo do YouTube.'
+                            : 'Cole o link para o site externo.'}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {watchType === 'link' && (
+                     <FormField
+                        control={form.control}
+                        name="imageUrl"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>URL da Imagem (Opcional)</FormLabel>
+                            <FormControl>
+                            <Input placeholder="https://.../imagem.png" {...field} />
+                            </FormControl>
+                            <FormDescription>
+                                URL para a imagem de pré-visualização do link.
+                            </FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                  )}
+                </>
             )}
             
             <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
