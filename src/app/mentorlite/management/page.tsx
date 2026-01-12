@@ -49,14 +49,14 @@ const feedPostSchema = z.object({
     title: z.string().min(5, "O título deve ter pelo menos 5 caracteres."),
     body: z.string().min(10, "O corpo do post deve ter pelo menos 10 caracteres."),
     type: z.enum(['video', 'link', 'notice']),
-    contentUrl: z.string().optional(),
+    contentUrl: z.string().url("Por favor, insira uma URL válida.").optional().or(z.literal('')),
     actionLabel: z.string().optional(),
     targetTier: z.enum(['all', 'standard', 'plus']),
     isPinned: z.boolean(),
     active: z.boolean(),
 }).refine(data => {
-    if (data.type === 'video' || data.type === 'link') {
-        return !!data.contentUrl && data.contentUrl.length > 0;
+    if ((data.type === 'video' || data.type === 'link') && (!data.contentUrl || data.contentUrl.length === 0)) {
+        return false;
     }
     return true;
 }, {
@@ -209,32 +209,23 @@ function FeedPostDialog() {
                         )} />
                     </div>
 
-                    {postType === 'video' && (
+                    {(postType === 'video' || postType === 'link') && (
                         <FormField name="contentUrl" control={form.control} render={({ field }) => (
                             <FormItem>
-                                <Label>Link do Vídeo (YouTube)</Label>
-                                <Input {...field} placeholder="https://www.youtube.com/watch?v=..." />
+                                <Label>{postType === 'video' ? 'Link do Vídeo (YouTube)' : 'URL de Destino'}</Label>
+                                <Input {...field} placeholder={postType === 'video' ? "https://www.youtube.com/watch?v=..." : "https://..."} />
                                 {form.formState.errors.contentUrl && <p className="text-sm text-destructive">{form.formState.errors.contentUrl.message}</p>}
                             </FormItem>
                         )} />
                     )}
 
                     {postType === 'link' && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                             <FormField name="contentUrl" control={form.control} render={({ field }) => (
-                                <FormItem>
-                                    <Label>URL de Destino</Label>
-                                    <Input {...field} placeholder="https://..." />
-                                     {form.formState.errors.contentUrl && <p className="text-sm text-destructive">{form.formState.errors.contentUrl.message}</p>}
-                                </FormItem>
-                            )} />
-                             <FormField name="actionLabel" control={form.control} render={({ field }) => (
-                                <FormItem>
-                                    <Label>Texto do Botão (Opcional)</Label>
-                                    <Input {...field} placeholder="Ex: Baixar PDF" />
-                                </FormItem>
-                            )} />
-                        </div>
+                         <FormField name="actionLabel" control={form.control} render={({ field }) => (
+                            <FormItem>
+                                <Label>Texto do Botão (Opcional)</Label>
+                                <Input {...field} placeholder="Ex: Baixar PDF" />
+                            </FormItem>
+                        )} />
                     )}
                     
                     <div className="flex items-center justify-between">

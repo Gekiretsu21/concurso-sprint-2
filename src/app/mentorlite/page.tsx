@@ -10,6 +10,7 @@ import {
   Sparkles,
   Timer,
   Shield,
+  Users,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -39,10 +40,10 @@ const mainFeatures = [
     cta: 'Começar a praticar',
   },
   {
-    title: 'Simulados',
-    href: '/mentorlite/simulados',
-    icon: Shield,
-    description: 'Resolva simulados criados pela comunidade.',
+    title: 'Simulados da Comunidade',
+    href: '/mentorlite/community-simulados',
+    icon: Users,
+    description: 'Resolva simulados criados por outros concurseiros.',
     cta: 'Escolher um Simulado',
   },
   {
