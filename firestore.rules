@@ -51,7 +51,7 @@ service cloud.firestore {
     }
 
     match /flashcards/{flashcardId} {
-      allow read: if resource.data.accessTier == 'standard' || isPlusSubscriber() || isAdmin() || resource.data.accessTier == null;
+      allow read: if isSignedIn();
       allow list: if isSignedIn();
       allow write: if isSignedIn();
     }
@@ -67,15 +67,6 @@ service cloud.firestore {
       allow read: if isAdmin() || isPlusSubscriber() || resource.data.accessTier == 'standard' || resource.data.accessTier == null;
       allow list: if isSignedIn();
       allow write: if isSignedIn();
-    }
-
-    match /feed_posts/{postId} {
-      allow read: if resource.data.active == true && 
-                    (resource.data.targetTier == 'all' || 
-                     resource.data.targetTier == 'standard' ||
-                     (resource.data.targetTier == 'plus' && isPlusSubscriber()));
-      allow list: if isSignedIn();
-      allow create, update, delete: if isAdmin();
     }
   }
 }

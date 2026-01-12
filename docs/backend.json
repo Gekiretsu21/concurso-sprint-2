@@ -550,25 +550,6 @@
         }
       },
       "required": ["examId", "userId", "completedAt", "score", "userAnswers"]
-    },
-    "FeedPost": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "FeedPost",
-      "description": "A post in the user-facing feed/dashboard.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string", "description": "Unique identifier for the feed post." },
-        "title": { "type": "string", "description": "The main headline of the post." },
-        "body": { "type": "string", "description": "The main text content of the post, can contain markdown." },
-        "type": { "type": "string", "enum": ["video", "link", "notice"], "description": "The type of content the post represents." },
-        "contentUrl": { "type": "string", "format": "uri", "description": "URL for video or link types (e.g., YouTube URL, external article URL)." },
-        "actionLabel": { "type": "string", "description": "The text for the call-to-action button (e.g., 'Read More')." },
-        "targetTier": { "type": "string", "enum": ["all", "standard", "plus"], "description": "Which user subscription tier can see this post." },
-        "isPinned": { "type": "boolean", "description": "If true, this post should be displayed at the top of the feed." },
-        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of when the post was created." },
-        "active": { "type": "boolean", "description": "Whether the post is currently active and should be displayed." }
-      },
-      "required": ["id", "title", "body", "type", "targetTier", "createdAt", "active"]
     }
   },
   "auth": {
@@ -760,22 +741,6 @@
             {
               "name": "aiStudyPlanId",
               "description": "The unique ID of the AI study plan."
-            }
-          ]
-        }
-      },
-       {
-        "path": "/feed_posts/{postId}",
-        "definition": {
-          "entityName": "FeedPost",
-          "schema": {
-            "$ref": "#/backend/entities/FeedPost"
-          },
-          "description": "Stores posts for the main user feed. Controls visibility via targetTier.",
-          "params": [
-            {
-              "name": "postId",
-              "description": "The unique ID of the feed post."
             }
           ]
         }

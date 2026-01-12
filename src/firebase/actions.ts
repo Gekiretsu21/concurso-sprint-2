@@ -26,36 +26,11 @@ import {
 import { User } from 'firebase/auth';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { FeedPost } from '@/types';
 
 interface ExamDetails {
   isPreviousExam: boolean;
   examName: string;
 }
-
-export async function createFeedPost(firestore: Firestore, postData: Omit<FeedPost, 'id' | 'createdAt'>): Promise<string> {
-    const feedCollection = collection(firestore, 'feed_posts');
-    const newPostRef = doc(feedCollection);
-
-    const dataToSave = {
-        ...postData,
-        id: newPostRef.id,
-        createdAt: serverTimestamp(),
-    };
-
-    setDoc(newPostRef, dataToSave).catch(serverError => {
-        const permissionError = new FirestorePermissionError({
-            path: newPostRef.path,
-            operation: 'create',
-            requestResourceData: dataToSave,
-        });
-        errorEmitter.emit('permission-error', permissionError);
-        throw permissionError;
-    });
-
-    return newPostRef.id;
-}
-
 
 export async function updateUserPlan(firestore: Firestore, userId: string, newPlan: 'standard' | 'plus'): Promise<void> {
     if (!userId) {
