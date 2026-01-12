@@ -19,28 +19,36 @@ export default function FeedPage() {
     
     const { data: userData, isLoading: isProfileLoading } = useDoc<{subscription?: { plan: 'standard' | 'plus' }}>(userDocRef);
 
+    // This query now only depends on the user being logged in, making it stable.
     const feedQuery = useMemoFirebase(() => {
-        // Aguarda o perfil do usuário carregar antes de criar a query.
-        if (!firestore || isProfileLoading) return null;
+        if (!firestore || !user) return null;
         
-        const isPlusUser = userData?.subscription?.plan === 'plus';
-        
-        const audienceFilter = isPlusUser 
-            ? where('audience', 'in', ['all', 'standard', 'plus'])
-            : where('audience', 'in', ['all', 'standard']);
-
         return query(
             collection(firestore, 'feed_posts'),
             where('isActive', '==', true),
-            audienceFilter,
             orderBy('isPinned', 'desc'),
             orderBy('createdAt', 'desc')
         );
-    }, [firestore, userData, isProfileLoading]);
+    }, [firestore, user]);
 
-    const { data: feedPosts, isLoading: isLoadingFeed } = useCollection<FeedPost>(feedQuery);
+    const { data: allFeedPosts, isLoading: isLoadingFeed } = useCollection<FeedPost>(feedQuery);
 
-    const isLoading = isUserLoading || isLoadingFeed;
+    // We filter the posts on the client side based on the user's plan.
+    const filteredFeedPosts = useMemo(() => {
+        if (!allFeedPosts || isProfileLoading) return null; // Wait for profile data
+
+        const isPlusUser = userData?.subscription?.plan === 'plus';
+
+        if (isPlusUser) {
+            return allFeedPosts; // Plus users see everything
+        }
+        
+        // Standard users see 'all' and 'standard' posts
+        return allFeedPosts.filter(post => post.audience === 'all' || post.audience === 'standard');
+    }, [allFeedPosts, userData, isProfileLoading]);
+
+
+    const isLoading = isUserLoading || isLoadingFeed || isProfileLoading;
 
     return (
         <div className="flex flex-col gap-8">
@@ -53,9 +61,9 @@ export default function FeedPage() {
                     <div className="flex flex-col gap-8">
                         {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-48 w-full" />)}
                     </div>
-                ) : feedPosts && feedPosts.length > 0 ? (
+                ) : filteredFeedPosts && filteredFeedPosts.length > 0 ? (
                     <div className="flex flex-col max-w-4xl mx-auto w-full">
-                        {feedPosts.map(post => <FeedCard key={post.id} post={post} />)}
+                        {filteredFeedPosts.map(post => <FeedCard key={post.id} post={post} />)}
                     </div>
                 ) : (
                     <div className="col-span-full flex items-center justify-center p-8 border-dashed border rounded-lg min-h-[40vh]">
