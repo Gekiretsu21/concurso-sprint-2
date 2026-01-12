@@ -26,7 +26,7 @@
                 "plan": {
                     "type": "string",
                     "description": "The user's subscription plan.",
-                    "enum": ["standard", "plus"]
+                    "enum": ["standard", "plus", "mentoria_plus_plus"]
                 },
                 "status": {
                     "type": "string",

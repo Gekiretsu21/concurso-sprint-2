@@ -17,6 +17,7 @@ import {
   Crown,
   Lock,
   Users,
+  Briefcase,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import {
@@ -35,7 +36,7 @@ import {
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { cn } from '@/lib/utils';
-import { useUser } from '@/firebase';
+import { useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { useFirebase } from '@/firebase/provider';
 import { useEffect, useState } from 'react';
 import {
@@ -50,6 +51,7 @@ import { signOut } from 'firebase/auth';
 import { useStudyTimeTracker } from '@/hooks/use-study-time-tracker';
 import { PremiumFeature } from './PremiumFeature';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import { doc } from 'firebase/firestore';
 
 
 const menuItems = [
@@ -74,19 +76,44 @@ const adminMenuItem = {
   label: 'Gerenciamento',
 };
 
+const executiveMenuItem = {
+  href: '/mentorlite/executive-dashboard',
+  icon: Briefcase,
+  label: 'Dashboard Executiva',
+}
+
+interface UserProfile {
+    subscription?: { plan: string };
+}
+
+
 function MainSidebar() {
   const pathname = usePathname();
   const { state } = useSidebar();
   const { user } = useUser();
+  const { firestore } = useFirebase();
   const [isMounted, setIsMounted] = useState(false);
+
+  const userDocRef = useMemoFirebase(
+    () => (user ? doc(firestore, 'users', user.uid) : null),
+    [user, firestore]
+  );
+  const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
   const isAdmin = user?.email === 'amentoriaacademy@gmail.com';
+  const isExecutive = userProfile?.subscription?.plan === 'mentoria_plus_plus';
   
   const allMenuItems = [...menuItems];
+  if (isAdmin || isExecutive) {
+      if (!allMenuItems.find(item => item.href === executiveMenuItem.href)) {
+        allMenuItems.push(executiveMenuItem);
+    }
+  }
+
   if (isAdmin) {
     if (!allMenuItems.find(item => item.href === adminMenuItem.href)) {
       allMenuItems.push(adminMenuItem);

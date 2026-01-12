@@ -17,6 +17,12 @@ function isPlusSubscriber() {
   return isSignedIn() && userData.subscription.plan == 'plus';
 }
 
+function isPlusPlusSubscriber() {
+  let userData = getUserData();
+  return isSignedIn() && userData.subscription.plan == 'mentoria_plus_plus';
+}
+
+
 function isAdmin() {
   return request.auth != null && request.auth.token.email == 'amentoriaacademy@gmail.com';
 }
@@ -30,7 +36,7 @@ service cloud.firestore {
     }
     
     match /users/{document=**} {
-      allow list: if isAdmin();
+      allow list: if isAdmin() || isPlusPlusSubscriber();
     }
     
     match /users/{userId}/{collection}/{docId} {
