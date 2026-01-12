@@ -16,8 +16,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { LogIn, LogOut, User as UserIcon } from 'lucide-react';
+import { LogIn, LogOut, User as UserIcon, Newspaper } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
+import Link from 'next/link';
 
 export function AuthButton() {
   const { auth } = useFirebase();
@@ -97,10 +98,19 @@ export function AuthButton() {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => (window.location.href = '/mentorlite')}>
-            <UserIcon className="mr-2 h-4 w-4" />
-            <span>Meu Painel</span>
+          <DropdownMenuItem asChild>
+             <Link href="/mentorlite/feed">
+                <Newspaper className="mr-2 h-4 w-4" />
+                <span>Feed de Notícias</span>
+             </Link>
           </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/mentorlite">
+              <UserIcon className="mr-2 h-4 w-4" />
+              <span>Meu Painel</span>
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleLogout}>
             <LogOut className="mr-2 h-4 w-4" />
             <span>Sair</span>

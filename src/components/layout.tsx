@@ -10,6 +10,7 @@ import {
   Layers,
   LayoutDashboard,
   LogOut,
+  Newspaper,
   Settings,
   Shield,
   User as UserIcon,
@@ -53,6 +54,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/t
 
 const menuItems = [
   { href: '/mentorlite', icon: LayoutDashboard, label: 'Dashboard' },
+  { href: '/mentorlite/feed', icon: Newspaper, label: 'Feed de Notícias' },
   { href: '/mentorlite/questions', icon: ClipboardList, label: 'Questões' },
   { href: '/mentorlite/community-simulados', icon: Users, label: 'Simulados da Comunidade'},
   { href: '/mentorlite/previous-exams', icon: FileText, label: 'Provas Anteriores' },
@@ -220,10 +222,19 @@ function UserNav() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <UserIcon className="mr-2 h-4 w-4" />
-          <span>Perfil</span>
+        <DropdownMenuItem asChild>
+          <Link href="/mentorlite/feed">
+            <Newspaper className="mr-2 h-4 w-4" />
+            <span>Feed de Notícias</span>
+          </Link>
         </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+           <Link href="/mentorlite">
+              <UserIcon className="mr-2 h-4 w-4" />
+              <span>Meu Painel</span>
+           </Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
             <LogOut className="mr-2 h-4 w-4" />
             <span>Sair</span>
