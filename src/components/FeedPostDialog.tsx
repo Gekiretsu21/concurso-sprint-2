@@ -37,9 +37,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Megaphone, Pencil } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useFirebase, useUser } from '@/firebase';
-import { createFeedPost, updateDoc, doc } from '@/firebase/actions';
+import { createFeedPost } from '@/firebase/actions';
 import { FeedPost } from '@/types';
-import { serverTimestamp } from 'firebase/firestore';
+import { serverTimestamp, updateDoc, doc } from 'firebase/firestore';
 
 
 const formSchema = z.object({
