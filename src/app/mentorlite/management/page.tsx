@@ -14,7 +14,7 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle, Sparkles, User, Crown, Search, Lock, Megaphone, ExternalLink } from 'lucide-react';
+import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle, Sparkles, User, Crown, Search, Lock, Megaphone, ExternalLink, List } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteAllFlashcards, deleteFlashcardsByFilter, deleteFlashcardsByIds, deleteQuestionsByIds, deleteDuplicateQuestions, deleteDuplicateFlashcards, updateUserPlan } from '@/firebase/actions';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
@@ -1094,8 +1094,14 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
                             </div>
                         </div>
                     </div>
-                    <div className="flex justify-end">
+                    <div className="flex justify-end gap-2">
                        <FeedPostDialog />
+                        <Button variant="outline" size="icon" asChild>
+                            <Link href="/mentorlite/management/feed">
+                                <List />
+                                <span className="sr-only">Listar Posts</span>
+                            </Link>
+                        </Button>
                     </div>
                 </div>
 

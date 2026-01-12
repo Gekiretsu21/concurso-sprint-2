@@ -34,10 +34,13 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Megaphone } from 'lucide-react';
-import { useState } from 'react';
+import { Loader2, Megaphone, Pencil } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useFirebase, useUser } from '@/firebase';
-import { createFeedPost } from '@/firebase/actions';
+import { createFeedPost, updateDoc, doc } from '@/firebase/actions';
+import { FeedPost } from '@/types';
+import { serverTimestamp } from 'firebase/firestore';
+
 
 const formSchema = z.object({
   title: z.string().min(5, { message: 'O título deve ter pelo menos 5 caracteres.' }),
@@ -50,11 +53,17 @@ const formSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
-export function FeedPostDialog() {
+interface FeedPostDialogProps {
+  postToEdit?: FeedPost;
+  children?: React.ReactNode;
+}
+
+export function FeedPostDialog({ postToEdit, children }: FeedPostDialogProps) {
   const { toast } = useToast();
   const { firestore } = useFirebase();
   const { user } = useUser();
   const [isOpen, setIsOpen] = useState(false);
+  const isEditing = !!postToEdit;
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -70,6 +79,18 @@ export function FeedPostDialog() {
     },
   });
 
+  useEffect(() => {
+    if (postToEdit && isOpen) {
+        form.reset({
+            ...postToEdit,
+            url: postToEdit.url || '',
+            imageUrl: postToEdit.imageUrl || '',
+        });
+    } else if (!isEditing) {
+        form.reset(); // Reset to default for new posts
+    }
+  }, [postToEdit, isOpen, form, isEditing]);
+
   const watchType = form.watch('type');
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -77,35 +98,49 @@ export function FeedPostDialog() {
         toast({ variant: 'destructive', title: 'Erro', description: 'Você não está autenticado.' });
         return;
     }
-    // Validate URL for link and youtube types
     if (values.type !== 'text' && !values.url) {
         form.setError('url', { type: 'manual', message: 'A URL é obrigatória para posts do tipo link ou youtube.' });
         return;
     }
 
     try {
-      await createFeedPost(firestore, values);
-      toast({ title: 'Sucesso!', description: 'O post foi criado no feed.' });
+      if (isEditing) {
+        const postRef = doc(firestore, 'feed_posts', postToEdit.id);
+        await updateDoc(postRef, values);
+        toast({ title: 'Sucesso!', description: 'O post foi atualizado.' });
+      } else {
+        await createFeedPost(firestore, values);
+        toast({ title: 'Sucesso!', description: 'O post foi criado no feed.' });
+      }
       form.reset();
       setIsOpen(false);
     } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Erro ao criar post', description: error.message });
+      toast({ variant: 'destructive', title: `Erro ao ${isEditing ? 'atualizar' : 'criar'} post`, description: error.message });
     }
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button size="icon" disabled={!user}>
-          <Megaphone />
-          <span className="sr-only">Gerenciar Feed</span>
-        </Button>
+        {children || (
+          isEditing ? (
+            <Button variant="outline" size="icon">
+              <Pencil className="h-4 w-4" />
+              <span className="sr-only">Editar Post</span>
+            </Button>
+          ) : (
+            <Button size="icon" disabled={!user}>
+              <Megaphone />
+              <span className="sr-only">Criar Post</span>
+            </Button>
+          )
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Criar Novo Post para o Feed</DialogTitle>
+          <DialogTitle>{isEditing ? 'Editar Post' : 'Criar Novo Post para o Feed'}</DialogTitle>
           <DialogDescription>
-            Crie um aviso, compartilhe um link ou vídeo com os alunos.
+            {isEditing ? 'Edite as informações do post abaixo.' : 'Crie um aviso, compartilhe um link ou vídeo com os alunos.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -143,7 +178,7 @@ export function FeedPostDialog() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Tipo de Post</FormLabel>
-                     <Select onValueChange={field.onChange} defaultValue={field.value}>
+                     <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o tipo" />
@@ -165,7 +200,7 @@ export function FeedPostDialog() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Audiência</FormLabel>
-                     <Select onValueChange={field.onChange} defaultValue={field.value}>
+                     <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o público" />
@@ -246,13 +281,35 @@ export function FeedPostDialog() {
                     )}
                 />
             </div>
+             <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
+                <div className="space-y-0.5">
+                    <FormLabel>Post Ativo?</FormLabel>
+                    <FormDescription>
+                        Posts inativos não aparecerão no feed.
+                    </FormDescription>
+                </div>
+                <FormField
+                    control={form.control}
+                    name="isActive"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormControl>
+                        <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                        />
+                        </FormControl>
+                    </FormItem>
+                    )}
+                />
+            </div>
              <DialogFooter>
                 <DialogClose asChild>
                     <Button type="button" variant="outline">Cancelar</Button>
                 </DialogClose>
                 <Button type="submit" disabled={form.formState.isSubmitting}>
                     {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Criar Post
+                    {isEditing ? 'Salvar Alterações' : 'Criar Post'}
                 </Button>
              </DialogFooter>
           </form>

@@ -28,10 +28,22 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { FeedPost } from '@/types';
 
-interface ExamDetails {
-  isPreviousExam: boolean;
-  examName: string;
+export async function deleteFeedPost(firestore: Firestore, postId: string): Promise<void> {
+    if (!postId) {
+        throw new Error('Post ID is required.');
+    }
+    const postRef = doc(firestore, 'feed_posts', postId);
+    
+    deleteDoc(postRef).catch(serverError => {
+        const permissionError = new FirestorePermissionError({
+            path: postRef.path,
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw permissionError;
+    });
 }
+
 
 export async function createFeedPost(firestore: Firestore, postData: Omit<FeedPost, 'id' | 'createdAt'>): Promise<void> {
     const postCollectionRef = collection(firestore, 'feed_posts');
