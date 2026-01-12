@@ -144,9 +144,9 @@ function FlashcardsContent() {
   const [filterTargetRole, setFilterTargetRole] = useState<string>('all');
   
   const [reviewSubject, setReviewSubject] = useState<string>('all');
+  const [reviewStatus, setReviewStatus] = useState<'all' | 'correct' | 'incorrect'>('incorrect');
 
-
-  const [studyMode, setStudyMode] = useState<'all' | 'incorrect'>('all');
+  const [studyMode, setStudyMode] = useState<'all' | 'review'>('all');
   const [activeFlashcards, setActiveFlashcards] = useState<Flashcard[]>([]);
 
   // Query for ALL flashcards, used to populate filters
@@ -156,18 +156,18 @@ function FlashcardsContent() {
 
   const { data: allFlashcards, isLoading: isLoadingAll } = useCollection<Flashcard>(allFlashcardsQuery);
 
-  const incorrectFlashcardsProgressQuery = useMemoFirebase(() =>
+  const allProgressQuery = useMemoFirebase(() =>
     (firestore && user)
-      ? query(collection(firestore, `users/${user.uid}/flashcard_progress`), where('lastResult', '==', 'incorrect'))
+      ? collection(firestore, `users/${user.uid}/flashcard_progress`)
       : null,
   [firestore, user]);
 
-  const { data: incorrectProgress, isLoading: isLoadingIncorrectProgress } = useCollection<FlashcardProgress>(incorrectFlashcardsProgressQuery);
+  const { data: allProgress, isLoading: isLoadingProgress } = useCollection<FlashcardProgress>(allProgressQuery);
 
-  const incorrectSubjects = useMemo(() => {
-    if (!incorrectProgress) return [];
-    return Array.from(new Set(incorrectProgress.map(p => p.subject))).sort();
-  }, [incorrectProgress]);
+  const availableReviewSubjects = useMemo(() => {
+    if (!allProgress) return [];
+    return Array.from(new Set(allProgress.map(p => p.subject))).sort();
+  }, [allProgress]);
 
 
   const filterOptions = useMemo(() => {
@@ -196,7 +196,7 @@ function FlashcardsContent() {
     setFilterTargetRole('all');
   }, [filterSubject]);
   
-  const startStudySession = useCallback(async (mode: 'all' | 'incorrect', options: { subject?: string, topics?: string[], targetRole?: string, tier?: string, reviewSubject?: string } = {}) => {
+  const startStudySession = useCallback(async (mode: 'all' | 'review', options: { subject?: string, topics?: string[], targetRole?: string, tier?: string, reviewSubject?: string, reviewStatus?: 'all' | 'correct' | 'incorrect' } = {}) => {
     if (!firestore || !user) return;
 
     setView('loading');
@@ -214,26 +214,29 @@ function FlashcardsContent() {
 
     let flashcardsToStudy: Flashcard[] = [];
 
-    if (mode === 'incorrect') {
-      const incorrectConstraints: QueryConstraint[] = [where('lastResult', '==', 'incorrect')];
+    if (mode === 'review') {
+      const progressConstraints: QueryConstraint[] = [];
       if (options.reviewSubject && options.reviewSubject !== 'all') {
-        incorrectConstraints.push(where('subject', '==', options.reviewSubject));
+        progressConstraints.push(where('subject', '==', options.reviewSubject));
+      }
+       if (options.reviewStatus && options.reviewStatus !== 'all') {
+        progressConstraints.push(where('lastResult', '==', options.reviewStatus));
       }
 
-      const responsesQuery = query(collection(firestore, `users/${user.uid}/flashcard_progress`), ...incorrectConstraints);
+      const responsesQuery = query(collection(firestore, `users/${user.uid}/flashcard_progress`), ...progressConstraints);
       
       const responsesSnapshot = await getDocs(responsesQuery);
-      const incorrectFlashcardIds = responsesSnapshot.docs.map(doc => doc.data().flashcardId);
+      const flashcardIdsToReview = responsesSnapshot.docs.map(doc => doc.id); // The progress doc ID is the flashcard ID
 
-      if (incorrectFlashcardIds.length === 0) {
+      if (flashcardIdsToReview.length === 0) {
         setActiveFlashcards([]);
         setView('studying');
         return;
       }
       
-      const incorrectCardsQuery = query(collection(firestore, 'flashcards'), where(documentId(), 'in', incorrectFlashcardIds));
-      const incorrectCardsSnapshot = await getDocs(incorrectCardsQuery);
-      flashcardsToStudy = incorrectCardsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Flashcard));
+      const reviewCardsQuery = query(collection(firestore, 'flashcards'), where(documentId(), 'in', flashcardIdsToReview));
+      const reviewCardsSnapshot = await getDocs(reviewCardsQuery);
+      flashcardsToStudy = reviewCardsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Flashcard));
 
     } else { // mode is 'all'
         const constraints: QueryConstraint[] = [];
@@ -403,23 +406,33 @@ function FlashcardsContent() {
 
             <Card>
                 <CardHeader>
-                <CardTitle>Revisar Meus Erros</CardTitle>
-                <CardDescription>Estude apenas os flashcards que você marcou como "Errei" anteriormente.</CardDescription>
+                    <CardTitle>Revisão</CardTitle>
+                    <CardDescription>Revise os flashcards que você já estudou, filtrando por acertos ou erros.</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                 <Select value={reviewSubject} onValueChange={setReviewSubject} disabled={incorrectSubjects.length === 0}>
-                    <SelectTrigger className="w-full sm:w-[240px]">
-                        <SelectValue placeholder="Filtrar por matéria" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">Todas as Matérias</SelectItem>
-                        {incorrectSubjects.map((s, index) => <SelectItem key={`${s}-${index}`} value={s}>{s}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                <Button onClick={() => startStudySession('incorrect', { reviewSubject: reviewSubject })} disabled={view === 'loading' || isLoadingIncorrectProgress}>
-                        {(view === 'loading' && studyMode === 'incorrect') || isLoadingIncorrectProgress ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4"/>}
-                        Revisar Meus Erros
-                </Button>
+                    <Select value={reviewSubject} onValueChange={setReviewSubject} disabled={availableReviewSubjects.length === 0}>
+                        <SelectTrigger className="w-full sm:w-[240px]">
+                            <SelectValue placeholder="Filtrar por matéria" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Todas as Matérias</SelectItem>
+                            {availableReviewSubjects.map((s, index) => <SelectItem key={`${s}-${index}`} value={s}>{s}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                    <Select value={reviewStatus} onValueChange={(value) => setReviewStatus(value as 'all' | 'correct' | 'incorrect')}>
+                        <SelectTrigger className="w-full sm:w-[240px]">
+                            <SelectValue placeholder="Filtrar por resultado" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Todos os Meus Cartões</SelectItem>
+                            <SelectItem value="correct">Apenas Corretos</SelectItem>
+                            <SelectItem value="incorrect">Apenas Incorretos</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <Button onClick={() => startStudySession('review', { reviewSubject, reviewStatus })} disabled={view === 'loading' || isLoadingProgress}>
+                        {(view === 'loading' && studyMode === 'review') || isLoadingProgress ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4"/>}
+                        Revisar
+                    </Button>
                 </CardContent>
             </Card>
         </div>
@@ -456,3 +469,5 @@ export default function FlashcardsPage() {
     </Suspense>
   )
 }
+
+    
