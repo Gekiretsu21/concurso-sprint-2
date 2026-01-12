@@ -3,7 +3,7 @@
 
 import { useMemo } from 'react';
 import { useCollection, useDoc, useFirebase, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, where, orderBy, doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FeedPost } from '@/types';
 import { FeedCard } from '@/components/FeedCard';
