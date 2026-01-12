@@ -19,10 +19,11 @@ export default function FeedPage() {
     
     const { data: userData, isLoading: isProfileLoading } = useDoc<{subscription?: { plan: 'standard' | 'plus' }}>(userDocRef);
 
-    const isPlusUser = userData?.subscription?.plan === 'plus';
-
     const feedQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
+        // Aguarda o perfil do usuário carregar antes de criar a query.
+        if (!firestore || isProfileLoading) return null;
+        
+        const isPlusUser = userData?.subscription?.plan === 'plus';
         
         const audienceFilter = isPlusUser 
             ? where('audience', 'in', ['all', 'standard', 'plus'])
@@ -35,11 +36,11 @@ export default function FeedPage() {
             orderBy('isPinned', 'desc'),
             orderBy('createdAt', 'desc')
         );
-    }, [firestore, isPlusUser]);
+    }, [firestore, userData, isProfileLoading]);
 
     const { data: feedPosts, isLoading: isLoadingFeed } = useCollection<FeedPost>(feedQuery);
 
-    const isLoading = isUserLoading || isProfileLoading || isLoadingFeed;
+    const isLoading = isUserLoading || isLoadingFeed;
 
     return (
         <div className="flex flex-col gap-8">
