@@ -26,11 +26,32 @@ import {
 import { User } from 'firebase/auth';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { FeedPost } from '@/types';
 
 interface ExamDetails {
   isPreviousExam: boolean;
   examName: string;
 }
+
+export async function createFeedPost(firestore: Firestore, postData: Omit<FeedPost, 'id' | 'createdAt'>): Promise<void> {
+    const postCollectionRef = collection(firestore, 'feed_posts');
+
+    const dataToSave = {
+        ...postData,
+        createdAt: serverTimestamp(),
+    };
+    
+    addDoc(postCollectionRef, dataToSave).catch(serverError => {
+        const permissionError = new FirestorePermissionError({
+            path: postCollectionRef.path,
+            operation: 'create',
+            requestResourceData: dataToSave,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw permissionError;
+    });
+}
+
 
 export async function updateUserPlan(firestore: Firestore, userId: string, newPlan: 'standard' | 'plus'): Promise<void> {
     if (!userId) {
@@ -937,4 +958,21 @@ export async function updateFlashcard(firestore: Firestore, flashcardId: string,
         errorEmitter.emit('permission-error', permissionError);
         throw permissionError;
     });
+}
+
+export async function toggleQuestionStatus(firestore: Firestore, questionId: string, currentStatus: 'active' | 'hidden'): Promise<'active' | 'hidden'> {
+    const questionRef = doc(firestore, 'questoes', questionId);
+    const newStatus = currentStatus === 'active' ? 'hidden' : 'active';
+    
+    await updateDoc(questionRef, { status: newStatus }).catch(serverError => {
+        const permissionError = new FirestorePermissionError({
+            path: questionRef.path,
+            operation: 'update',
+            requestResourceData: { status: newStatus },
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw permissionError;
+    });
+    
+    return newStatus;
 }
