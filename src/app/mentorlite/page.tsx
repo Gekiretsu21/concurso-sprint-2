@@ -106,6 +106,26 @@ export default function Home() {
 
     const { data: userData, isLoading: isStatsLoading } = useDoc<{stats?: UserStats, subscription?: { plan: 'standard' | 'plus' }}>(userDocRef);
     const [dailyStreak, setDailyStreak] = useState(userData?.stats?.dailyStreak ?? 0);
+
+    const isPlusUser = userData?.subscription?.plan === 'plus';
+
+    const feedQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        
+        const audienceFilter = isPlusUser 
+            ? where('audience', 'in', ['all', 'standard', 'plus'])
+            : where('audience', 'in', ['all', 'standard']);
+
+        return query(
+            collection(firestore, 'feed_posts'),
+            where('isActive', '==', true),
+            audienceFilter,
+            orderBy('isPinned', 'desc'),
+            orderBy('createdAt', 'desc')
+        );
+    }, [firestore, isPlusUser]);
+
+    const { data: feedPosts, isLoading: isLoadingFeed } = useCollection<FeedPost>(feedQuery);
     
     useEffect(() => {
         if (user && !isUserLoading) {
@@ -177,6 +197,23 @@ export default function Home() {
                 ))
             )}
         </div>
+      </section>
+
+      <section className="space-y-6">
+          <h2 className="text-2xl font-bold tracking-tight">Mural de Avisos</h2>
+          {isLoadingFeed ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-48 w-full" />)}
+              </div>
+          ) : feedPosts && feedPosts.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {feedPosts.map(post => <FeedCard key={post.id} post={post} />)}
+              </div>
+          ) : (
+              <Card className="col-span-full flex items-center justify-center p-8 border-dashed">
+                  <p className="text-muted-foreground">Nenhuma novidade por aqui ainda.</p>
+              </Card>
+          )}
       </section>
       
       <section>

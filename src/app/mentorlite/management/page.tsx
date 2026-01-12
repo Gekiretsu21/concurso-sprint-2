@@ -44,6 +44,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
+import { FeedPostDialog } from '@/components/FeedPostDialog';
 
 interface PreviousExam {
   id: string;
@@ -1090,7 +1091,7 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
                         <p className="text-sm text-muted-foreground mt-1">Crie e edite posts do feed.</p>
                     </div>
                     <div className="flex justify-end">
-                       {/* O diálogo para criar feed foi removido */}
+                       <FeedPostDialog />
                     </div>
                 </div>
 

@@ -68,5 +68,11 @@ service cloud.firestore {
       allow list: if isSignedIn();
       allow write: if isSignedIn();
     }
+
+    match /feed_posts/{postId} {
+      allow read: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
   }
 }

@@ -550,6 +550,23 @@
         }
       },
       "required": ["examId", "userId", "completedAt", "score", "userAnswers"]
+    },
+     "FeedPost": {
+      "title": "Feed Post",
+      "type": "object",
+      "description": "Represents a post in the user-facing feed.",
+      "properties": {
+        "title": { "type": "string", "description": "The main title of the feed post." },
+        "content": { "type": "string", "description": "The body content of the post." },
+        "type": { "type": "string", "enum": ["text", "youtube", "link"], "description": "The type of content in the post." },
+        "url": { "type": "string", "format": "uri", "description": "URL for 'youtube' or 'link' types." },
+        "imageUrl": { "type": "string", "format": "uri", "description": "Optional image URL for link previews." },
+        "audience": { "type": "string", "enum": ["all", "standard", "plus"], "description": "Which user plan can see this post." },
+        "isPinned": { "type": "boolean", "description": "If true, this post should be displayed at the top of the feed." },
+        "isActive": { "type": "boolean", "description": "If false, this post will be hidden from the feed." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of when the post was created." }
+      },
+      "required": ["title", "content", "type", "audience", "isPinned", "isActive", "createdAt"]
     }
   },
   "auth": {
@@ -742,6 +759,17 @@
               "name": "aiStudyPlanId",
               "description": "The unique ID of the AI study plan."
             }
+          ]
+        }
+      },
+       {
+        "path": "/feed_posts/{postId}",
+        "definition": {
+          "entityName": "FeedPost",
+          "schema": { "$ref": "#/backend/entities/FeedPost" },
+          "description": "Public feed posts for announcements and content sharing.",
+          "params": [
+            { "name": "postId", "description": "The unique ID of the feed post." }
           ]
         }
       }
