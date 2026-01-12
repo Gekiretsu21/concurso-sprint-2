@@ -49,17 +49,17 @@ export default function FeedPage() {
             </header>
              <section className="space-y-6">
                 {isLoading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-48 w-full" />)}
+                    <div className="flex flex-col gap-8">
+                        {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-48 w-full" />)}
                     </div>
                 ) : feedPosts && feedPosts.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="flex flex-col max-w-4xl mx-auto w-full">
                         {feedPosts.map(post => <FeedCard key={post.id} post={post} />)}
                     </div>
                 ) : (
-                    <Card className="col-span-full flex items-center justify-center p-8 border-dashed min-h-[40vh]">
+                    <div className="col-span-full flex items-center justify-center p-8 border-dashed border rounded-lg min-h-[40vh]">
                         <p className="text-muted-foreground">Nenhuma novidade por aqui ainda.</p>
-                    </Card>
+                    </div>
                 )}
             </section>
         </div>
