@@ -425,8 +425,8 @@ function FlashcardsContent() {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">Todos os Meus Cartões</SelectItem>
-                            <SelectItem value="correct">Apenas Corretos</SelectItem>
-                            <SelectItem value="incorrect">Apenas Incorretos</SelectItem>
+                            <SelectItem value="correct">Acertei</SelectItem>
+                            <SelectItem value="incorrect">Errei</SelectItem>
                         </SelectContent>
                     </Select>
                     <Button onClick={() => startStudySession('review', { reviewSubject, reviewStatus })} disabled={view === 'loading' || isLoadingProgress}>
