@@ -7,7 +7,7 @@ import { FeedPost } from '@/types';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ChevronLeft, Loader2, Pencil, Trash2 } from 'lucide-react';
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
