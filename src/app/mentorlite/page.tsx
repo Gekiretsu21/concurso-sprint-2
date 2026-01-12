@@ -107,37 +107,6 @@ export default function Home() {
     const { data: userData, isLoading: isStatsLoading } = useDoc<{stats?: UserStats, subscription?: { plan: 'standard' | 'plus' }}>(userDocRef);
     const [dailyStreak, setDailyStreak] = useState(userData?.stats?.dailyStreak ?? 0);
     
-    const userPlan = userData?.subscription?.plan || 'standard';
-
-    const feedQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
-        
-        const tiersForUser = userPlan === 'plus' ? ['all', 'standard', 'plus'] : ['all', 'standard'];
-        
-        // We will fetch ordered by date and then sort for pinned posts on the client-side
-        // to avoid needing a composite index in Firestore for this view.
-        return query(
-            collection(firestore, 'feed_posts'), 
-            where('active', '==', true),
-            where('targetTier', 'in', tiersForUser),
-            orderBy('createdAt', 'desc')
-        );
-    }, [firestore, userPlan]);
-
-    const { data: feedPosts, isLoading: isLoadingFeed } = useCollection<FeedPost>(feedQuery);
-
-    const sortedFeedPosts = useMemo(() => {
-        if (!feedPosts) return [];
-        // Manually sort pinned posts to the top, then by date (which is already done by the query)
-        return [...feedPosts].sort((a, b) => {
-            if (a.isPinned && !b.isPinned) return -1;
-            if (!a.isPinned && b.isPinned) return 1;
-            // For posts with same pinned status, the default order from query (createdAt desc) is maintained
-            return 0;
-        });
-    }, [feedPosts]);
-
-
     useEffect(() => {
         if (user && !isUserLoading) {
             updateDailyStreak(user.uid).then(result => {
@@ -206,20 +175,6 @@ export default function Home() {
                     </CardContent>
                 </Card>
                 ))
-            )}
-        </div>
-      </section>
-
-      <section className="space-y-6">
-        <h2 className="text-2xl font-bold tracking-tight">
-          Mural de Avisos
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {isLoadingFeed && Array.from({length: 2}).map((_, i) => <Skeleton key={i} className="h-64 w-full" />)}
-            {sortedFeedPosts && sortedFeedPosts.length > 0 ? (
-                sortedFeedPosts.map(post => <FeedCard key={post.id} post={post} />)
-            ) : (
-                !isLoadingFeed && <p className="text-muted-foreground md:col-span-2">Nenhuma novidade por aqui ainda.</p>
             )}
         </div>
       </section>
