@@ -37,15 +37,18 @@ export default function QuestionsPage() {
 
   const [filterSubject, setFilterSubject] = useState('');
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  const [filterCargo, setFilterCargo] = useState('');
   const [filterStatus, setFilterStatus] = useState<StatusFilter>('all');
   
   const [activeFilters, setActiveFilters] = useState<{
     subject: string | string[];
     topics: string[];
+    cargo: string;
     status: StatusFilter;
   }>({
     subject: '',
     topics: [],
+    cargo: '',
     status: 'all',
   });
 
@@ -107,9 +110,24 @@ export default function QuestionsPage() {
     return Array.from(topics).sort();
   }, [allQuestions, filterSubject]);
 
+  const availableCargos = useMemo(() => {
+    if (!allQuestions) return [];
+    const subjectFilteredQuestions = filterSubject
+        ? allQuestions.filter(q => q.Materia === filterSubject)
+        : allQuestions;
+
+    const cargoSet = new Set<string>();
+    subjectFilteredQuestions
+        .filter(q => q.status !== 'hidden' && q.Cargo && q.Cargo.trim())
+        .forEach(q => cargoSet.add(q.Cargo.trim()));
+    
+    return Array.from(cargoSet).sort();
+  }, [allQuestions, filterSubject]);
+
   useEffect(() => {
-    // When a new subject is selected, reset the topic filter
+    // When a new subject is selected, reset the dependent filters
     setSelectedTopics([]);
+    setFilterCargo('');
   }, [filterSubject]);
 
   const handleFilterSubmit = () => {
@@ -121,7 +139,7 @@ export default function QuestionsPage() {
     } else if (filterSubject === 'Legislação Institucional') {
         subjectQuery = ['Legislação Institucional', 'Legislacao Institucional'];
     }
-    setActiveFilters({ subject: subjectQuery, topics: selectedTopics, status: filterStatus });
+    setActiveFilters({ subject: subjectQuery, topics: selectedTopics, cargo: filterCargo, status: filterStatus });
   };
   
   const getTopicButtonLabel = () => {
@@ -152,7 +170,7 @@ export default function QuestionsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Select value={filterSubject} onValueChange={setFilterSubject}>
               <SelectTrigger>
                 <SelectValue placeholder="Matéria" />
@@ -182,7 +200,7 @@ export default function QuestionsPage() {
                 <DropdownMenuLabel>Assuntos Disponíveis</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <ScrollArea className="h-72">
-                  {availableTopics.map(topic => (
+                  {availableTopics.length > 0 ? availableTopics.map(topic => (
                     <DropdownMenuCheckboxItem
                       key={topic}
                       checked={selectedTopics.includes(topic)}
@@ -197,10 +215,21 @@ export default function QuestionsPage() {
                     >
                       {topic}
                     </DropdownMenuCheckboxItem>
-                  ))}
+                  )) : <p className="p-2 text-xs text-muted-foreground">Nenhum assunto para esta matéria.</p>}
                 </ScrollArea>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <Select value={filterCargo} onValueChange={setFilterCargo} disabled={!filterSubject || availableCargos.length === 0}>
+                <SelectTrigger>
+                    <SelectValue placeholder="Cargo" />
+                </SelectTrigger>
+                <SelectContent position="popper">
+                    <SelectItem value="">Todos os Cargos</SelectItem>
+                    {availableCargos.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+            </Select>
+
 
             <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as StatusFilter)} disabled={!filterSubject}>
               <SelectTrigger>
@@ -213,10 +242,12 @@ export default function QuestionsPage() {
               </SelectContent>
             </Select>
 
-            <Button onClick={handleFilterSubmit} disabled={!filterSubject}>
-              Buscar Questões
-            </Button>
           </div>
+            <div className="mt-4 flex justify-end">
+                <Button onClick={handleFilterSubmit} disabled={!filterSubject}>
+                    Buscar Questões
+                </Button>
+            </div>
         </CardContent>
       </Card>
 
@@ -224,6 +255,7 @@ export default function QuestionsPage() {
         <QuestionList
           subject={activeFilters.subject}
           topics={activeFilters.topics}
+          cargo={activeFilters.cargo}
           statusFilter={activeFilters.status}
         />
       ) : (

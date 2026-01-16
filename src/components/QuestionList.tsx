@@ -66,10 +66,11 @@ function formatEnunciado(text: string) {
 interface QuestionListProps {
   subject: string | string[];
   topics?: string[];
+  cargo?: string;
   statusFilter?: StatusFilter;
 }
 
-export function QuestionList({ subject, topics, statusFilter = 'all' }: QuestionListProps) {
+export function QuestionList({ subject, topics, cargo, statusFilter = 'all' }: QuestionListProps) {
   const { firestore } = useFirebase();
   const { user } = useUser();
 
@@ -81,9 +82,9 @@ export function QuestionList({ subject, topics, statusFilter = 'all' }: Question
   const [userAttempts, setUserAttempts] = useState<Map<string, QuestionAttempt>>(new Map());
   const isAdmin = user?.email === 'amentoriaacademy@gmail.com';
 
-  // 1. Fetch base questions based on subject and topics
+  // 1. Fetch base questions based on subject, topics and cargo
   const questionsQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null; // Wait for user
+    if (!firestore || !user) return null;
     const subjectConstraint = Array.isArray(subject) 
       ? where('Materia', 'in', subject) 
       : where('Materia', '==', subject);
@@ -92,8 +93,11 @@ export function QuestionList({ subject, topics, statusFilter = 'all' }: Question
     if (topics && topics.length > 0) {
       constraints.push(where('Assunto', 'in', topics));
     }
+    if (cargo) {
+        constraints.push(where('Cargo', '==', cargo));
+    }
     return query(collection(firestore, 'questoes'), and(...constraints));
-  }, [firestore, user, subject, topics]);
+  }, [firestore, user, subject, topics, cargo]);
 
   const { data: questions, isLoading: isLoadingQuestions } = useCollection<Question>(questionsQuery);
   
@@ -151,7 +155,7 @@ export function QuestionList({ subject, topics, statusFilter = 'all' }: Question
     // When the questions themselves change, also clear local answer state
     setSelectedAnswers({});
     setAnsweredQuestions({});
-  }, [subject, topics, statusFilter, questions]);
+  }, [subject, topics, cargo, statusFilter, questions]);
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
