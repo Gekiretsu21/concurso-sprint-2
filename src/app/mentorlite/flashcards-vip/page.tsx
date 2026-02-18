@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 
 interface Flashcard {
   id: string;
@@ -130,17 +132,45 @@ function FlashcardsVipContent() {
   const searchParams = useSearchParams();
 
   const [view, setView] = useState<'initial' | 'loading' | 'studying'>('initial');
+  const [studyMode, setStudyMode] = useState<'all' | 'review'>('all');
+  
   const [filterSubject, setFilterSubject] = useState<string>('all');
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [filterTargetRole, setFilterTargetRole] = useState<string>('all');
+  
+  const [reviewSubject, setReviewSubject] = useState<string>('all');
+  const [reviewStatus, setReviewStatus] = useState<'all' | 'correct' | 'incorrect'>('incorrect');
+  
   const [activeFlashcards, setActiveFlashcards] = useState<Flashcard[]>([]);
 
-  // Only fetch VIP flashcards
+  // STRICT SEPARATION: Only fetch VIP flashcards
   const vipFlashcardsQuery = useMemoFirebase(() => (
-    firestore ? query(collection(firestore, 'flashcards'), where('accessTier', '==', 'plus')) : null
+    firestore ? query(collection(firestore, 'flashcards'), where('accessTier', '==', 'plus'), orderBy('subject')) : null
   ), [firestore]);
 
   const { data: vipFlashcards, isLoading: isLoadingVip } = useCollection<Flashcard>(vipFlashcardsQuery);
+
+  const allProgressQuery = useMemoFirebase(() =>
+    (firestore && user)
+      ? collection(firestore, `users/${user.uid}/flashcard_progress`)
+      : null,
+  [firestore, user]);
+
+  const { data: allProgress, isLoading: isLoadingProgress } = useCollection<FlashcardProgress>(allProgressQuery);
+
+  const vipFlashcardIds = useMemo(() => {
+    if (!vipFlashcards) return new Set<string>();
+    return new Set(vipFlashcards.map(fc => fc.id));
+  }, [vipFlashcards]);
+
+  const availableReviewSubjects = useMemo(() => {
+    if (!allProgress || !vipFlashcardIds.size) return [];
+    return Array.from(new Set(
+        allProgress
+            .filter(p => vipFlashcardIds.has(p.id))
+            .map(p => p.subject)
+    )).sort();
+  }, [allProgress, vipFlashcardIds]);
 
   const filterOptions = useMemo(() => {
     if (!vipFlashcards) return { subjects: [], topics: [], targetRoles: [] };
@@ -167,10 +197,11 @@ function FlashcardsVipContent() {
     setFilterTargetRole('all');
   }, [filterSubject]);
   
-  const startStudySession = useCallback(async (options: { subject?: string, topics?: string[], targetRole?: string } = {}) => {
+  const startStudySession = useCallback(async (mode: 'all' | 'review', options: { subject?: string, topics?: string[], targetRole?: string, reviewSubject?: string, reviewStatus?: 'all' | 'correct' | 'incorrect' } = {}) => {
     if (!firestore || !user) return;
 
     setView('loading');
+    setStudyMode(mode);
 
     const shuffleArray = <T,>(array: T[]): T[] => {
       const newArray = [...array];
@@ -181,37 +212,68 @@ function FlashcardsVipContent() {
       return newArray;
     };
 
-    const constraints: QueryConstraint[] = [where('accessTier', '==', 'plus')];
-    const subjectToFilter = options.subject || filterSubject;
-    const topicsToFilter = options.topics || selectedTopics;
-    const targetRoleToFilter = options.targetRole || filterTargetRole;
-    
-    if (subjectToFilter !== 'all') {
-        constraints.push(where('subject', '==', subjectToFilter));
-    }
-    if (topicsToFilter && topicsToFilter.length > 0) {
-        constraints.push(where('topic', 'in', topicsToFilter));
-    }
-    if (targetRoleToFilter !== 'all') {
-        constraints.push(where('targetRole', '==', targetRoleToFilter));
-    }
-    
-    const baseQuery = collection(firestore, 'flashcards');
-    const finalQuery = query(baseQuery, and(...constraints));
+    let flashcardsToStudy: Flashcard[] = [];
 
-    const snapshot = await getDocs(finalQuery);
-    const flashcardsToStudy = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Flashcard));
+    if (mode === 'review') {
+        const progressConstraints: QueryConstraint[] = [];
+        if (options.reviewSubject && options.reviewSubject !== 'all') {
+            progressConstraints.push(where('subject', '==', options.reviewSubject));
+        }
+        if (options.reviewStatus && options.reviewStatus !== 'all') {
+            progressConstraints.push(where('lastResult', '==', options.reviewStatus));
+        }
+
+        const responsesQuery = query(collection(firestore, `users/${user.uid}/flashcard_progress`), ...progressConstraints);
+        const responsesSnapshot = await getDocs(responsesQuery);
+        
+        // Filter by VIP IDs to maintain strict separation
+        const flashcardIdsToReview = responsesSnapshot.docs
+            .map(doc => doc.id)
+            .filter(id => vipFlashcardIds.has(id));
+
+        if (flashcardIdsToReview.length === 0) {
+            setActiveFlashcards([]);
+            setView('studying');
+            return;
+        }
+        
+        const reviewCardsQuery = query(collection(firestore, 'flashcards'), where(documentId(), 'in', flashcardIdsToReview));
+        const reviewCardsSnapshot = await getDocs(reviewCardsQuery);
+        flashcardsToStudy = reviewCardsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Flashcard));
+
+    } else {
+        const constraints: QueryConstraint[] = [where('accessTier', '==', 'plus')];
+        const subjectToFilter = options.subject || filterSubject;
+        const topicsToFilter = options.topics || selectedTopics;
+        const targetRoleToFilter = options.targetRole || filterTargetRole;
+        
+        if (subjectToFilter !== 'all') {
+            constraints.push(where('subject', '==', subjectToFilter));
+        }
+        if (topicsToFilter && topicsToFilter.length > 0) {
+            constraints.push(where('topic', 'in', topicsToFilter));
+        }
+        if (targetRoleToFilter !== 'all') {
+            constraints.push(where('targetRole', '==', targetRoleToFilter));
+        }
+        
+        const baseQuery = collection(firestore, 'flashcards');
+        const finalQuery = query(baseQuery, and(...constraints));
+
+        const snapshot = await getDocs(finalQuery);
+        flashcardsToStudy = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Flashcard));
+    }
 
     setActiveFlashcards(shuffleArray(flashcardsToStudy));
     setView('studying');
 
-  }, [firestore, user, filterSubject, selectedTopics, filterTargetRole]);
+  }, [firestore, user, filterSubject, selectedTopics, filterTargetRole, vipFlashcardIds]);
 
   useEffect(() => {
     const subjectFromParams = searchParams.get('subject');
     if (subjectFromParams && view === 'initial') {
       setFilterSubject(subjectFromParams);
-      setTimeout(() => startStudySession({ subject: subjectFromParams }), 0);
+      setTimeout(() => startStudySession('all', { subject: subjectFromParams }), 0);
     }
   }, [searchParams, view, startStudySession]);
 
@@ -251,69 +313,105 @@ function FlashcardsVipContent() {
       </header>
 
       {view !== 'studying' && (
-        <Card className="border-amber-200 bg-amber-50/30">
-            <CardHeader>
-            <CardTitle>Filtrar Especialidades</CardTitle>
-            <CardDescription>Selecione a matéria e o cargo para focar nos cartões de elite.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <Select value={filterSubject} onValueChange={setFilterSubject}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Matéria" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Todas as Matérias</SelectItem>
-                            {filterOptions.subjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                    
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" disabled={filterSubject === 'all' && filterOptions.topics.length === 0} className="w-full justify-start font-normal truncate">
-                                {getTopicButtonLabel()}
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-56" align="start">
-                            <DropdownMenuLabel>Assuntos VIP</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <ScrollArea className="h-72">
-                            {filterOptions.topics.map(topic => (
-                                <DropdownMenuCheckboxItem
-                                key={topic}
-                                checked={selectedTopics.includes(topic)}
-                                onCheckedChange={(checked) => {
-                                    if (checked) {
-                                        setSelectedTopics(prev => [...prev, topic]);
-                                    } else {
-                                        setSelectedTopics(prev => prev.filter(t => t !== topic));
-                                    }
-                                }}
-                                onSelect={(e) => e.preventDefault()}
-                                >
-                                {topic}
-                                </DropdownMenuCheckboxItem>
-                            ))}
-                            </ScrollArea>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+        <div className="space-y-8">
+            <Card className="border-amber-200 bg-amber-50/30">
+                <CardHeader>
+                <CardTitle>Treinamento Especializado</CardTitle>
+                <CardDescription>Selecione a matéria e o cargo para focar nos cartões de elite.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <Select value={filterSubject} onValueChange={setFilterSubject}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Matéria" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todas as Matérias</SelectItem>
+                                {filterOptions.subjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                        
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" disabled={filterSubject === 'all' && filterOptions.topics.length === 0} className="w-full justify-start font-normal truncate">
+                                    {getTopicButtonLabel()}
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-56" align="start">
+                                <DropdownMenuLabel>Assuntos VIP</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <ScrollArea className="h-72">
+                                {filterOptions.topics.map(topic => (
+                                    <DropdownMenuCheckboxItem
+                                    key={topic}
+                                    checked={selectedTopics.includes(topic)}
+                                    onCheckedChange={(checked) => {
+                                        if (checked) {
+                                            setSelectedTopics(prev => [...prev, topic]);
+                                        } else {
+                                            setSelectedTopics(prev => prev.filter(t => t !== topic));
+                                        }
+                                    }}
+                                    onSelect={(e) => e.preventDefault()}
+                                    >
+                                    {topic}
+                                    </DropdownMenuCheckboxItem>
+                                ))}
+                                </ScrollArea>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
 
-                        <Select value={filterTargetRole} onValueChange={setFilterTargetRole} disabled={filterSubject === 'all' && filterOptions.targetRoles.length === 0}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Cargo" />
+                            <Select value={filterTargetRole} onValueChange={setFilterTargetRole} disabled={filterSubject === 'all' && filterOptions.targetRoles.length === 0}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Cargo" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todos os Cargos</SelectItem>
+                                {filterOptions.targetRoles.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                        <Button onClick={() => startStudySession('all')} disabled={view === 'loading'} className="bg-amber-600 hover:bg-amber-700 text-white">
+                        {view === 'loading' && studyMode === 'all' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Crown className="mr-2 h-4 w-4" />}
+                        Iniciar Estudo VIP
+                    </Button>
+                </CardContent>
+            </Card>
+
+            <Card className="border-amber-200">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <RefreshCw className="h-5 w-5 text-amber-600" /> Revisão VIP
+                    </CardTitle>
+                    <CardDescription>Reforce o conteúdo VIP que você já estudou, com foco nos seus erros.</CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                    <Select value={reviewSubject} onValueChange={setReviewSubject} disabled={availableReviewSubjects.length === 0}>
+                        <SelectTrigger className="w-full sm:w-[240px]">
+                            <SelectValue placeholder="Matéria VIP" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">Todos os Cargos</SelectItem>
-                            {filterOptions.targetRoles.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                            <SelectItem value="all">Todas as Matérias VIP</SelectItem>
+                            {availableReviewSubjects.map((s, index) => <SelectItem key={`${s}-${index}`} value={s}>{s}</SelectItem>)}
                         </SelectContent>
                     </Select>
-                </div>
-                    <Button onClick={() => startStudySession()} disabled={view === 'loading'} className="bg-amber-600 hover:bg-amber-700 text-white">
-                    {view === 'loading' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Crown className="mr-2 h-4 w-4" />}
-                    Iniciar Treinamento VIP
-                </Button>
-            </CardContent>
-        </Card>
+                    <Select value={reviewStatus} onValueChange={(value) => setReviewStatus(value as 'all' | 'correct' | 'incorrect')}>
+                        <SelectTrigger className="w-full sm:w-[240px]">
+                            <SelectValue placeholder="Resultado" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Todos os Meus VIPs</SelectItem>
+                            <SelectItem value="correct">Acertei</SelectItem>
+                            <SelectItem value="incorrect">Errei</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <Button onClick={() => startStudySession('review', { reviewSubject, reviewStatus })} disabled={view === 'loading' || isLoadingProgress} className="bg-amber-600 hover:bg-amber-700 text-white">
+                        {(view === 'loading' && studyMode === 'review') || isLoadingProgress ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4"/>}
+                        Revisar VIP
+                    </Button>
+                </CardContent>
+            </Card>
+        </div>
       )}
 
       {view === 'loading' && (

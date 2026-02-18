@@ -8,7 +8,7 @@ import { useState, useMemo, useEffect, useCallback, Suspense } from 'react';
 import './flashcard.css';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
-import { collection, query, where, orderBy, getDocs, Query, QueryConstraint, and, documentId } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, QueryConstraint, and, documentId } from 'firebase/firestore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { handleFlashcardResponse } from '@/firebase/actions';
 import { cn } from '@/lib/utils';
@@ -39,7 +39,6 @@ function FlashcardViewer({ flashcards, onResponse }: { flashcards: Flashcard[], 
   const [isFlipped, setIsFlipped] = useState(false);
 
   useEffect(() => {
-    // Reset state when flashcards change, e.g. when a new filter is applied
     setCurrentIndex(0);
     setIsFlipped(false);
   }, [flashcards]);
@@ -56,14 +55,13 @@ function FlashcardViewer({ flashcards, onResponse }: { flashcards: Flashcard[], 
       } else {
         setCurrentIndex(prev => (prev + 1) % flashcards.length);
       }
-    }, 150); // wait for flip back animation
+    }, 150);
   };
 
   const handleResponseClick = (result: 'correct' | 'incorrect') => {
     const card = flashcards[currentIndex];
     if (!card) return;
-    onResponse(card, result); // Pass the full flashcard object
-    // Automatically move to the next card after responding, but only if it's not the last card
+    onResponse(card, result);
     if (currentIndex < flashcards.length -1) {
         setTimeout(() => handleNav('next'), 200);
     }
@@ -73,7 +71,7 @@ function FlashcardViewer({ flashcards, onResponse }: { flashcards: Flashcard[], 
     return (
       <Card className="mt-6">
         <CardContent className="flex flex-col items-center justify-center h-40 p-6">
-          <p className="text-muted-foreground">Nenhum flashcard encontrado para os critérios selecionados.</p>
+          <p className="text-muted-foreground">Nenhum flashcard encontrado.</p>
         </CardContent>
       </Card>
     );
@@ -81,16 +79,7 @@ function FlashcardViewer({ flashcards, onResponse }: { flashcards: Flashcard[], 
 
   const card = flashcards[currentIndex];
 
-  // Add a check to ensure card exists before rendering
-  if (!card) {
-      return (
-          <Card className="mt-6">
-              <CardContent className="flex flex-col items-center justify-center h-40 p-6">
-                  <p className="text-muted-foreground">Carregando flashcard...</p>
-              </CardContent>
-          </Card>
-      );
-  }
+  if (!card) return null;
 
   return (
      <div className="flex flex-col gap-8 items-center mt-6">
@@ -149,12 +138,12 @@ function FlashcardsContent() {
   const [studyMode, setStudyMode] = useState<'all' | 'review'>('all');
   const [activeFlashcards, setActiveFlashcards] = useState<Flashcard[]>([]);
 
-  // Query for ALL flashcards, used to populate filters
-  const allFlashcardsQuery = useMemoFirebase(() => (
-    firestore ? query(collection(firestore, 'flashcards'), orderBy('subject')) : null
+  // STRICT SEPARATION: Only fetch Standard flashcards
+  const standardFlashcardsQuery = useMemoFirebase(() => (
+    firestore ? query(collection(firestore, 'flashcards'), where('accessTier', '==', 'standard'), orderBy('subject')) : null
   ), [firestore]);
 
-  const { data: allFlashcards, isLoading: isLoadingAll } = useCollection<Flashcard>(allFlashcardsQuery);
+  const { data: standardFlashcards, isLoading: isLoadingAll } = useCollection<Flashcard>(standardFlashcardsQuery);
 
   const allProgressQuery = useMemoFirebase(() =>
     (firestore && user)
@@ -164,20 +153,30 @@ function FlashcardsContent() {
 
   const { data: allProgress, isLoading: isLoadingProgress } = useCollection<FlashcardProgress>(allProgressQuery);
 
+  // Filter progress to only show standard subjects
+  const standardFlashcardIds = useMemo(() => {
+    if (!standardFlashcards) return new Set<string>();
+    return new Set(standardFlashcards.map(fc => fc.id));
+  }, [standardFlashcards]);
+
   const availableReviewSubjects = useMemo(() => {
     if (!allProgress) return [];
-    return Array.from(new Set(allProgress.map(p => p.subject))).sort();
-  }, [allProgress]);
+    return Array.from(new Set(
+        allProgress
+            .filter(p => standardFlashcardIds.has(p.id))
+            .map(p => p.subject)
+    )).sort();
+  }, [allProgress, standardFlashcardIds]);
 
 
   const filterOptions = useMemo(() => {
-    if (!allFlashcards) return { subjects: [], topics: [], targetRoles: [] };
+    if (!standardFlashcards) return { subjects: [], topics: [], targetRoles: [] };
 
-    const subjects = new Set(allFlashcards.map(fc => fc.subject));
-    let filteredBySubject = allFlashcards;
+    const subjects = new Set(standardFlashcards.map(fc => fc.subject));
+    let filteredBySubject = standardFlashcards;
 
     if (filterSubject !== 'all') {
-      filteredBySubject = allFlashcards.filter(fc => fc.subject === filterSubject);
+      filteredBySubject = standardFlashcards.filter(fc => fc.subject === filterSubject);
     }
     
     const topics = new Set(filteredBySubject.map(fc => fc.topic));
@@ -188,21 +187,19 @@ function FlashcardsContent() {
       topics: Array.from(topics).sort(),
       targetRoles: Array.from(targetRoles).sort(),
     };
-  }, [allFlashcards, filterSubject]);
+  }, [standardFlashcards, filterSubject]);
 
-  // Reset dependent filters when the main filter changes
   useEffect(() => {
     setSelectedTopics([]);
     setFilterTargetRole('all');
   }, [filterSubject]);
   
-  const startStudySession = useCallback(async (mode: 'all' | 'review', options: { subject?: string, topics?: string[], targetRole?: string, tier?: string, reviewSubject?: string, reviewStatus?: 'all' | 'correct' | 'incorrect' } = {}) => {
+  const startStudySession = useCallback(async (mode: 'all' | 'review', options: { subject?: string, topics?: string[], targetRole?: string, reviewSubject?: string, reviewStatus?: 'all' | 'correct' | 'incorrect' } = {}) => {
     if (!firestore || !user) return;
 
     setView('loading');
     setStudyMode(mode);
 
-    // Fisher-Yates Shuffle Algorithm
     const shuffleArray = <T,>(array: T[]): T[] => {
       const newArray = [...array];
       for (let i = newArray.length - 1; i > 0; i--) {
@@ -224,9 +221,12 @@ function FlashcardsContent() {
       }
 
       const responsesQuery = query(collection(firestore, `users/${user.uid}/flashcard_progress`), ...progressConstraints);
-      
       const responsesSnapshot = await getDocs(responsesQuery);
-      const flashcardIdsToReview = responsesSnapshot.docs.map(doc => doc.id); // The progress doc ID is the flashcard ID
+      
+      // Filter by standard IDs to maintain strict separation
+      const flashcardIdsToReview = responsesSnapshot.docs
+        .map(doc => doc.id)
+        .filter(id => standardFlashcardIds.has(id));
 
       if (flashcardIdsToReview.length === 0) {
         setActiveFlashcards([]);
@@ -238,12 +238,11 @@ function FlashcardsContent() {
       const reviewCardsSnapshot = await getDocs(reviewCardsQuery);
       flashcardsToStudy = reviewCardsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Flashcard));
 
-    } else { // mode is 'all'
-        const constraints: QueryConstraint[] = [];
+    } else {
+        const constraints: QueryConstraint[] = [where('accessTier', '==', 'standard')];
         const subjectToFilter = options.subject || filterSubject;
         const topicsToFilter = options.topics || selectedTopics;
         const targetRoleToFilter = options.targetRole || filterTargetRole;
-        const tierToFilter = options.tier;
         
         if (subjectToFilter !== 'all') {
             constraints.push(where('subject', '==', subjectToFilter));
@@ -254,12 +253,9 @@ function FlashcardsContent() {
         if (targetRoleToFilter !== 'all') {
             constraints.push(where('targetRole', '==', targetRoleToFilter));
         }
-        if (tierToFilter === 'plus') {
-            constraints.push(where('accessTier', '==', 'plus'));
-        }
         
         const baseQuery = collection(firestore, 'flashcards');
-        const finalQuery = constraints.length > 0 ? query(baseQuery, and(...constraints)) : baseQuery;
+        const finalQuery = query(baseQuery, and(...constraints));
 
         const snapshot = await getDocs(finalQuery);
         flashcardsToStudy = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Flashcard));
@@ -268,37 +264,18 @@ function FlashcardsContent() {
     setActiveFlashcards(shuffleArray(flashcardsToStudy));
     setView('studying');
 
-  }, [firestore, user, filterSubject, selectedTopics, filterTargetRole]);
-
-  // Effect to handle deep linking from Arsenal VIP
-  useEffect(() => {
-    const subjectFromParams = searchParams.get('subject');
-    const tierFromParams = searchParams.get('tier');
-    
-    if (subjectFromParams && tierFromParams === 'plus' && view === 'initial') {
-      setFilterSubject(subjectFromParams);
-      // Use a timeout to ensure state updates are processed before starting the session
-      setTimeout(() => startStudySession('all', { subject: subjectFromParams, tier: 'plus' }), 0);
-    }
-  }, [searchParams, view, startStudySession]);
+  }, [firestore, user, filterSubject, selectedTopics, filterTargetRole, standardFlashcardIds]);
 
 
   const handleFlashcardResponseCallback = useCallback((flashcard: Flashcard, result: 'correct' | 'incorrect') => {
     if (!firestore || !user) return;
     handleFlashcardResponse(firestore, user.uid, flashcard, result);
-    
-    // Optimistically remove the card from the current session's active list
     setActiveFlashcards(prev => prev.filter(fc => fc.id !== flashcard.id));
-
   }, [firestore, user]);
   
   const getTopicButtonLabel = () => {
-    if (selectedTopics.length === 0) {
-      return "Todos os Assuntos";
-    }
-    if (selectedTopics.length === 1) {
-      return selectedTopics[0];
-    }
+    if (selectedTopics.length === 0) return "Todos os Assuntos";
+    if (selectedTopics.length === 1) return selectedTopics[0];
     return `${selectedTopics.length} assuntos selecionados`;
   };
 
@@ -311,7 +288,7 @@ function FlashcardsContent() {
     )
   }
 
-  if (!allFlashcards || allFlashcards.length === 0) {
+  if (!standardFlashcards || standardFlashcards.length === 0) {
      return (
       <div className="flex flex-col gap-8 items-center text-center">
         <header>
@@ -320,11 +297,8 @@ function FlashcardsContent() {
         <Card className="flex flex-col items-center justify-center h-40 w-full max-w-2xl border-dashed">
           <CardContent className="text-center p-6">
             <p className="text-muted-foreground mb-4">
-              Nenhum flashcard foi importado na plataforma ainda.
+              Nenhum flashcard disponível nesta categoria.
             </p>
-            <Button asChild variant="link">
-              <Link href="/mentorlite/management">Ir para o Gerenciador</Link>
-            </Button>
           </CardContent>
         </Card>
       </div>
@@ -397,7 +371,7 @@ function FlashcardsContent() {
                             </SelectContent>
                         </Select>
                     </div>
-                     <Button onClick={() => startStudySession('all', { subject: filterSubject, topics: selectedTopics, targetRole: filterTargetRole })} disabled={view === 'loading'}>
+                     <Button onClick={() => startStudySession('all')} disabled={view === 'loading'}>
                         {view === 'loading' && studyMode === 'all' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                         Iniciar Estudo
                     </Button>
@@ -469,5 +443,3 @@ export default function FlashcardsPage() {
     </Suspense>
   )
 }
-
-    
