@@ -157,7 +157,7 @@ export default function ArsenalVipPage() {
           <CardContent>
             <ExclusiveFlashcardsList />
           </CardContent>
-        </div>
+        </Card>
       </div>
     </div>
   );
