@@ -107,7 +107,7 @@ function ExclusiveFlashcardsList() {
                   <p className="text-sm text-muted-foreground">{item.count} flashcards</p>
                 </div>
                  <Button asChild>
-                    <Link href={`/mentorlite/flashcards?subject=${encodeURIComponent(item.subject)}&tier=plus`}>
+                    <Link href={`/mentorlite/flashcards-vip?subject=${encodeURIComponent(item.subject)}`}>
                         Estudar
                     </Link>
                 </Button>
@@ -157,7 +157,7 @@ export default function ArsenalVipPage() {
           <CardContent>
             <ExclusiveFlashcardsList />
           </CardContent>
-        </Card>
+        </div>
       </div>
     </div>
   );

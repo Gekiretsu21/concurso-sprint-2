@@ -14,7 +14,7 @@ function getUserData() {
 
 function isPlusSubscriber() {
   let userData = getUserData();
-  return isSignedIn() && userData.subscription.plan == 'plus';
+  return isSignedIn() && (userData.subscription.plan == 'plus' || userData.subscription.plan == 'mentoria_plus_plus');
 }
 
 function isPlusPlusSubscriber() {
