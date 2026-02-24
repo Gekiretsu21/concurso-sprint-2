@@ -62,10 +62,10 @@ function FlashcardViewer({ flashcards, onResponse }: { flashcards: Flashcard[], 
     const card = flashcards[currentIndex];
     if (!card) return;
     onResponse(card, result);
-    if (currentIndex < flashcards.length -1) {
-        setTimeout(() => handleNav('next'), 200);
+    if (currentIndex < flashcards.length - 1) {
+      setTimeout(() => handleNav('next'), 200);
     }
-  }
+  };
 
   if (!flashcards || flashcards.length === 0) {
     return (
@@ -82,7 +82,7 @@ function FlashcardViewer({ flashcards, onResponse }: { flashcards: Flashcard[], 
   if (!card) return null;
 
   return (
-     <div className="flex flex-col gap-8 items-center mt-6">
+    <div className="flex flex-col gap-8 items-center mt-6">
       <div className="w-full max-w-2xl" style={{ perspective: '1000px' }}>
         <div className={`flashcard-inner ${isFlipped ? 'is-flipped' : ''}`}>
           <Card className="flashcard-front" onClick={handleFlip}>
@@ -96,10 +96,10 @@ function FlashcardViewer({ flashcards, onResponse }: { flashcards: Flashcard[], 
               <p className="text-lg">{card.back}</p>
               <div className="flex gap-4 mt-4">
                 <Button variant="destructive" size="lg" onClick={(e) => { e.stopPropagation(); handleResponseClick('incorrect'); }}>
-                    <ThumbsDown className="mr-2"/> Errei
+                  <ThumbsDown className="mr-2" /> Errei
                 </Button>
                 <Button variant="secondary" size="lg" onClick={(e) => { e.stopPropagation(); handleResponseClick('correct'); }}>
-                    <ThumbsUp className="mr-2"/> Acertei
+                  <ThumbsUp className="mr-2" /> Acertei
                 </Button>
               </div>
             </CardContent>
@@ -118,7 +118,7 @@ function FlashcardViewer({ flashcards, onResponse }: { flashcards: Flashcard[], 
           <ChevronRight />
         </Button>
       </div>
-     </div>
+    </div>
   );
 }
 
@@ -131,54 +131,45 @@ function FlashcardsContent() {
   const [filterSubject, setFilterSubject] = useState<string>('all');
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [filterTargetRole, setFilterTargetRole] = useState<string>('all');
-  
+
   const [reviewSubject, setReviewSubject] = useState<string>('all');
   const [reviewStatus, setReviewStatus] = useState<'all' | 'correct' | 'incorrect'>('incorrect');
 
   const [studyMode, setStudyMode] = useState<'all' | 'review'>('all');
   const [activeFlashcards, setActiveFlashcards] = useState<Flashcard[]>([]);
 
-  // STRICT SEPARATION: Only fetch Standard flashcards
-  const standardFlashcardsQuery = useMemoFirebase(() => (
-    firestore ? query(collection(firestore, 'flashcards'), where('accessTier', '==', 'standard'), orderBy('subject')) : null
+  // FETCH ALL FLASHCARDS WITHOUT RESTRICTION
+  const allFlashcardsQuery = useMemoFirebase(() => (
+    firestore ? query(collection(firestore, 'flashcards'), orderBy('subject')) : null
   ), [firestore]);
 
-  const { data: standardFlashcards, isLoading: isLoadingAll } = useCollection<Flashcard>(standardFlashcardsQuery);
+  const { data: allFlashcards, isLoading: isLoadingAll } = useCollection<Flashcard>(allFlashcardsQuery);
 
   const allProgressQuery = useMemoFirebase(() =>
     (firestore && user)
       ? collection(firestore, `users/${user.uid}/flashcard_progress`)
       : null,
-  [firestore, user]);
+    [firestore, user]);
 
   const { data: allProgress, isLoading: isLoadingProgress } = useCollection<FlashcardProgress>(allProgressQuery);
-
-  // Filter progress to only show standard subjects
-  const standardFlashcardIds = useMemo(() => {
-    if (!standardFlashcards) return new Set<string>();
-    return new Set(standardFlashcards.map(fc => fc.id));
-  }, [standardFlashcards]);
 
   const availableReviewSubjects = useMemo(() => {
     if (!allProgress) return [];
     return Array.from(new Set(
-        allProgress
-            .filter(p => standardFlashcardIds.has(p.id))
-            .map(p => p.subject)
+      allProgress.map(p => p.subject)
     )).sort();
-  }, [allProgress, standardFlashcardIds]);
-
+  }, [allProgress]);
 
   const filterOptions = useMemo(() => {
-    if (!standardFlashcards) return { subjects: [], topics: [], targetRoles: [] };
+    if (!allFlashcards) return { subjects: [], topics: [], targetRoles: [] };
 
-    const subjects = new Set(standardFlashcards.map(fc => fc.subject));
-    let filteredBySubject = standardFlashcards;
+    const subjects = new Set(allFlashcards.map(fc => fc.subject));
+    let filteredBySubject = allFlashcards;
 
     if (filterSubject !== 'all') {
-      filteredBySubject = standardFlashcards.filter(fc => fc.subject === filterSubject);
+      filteredBySubject = allFlashcards.filter(fc => fc.subject === filterSubject);
     }
-    
+
     const topics = new Set(filteredBySubject.map(fc => fc.topic));
     const targetRoles = new Set(filteredBySubject.map(fc => fc.targetRole));
 
@@ -187,13 +178,13 @@ function FlashcardsContent() {
       topics: Array.from(topics).sort(),
       targetRoles: Array.from(targetRoles).sort(),
     };
-  }, [standardFlashcards, filterSubject]);
+  }, [allFlashcards, filterSubject]);
 
   useEffect(() => {
     setSelectedTopics([]);
     setFilterTargetRole('all');
   }, [filterSubject]);
-  
+
   const startStudySession = useCallback(async (mode: 'all' | 'review', options: { subject?: string, topics?: string[], targetRole?: string, reviewSubject?: string, reviewStatus?: 'all' | 'correct' | 'incorrect' } = {}) => {
     if (!firestore || !user) return;
 
@@ -216,55 +207,62 @@ function FlashcardsContent() {
       if (options.reviewSubject && options.reviewSubject !== 'all') {
         progressConstraints.push(where('subject', '==', options.reviewSubject));
       }
-       if (options.reviewStatus && options.reviewStatus !== 'all') {
+      if (options.reviewStatus && options.reviewStatus !== 'all') {
         progressConstraints.push(where('lastResult', '==', options.reviewStatus));
       }
 
       const responsesQuery = query(collection(firestore, `users/${user.uid}/flashcard_progress`), ...progressConstraints);
       const responsesSnapshot = await getDocs(responsesQuery);
-      
-      // Filter by standard IDs to maintain strict separation
-      const flashcardIdsToReview = responsesSnapshot.docs
-        .map(doc => doc.id)
-        .filter(id => standardFlashcardIds.has(id));
+
+      const flashcardIdsToReview = responsesSnapshot.docs.map(doc => doc.id);
 
       if (flashcardIdsToReview.length === 0) {
         setActiveFlashcards([]);
         setView('studying');
         return;
       }
-      
-      const reviewCardsQuery = query(collection(firestore, 'flashcards'), where(documentId(), 'in', flashcardIdsToReview));
-      const reviewCardsSnapshot = await getDocs(reviewCardsQuery);
-      flashcardsToStudy = reviewCardsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Flashcard));
+
+      // Firestore 'in' queries are limited to 30 items
+      const batches: string[][] = [];
+      for (let i = 0; i < flashcardIdsToReview.length; i += 30) {
+        batches.push(flashcardIdsToReview.slice(i, i + 30));
+      }
+
+      const allFetchedCards: Flashcard[] = [];
+      for (const batch of batches) {
+        const q = query(collection(firestore, 'flashcards'), where(documentId(), 'in', batch));
+        const snap = await getDocs(q);
+        allFetchedCards.push(...snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Flashcard)));
+      }
+      flashcardsToStudy = allFetchedCards;
 
     } else {
-        const constraints: QueryConstraint[] = [where('accessTier', '==', 'standard')];
-        const subjectToFilter = options.subject || filterSubject;
-        const topicsToFilter = options.topics || selectedTopics;
-        const targetRoleToFilter = options.targetRole || filterTargetRole;
-        
-        if (subjectToFilter !== 'all') {
-            constraints.push(where('subject', '==', subjectToFilter));
-        }
-        if (topicsToFilter && topicsToFilter.length > 0) {
-            constraints.push(where('topic', 'in', topicsToFilter));
-        }
-        if (targetRoleToFilter !== 'all') {
-            constraints.push(where('targetRole', '==', targetRoleToFilter));
-        }
-        
-        const baseQuery = collection(firestore, 'flashcards');
-        const finalQuery = query(baseQuery, and(...constraints));
+      const constraints: QueryConstraint[] = [];
+      const subjectToFilter = options.subject || filterSubject;
+      const topicsToFilter = options.topics || selectedTopics;
+      const targetRoleToFilter = options.targetRole || filterTargetRole;
 
-        const snapshot = await getDocs(finalQuery);
-        flashcardsToStudy = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Flashcard));
+      if (subjectToFilter !== 'all') {
+        constraints.push(where('subject', '==', subjectToFilter));
+      }
+      if (topicsToFilter && topicsToFilter.length > 0) {
+        constraints.push(where('topic', 'in', topicsToFilter));
+      }
+      if (targetRoleToFilter !== 'all') {
+        constraints.push(where('targetRole', '==', targetRoleToFilter));
+      }
+
+      const baseQuery = collection(firestore, 'flashcards');
+      const finalQuery = constraints.length > 0 ? query(baseQuery, and(...constraints)) : baseQuery;
+
+      const snapshot = await getDocs(finalQuery);
+      flashcardsToStudy = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Flashcard));
     }
 
     setActiveFlashcards(shuffleArray(flashcardsToStudy));
     setView('studying');
 
-  }, [firestore, user, filterSubject, selectedTopics, filterTargetRole, standardFlashcardIds]);
+  }, [firestore, user, filterSubject, selectedTopics, filterTargetRole]);
 
 
   const handleFlashcardResponseCallback = useCallback((flashcard: Flashcard, result: 'correct' | 'incorrect') => {
@@ -272,7 +270,7 @@ function FlashcardsContent() {
     handleFlashcardResponse(firestore, user.uid, flashcard, result);
     setActiveFlashcards(prev => prev.filter(fc => fc.id !== flashcard.id));
   }, [firestore, user]);
-  
+
   const getTopicButtonLabel = () => {
     if (selectedTopics.length === 0) return "Todos os Assuntos";
     if (selectedTopics.length === 1) return selectedTopics[0];
@@ -282,14 +280,14 @@ function FlashcardsContent() {
 
   if (isLoadingAll) {
     return (
-       <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     )
   }
 
-  if (!standardFlashcards || standardFlashcards.length === 0) {
-     return (
+  if (!allFlashcards || allFlashcards.length === 0) {
+    return (
       <div className="flex flex-col gap-8 items-center text-center">
         <header>
           <h1 className="text-3xl font-bold tracking-tight">Flashcards</h1>
@@ -297,132 +295,133 @@ function FlashcardsContent() {
         <Card className="flex flex-col items-center justify-center h-40 w-full max-w-2xl border-dashed">
           <CardContent className="text-center p-6">
             <p className="text-muted-foreground mb-4">
-              Nenhum flashcard disponível nesta categoria.
+              Nenhum flashcard cadastrado no sistema ainda.
             </p>
+            <p className="text-sm text-muted-foreground">Importe flashcards no painel de gerenciamento para começar.</p>
           </CardContent>
         </Card>
       </div>
     );
   }
-  
+
   return (
     <div className="flex flex-col gap-8">
-       <header>
+      <header>
         <h1 className="text-3xl font-bold tracking-tight">Flashcards</h1>
         <p className="text-muted-foreground">Filtre seus flashcards ou comece uma sessão de estudo.</p>
       </header>
 
       {view !== 'studying' && (
         <div className="space-y-8">
-            <Card>
-                <CardHeader>
-                <CardTitle>Estudo Focado</CardTitle>
-                <CardDescription>Filtre por matéria, assunto e cargo para aprender novos flashcards.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                         <Select value={filterSubject} onValueChange={setFilterSubject}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Matéria" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Todas as Matérias</SelectItem>
-                                {filterOptions.subjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                        
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" disabled={filterSubject === 'all' && filterOptions.topics.length === 0} className="w-full justify-start font-normal truncate">
-                                    {getTopicButtonLabel()}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-56" align="start">
-                                <DropdownMenuLabel>Assuntos Disponíveis</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <ScrollArea className="h-72">
-                                {filterOptions.topics.map(topic => (
-                                    <DropdownMenuCheckboxItem
-                                    key={topic}
-                                    checked={selectedTopics.includes(topic)}
-                                    onCheckedChange={(checked) => {
-                                        if (checked) {
-                                            setSelectedTopics(prev => [...prev, topic]);
-                                        } else {
-                                            setSelectedTopics(prev => prev.filter(t => t !== topic));
-                                        }
-                                    }}
-                                    onSelect={(e) => e.preventDefault()}
-                                    >
-                                    {topic}
-                                    </DropdownMenuCheckboxItem>
-                                ))}
-                                </ScrollArea>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+          <Card>
+            <CardHeader>
+              <CardTitle>Estudo Focado</CardTitle>
+              <CardDescription>Filtre por matéria, assunto e cargo para aprender novos flashcards.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Select value={filterSubject} onValueChange={setFilterSubject}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Matéria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as Matérias</SelectItem>
+                    {filterOptions.subjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
 
-                         <Select value={filterTargetRole} onValueChange={setFilterTargetRole} disabled={filterSubject === 'all' && filterOptions.targetRoles.length === 0}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Cargo" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Todos os Cargos</SelectItem>
-                                {filterOptions.targetRoles.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                     <Button onClick={() => startStudySession('all')} disabled={view === 'loading'}>
-                        {view === 'loading' && studyMode === 'all' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                        Iniciar Estudo
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" disabled={filterSubject === 'all' && filterOptions.topics.length === 0} className="w-full justify-start font-normal truncate">
+                      {getTopicButtonLabel()}
                     </Button>
-                </CardContent>
-            </Card>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="start">
+                    <DropdownMenuLabel>Assuntos Disponíveis</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <ScrollArea className="h-72">
+                      {filterOptions.topics.map(topic => (
+                        <DropdownMenuCheckboxItem
+                          key={topic}
+                          checked={selectedTopics.includes(topic)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedTopics(prev => [...prev, topic]);
+                            } else {
+                              setSelectedTopics(prev => prev.filter(t => t !== topic));
+                            }
+                          }}
+                          onSelect={(e) => e.preventDefault()}
+                        >
+                          {topic}
+                        </DropdownMenuCheckboxItem>
+                      ))}
+                    </ScrollArea>
+                  </DropdownMenuContent>
+                </DropdownMenu>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Revisão</CardTitle>
-                    <CardDescription>Revise os flashcards que você já estudou, filtrando por acertos ou erros.</CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                    <Select value={reviewSubject} onValueChange={setReviewSubject} disabled={availableReviewSubjects.length === 0}>
-                        <SelectTrigger className="w-full sm:w-[240px]">
-                            <SelectValue placeholder="Filtrar por matéria" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Todas as Matérias</SelectItem>
-                            {availableReviewSubjects.map((s, index) => <SelectItem key={`${s}-${index}`} value={s}>{s}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                    <Select value={reviewStatus} onValueChange={(value) => setReviewStatus(value as 'all' | 'correct' | 'incorrect')}>
-                        <SelectTrigger className="w-full sm:w-[240px]">
-                            <SelectValue placeholder="Filtrar por resultado" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Todos os Meus Cartões</SelectItem>
-                            <SelectItem value="correct">Acertei</SelectItem>
-                            <SelectItem value="incorrect">Errei</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <Button onClick={() => startStudySession('review', { reviewSubject, reviewStatus })} disabled={view === 'loading' || isLoadingProgress}>
-                        {(view === 'loading' && studyMode === 'review') || isLoadingProgress ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4"/>}
-                        Revisar
-                    </Button>
-                </CardContent>
-            </Card>
+                <Select value={filterTargetRole} onValueChange={setFilterTargetRole} disabled={filterSubject === 'all' && filterOptions.targetRoles.length === 0}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Cargo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os Cargos</SelectItem>
+                    {filterOptions.targetRoles.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={() => startStudySession('all')} disabled={view === 'loading'}>
+                {view === 'loading' && studyMode === 'all' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Iniciar Estudo
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Revisão</CardTitle>
+              <CardDescription>Revise os flashcards que você já estudou, filtrando por acertos ou erros.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+              <Select value={reviewSubject} onValueChange={setReviewSubject} disabled={availableReviewSubjects.length === 0}>
+                <SelectTrigger className="w-full sm:w-[240px]">
+                  <SelectValue placeholder="Filtrar por matéria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as Matérias</SelectItem>
+                  {availableReviewSubjects.map((s, index) => <SelectItem key={`${s}-${index}`} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={reviewStatus} onValueChange={(value) => setReviewStatus(value as 'all' | 'correct' | 'incorrect')}>
+                <SelectTrigger className="w-full sm:w-[240px]">
+                  <SelectValue placeholder="Filtrar por resultado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os Meus Cartões</SelectItem>
+                  <SelectItem value="correct">Acertei</SelectItem>
+                  <SelectItem value="incorrect">Errei</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button onClick={() => startStudySession('review', { reviewSubject, reviewStatus })} disabled={view === 'loading' || isLoadingProgress}>
+                {(view === 'loading' && studyMode === 'review') || isLoadingProgress ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                Revisar
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       )}
 
       {view === 'loading' && (
-         <div className="flex items-center justify-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            <p className="ml-4 text-muted-foreground">Carregando flashcards...</p>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <p className="ml-4 text-muted-foreground">Carregando flashcards...</p>
         </div>
       )}
 
       {view === 'studying' && (
         <>
           <Button variant="outline" onClick={() => setView('initial')} className="w-fit">
-            <ChevronLeft className="mr-2 h-4 w-4"/>
+            <ChevronLeft className="mr-2 h-4 w-4" />
             Voltar para Seleção
           </Button>
           <FlashcardViewer flashcards={activeFlashcards} onResponse={handleFlashcardResponseCallback} />
@@ -436,9 +435,9 @@ function FlashcardsContent() {
 export default function FlashcardsPage() {
   return (
     <Suspense fallback={<div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-4 text-muted-foreground">Carregando...</p>
-      </div>}>
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <p className="ml-4 text-muted-foreground">Carregando...</p>
+    </div>}>
       <FlashcardsContent />
     </Suspense>
   )
