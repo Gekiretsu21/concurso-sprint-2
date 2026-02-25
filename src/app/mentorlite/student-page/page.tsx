@@ -1,191 +1,70 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { CheckCircle2, PlayCircle, ExternalLink, Compass, Trophy, Lightbulb, Youtube, Layout, FileText, Users } from 'lucide-react';
-import Link from 'next/link';
+import { ScrollGlobe } from '@/components/ui/scroll-globe';
+import { useRouter } from 'next/navigation';
 
 export default function StudentPage() {
+  const router = useRouter();
+
+  const sections = [
+    {
+      id: "welcome",
+      badge: "Bússola do Aluno",
+      title: "Página do Aluno",
+      subtitle: "Seu Guia para a Aprovação",
+      description: "Siga atentamente os passos abaixo para usufruir ao máximo da mentoria. A constância vence o talento, e aqui você encontra a estratégia certa.",
+      align: "left" as const,
+      actions: [
+        { label: "Começar Agora", variant: "primary" as const, onClick: () => console.log("Start") },
+        { label: "Suporte WhatsApp", variant: "secondary" as const, onClick: () => window.open('https://api.whatsapp.com/send/?phone=5531984585846', '_blank') },
+      ]
+    },
+    {
+      id: "steps",
+      badge: "Primeiros Passos",
+      title: "Roteiro de Onboarding",
+      description: "O que você deve fazer agora para começar com o pé direito e garantir sua farda.",
+      align: "center" as const,
+      features: [
+        { title: "1. Assista aos vídeos iniciais", description: "Veja a sequência de Mindset, Boas-vindas, Cronograma e MentorIA." },
+        { title: "2. Verifique seu E-mail", description: "Aceite as instruções e tutoriais. Lá estão os links de acesso às ferramentas." },
+        { title: "3. Explore a Plataforma", description: "Use Flashcards, Simulados, Questões e Provas Anteriores para complementar seus estudos." },
+        { title: "4. SUPER STRIKE (SS)", description: "Assista o tutorial e gere o seu SS todos os dias logo após estudar." }
+      ]
+    },
+    {
+      id: "performance",
+      badge: "Alta Performance",
+      title: "Metas Semanais",
+      subtitle: "Mantenha o Ritmo",
+      description: "Nossa metodologia é focada em prática. Siga os indicadores mínimos para evolução constante.",
+      align: "left" as const,
+      features: [
+        { title: "Mínimo de Questões", description: "Resolva ao menos 100 questões por semana analisando cada erro." },
+        { title: "Flashcards Revisados", description: "Revise no mínimo 80 cartões por semana com repetição espaçada." },
+        { title: "Manual da Aprovação", description: "O segredo não é apenas resolver, mas entender o porquê de cada acerto e erro." }
+      ],
+      actions: [
+        { label: "Ir para Prática", variant: "primary" as const, onClick: () => router.push('/mentorlite/questions') }
+      ]
+    },
+    {
+      id: "resources",
+      badge: "Arsenal Tático",
+      title: "Links e Vídeos",
+      subtitle: "Tudo em um só lugar",
+      description: "Acesse rapidamente seus materiais de apoio e suporte direto com os mentores.",
+      align: "center" as const,
+      actions: [
+        { label: "Arsenal - Drive de Materiais", variant: "primary" as const, onClick: () => window.open('https://drive.google.com/drive/folders/1nt9Tek397SZFw5mOo14Y6fzCVdhsicLX?usp=drive_link', '_blank') },
+        { label: "Youtube - Mindset da Aprovação", variant: "secondary" as const, onClick: () => window.open('https://youtu.be/1XfBaufahtM', '_blank') }
+      ]
+    }
+  ];
+
   return (
-    <div className="flex flex-col gap-8 max-w-5xl mx-auto">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2 text-primary">
-          <Compass className="h-8 w-8" /> Página do Aluno
-        </h1>
-        <p className="text-muted-foreground text-lg">
-          Siga atentamente os passos para usufruir ao máximo da mentoria.
-        </p>
-      </header>
-
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="md:col-span-2 border-primary/20 bg-primary/5">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle2 className="text-primary h-5 w-5" /> Primeiros Passos
-            </CardTitle>
-            <CardDescription>O que você deve fazer agora para começar com o pé direito.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-start gap-3 p-3 bg-card rounded-lg border">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">1</span>
-                <div>
-                  <p className="font-semibold text-sm">Assista aos vídeos iniciais</p>
-                  <p className="text-xs text-muted-foreground mt-1">Ali em baixo temos uma sequencia de vídeos: Mindset, Boas-vidas, Cronograma, MentorIA.</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 p-3 bg-card rounded-lg border">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">2</span>
-                <div>
-                  <p className="font-semibold text-sm">Aceite no seu email e siga as instruções dos tutoriais</p>
-                  <p className="text-xs text-muted-foreground mt-1">No seu email, haverá os links para acessar as ferramentas, acesse cada uma delas.</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 p-3 bg-card rounded-lg border">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">3</span>
-                <div>
-                  <p className="font-semibold text-sm">Visite as funções do Site</p>
-                  <p className="text-xs text-muted-foreground mt-1">Nosso site possui o complemento ideal para seus estudo: Flashcards, Simulados, Questões e Provas Anteriores.</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 p-3 bg-card rounded-lg border">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">4</span>
-                <div>
-                  <p className="font-semibold text-sm">SUPER STRIKE (SS)</p>
-                  <p className="text-xs text-muted-foreground mt-1">Assista o Tutorial do Super Strike. Gere o SS todos os dias após estudar.</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-accent/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="text-accent h-5 w-5" /> Metas Semanais
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="p-3 border rounded-md text-sm">
-              <p className="font-medium">Mínimo de Questões</p>
-              <p className="text-2xl font-bold text-primary">100/semana</p>
-            </div>
-            <div className="p-3 border rounded-md text-sm">
-              <p className="font-medium">Flashcards revisados</p>
-              <p className="text-2xl font-bold text-accent">80/semana</p>
-            </div>
-            <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" asChild>
-              <Link href="/mentorlite/flashcards">Ir para Prática</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold tracking-tight">Manual da Aprovação</h2>
-        <Accordion type="single" collapsible className="w-full space-y-2">
-          <AccordionItem value="item-1" className="border rounded-lg px-4 bg-card">
-            <AccordionTrigger className="hover:no-underline">Como usar o Banco de Questões?</AccordionTrigger>
-            <AccordionContent className="text-muted-foreground">
-              O segredo não é apenas resolver, mas analisar cada erro. Use os filtros por matéria e assunto para atacar suas maiores dificuldades primeiro. Sempre leia os comentários após responder!
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="item-2" className="border rounded-lg px-4 bg-card">
-            <AccordionTrigger className="hover:no-underline">O poder dos Flashcards (Aprendizado Ativo)</AccordionTrigger>
-            <AccordionContent className="text-muted-foreground">
-              Nossos flashcards são baseados na Repetição Espaçada. Revise diariamente os cartões que você errou. Isso transfere o conhecimento da memória de curto prazo para a de longo prazo.
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="item-3" className="border rounded-lg px-4 bg-card">
-            <AccordionTrigger className="hover:no-underline">Quando devo fazer um Simulado?</AccordionTrigger>
-            <AccordionContent className="text-muted-foreground">
-              Recomendamos um simulado completo a cada 15 dias. No MentorIA, você tem acesso a simulados exclusivos de banca que replicam o nível real de dificuldade da sua prova.
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </section>
-
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Youtube className="text-red-600 h-5 w-5" /> Vídeos Recomendados para iniciar os estudos
-            </CardTitle>
-            <CardDescription>Tudo que precisa para iniciar o caminho da sua aprovação.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Button variant="outline" className="w-full justify-start text-left h-auto py-3 px-4" asChild>
-              <Link href="https://youtu.be/1XfBaufahtM" target="_blank">
-                <PlayCircle className="mr-3 h-5 w-5 shrink-0 text-red-600" />
-                <div className="flex flex-col overflow-hidden">
-                  <span className="font-semibold truncate">Mindset da Aprovação</span>
-                  <span className="text-[10px] text-muted-foreground">Blindando sua mente</span>
-                </div>
-              </Link>
-            </Button>
-            <Button variant="outline" className="w-full justify-start text-left h-auto py-3 px-4" asChild>
-              <Link href="https://youtu.be/yGg5ansZ8nM" target="_blank">
-                <PlayCircle className="mr-3 h-5 w-5 shrink-0 text-red-600" />
-                <div className="flex flex-col overflow-hidden">
-                  <span className="font-semibold truncate">Onboard</span>
-                  <span className="text-[10px] text-muted-foreground">Seja bem-vindo à Mentoria Academy</span>
-                </div>
-              </Link>
-            </Button>
-            <Button variant="outline" className="w-full justify-start text-left h-auto py-3 px-4" asChild>
-              <Link href="https://youtu.be/EjMubrYSuzo" target="_blank">
-                <PlayCircle className="mr-3 h-5 w-5 shrink-0 text-red-600" />
-                <div className="flex flex-col overflow-hidden">
-                  <span className="font-semibold truncate">Seu Cronograma</span>
-                  <span className="text-[10px] text-muted-foreground">Entenda como funciona o seu cronograma, lembre-se de executá-lo passo a passo.</span>
-                </div>
-              </Link>
-            </Button>
-            <Button variant="outline" className="w-full justify-start text-left h-auto py-3 px-4" asChild>
-              <Link href="https://youtu.be/EjMubrYSuzo" target="_blank">
-                <PlayCircle className="mr-3 h-5 w-5 shrink-0 text-red-600" />
-                <div className="flex flex-col overflow-hidden">
-                  <span className="font-semibold truncate">SUPER STRIKE</span>
-                  <span className="text-[10px] text-muted-foreground">Um grande diferencial na sua aprovação será o Super Strike (SS).</span>
-                </div>
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Layout className="text-primary h-5 w-5" /> Links e Documentos
-            </CardTitle>
-            <CardDescription>Acesso rápido aos seus materiais.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Button variant="secondary" className="w-full justify-between" asChild>
-              <Link href="https://drive.google.com/drive/folders/1nt9Tek397SZFw5mOo14Y6fzCVdhsicLX?usp=drive_link" target="_blank">
-                <span className="flex items-center gap-2"><FileText className="h-4 w-4" />Arsenal - Drive de Materiais</span>
-                <ExternalLink className="h-3 w-3" />
-              </Link>
-            </Button>
-            <Button variant="secondary" className="w-full justify-between" asChild>
-              <Link href="https://api.whatsapp.com/send/?phone=5531984585846" target="_blank">
-                <span className="flex items-center gap-2"><Users className="h-4 w-4" /> Suporte no WhatsApp</span>
-                <ExternalLink className="h-3 w-3" />
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </section>
-
-      <footer className="text-center py-8">
-        <div className="flex items-center justify-center gap-2 p-4 bg-muted rounded-2xl">
-          <Lightbulb className="h-5 w-5 text-accent" />
-          <p className="text-sm font-medium italic">
-            "A constância vence o talento.." - Mentoria Academy
-          </p>
-        </div>
-      </footer>
+    <div className="-m-4 md:-m-6 lg:-m-8">
+      <ScrollGlobe sections={sections} className="bg-background" />
     </div>
   );
 }
