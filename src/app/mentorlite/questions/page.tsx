@@ -37,7 +37,7 @@ export default function QuestionsPage() {
 
   const [filterSubject, setFilterSubject] = useState('');
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
-  const [filterCargo, setFilterCargo] = useState('');
+  const [filterCargo, setFilterCargo] = useState('all');
   const [filterStatus, setFilterStatus] = useState<StatusFilter>('all');
   
   const [activeFilters, setActiveFilters] = useState<{
@@ -127,7 +127,7 @@ export default function QuestionsPage() {
   useEffect(() => {
     // When a new subject is selected, reset the dependent filters
     setSelectedTopics([]);
-    setFilterCargo('');
+    setFilterCargo('all');
   }, [filterSubject]);
 
   const handleFilterSubmit = () => {
@@ -139,7 +139,12 @@ export default function QuestionsPage() {
     } else if (filterSubject === 'Legislação Institucional') {
         subjectQuery = ['Legislação Institucional', 'Legislacao Institucional'];
     }
-    setActiveFilters({ subject: subjectQuery, topics: selectedTopics, cargo: filterCargo, status: filterStatus });
+    setActiveFilters({ 
+      subject: subjectQuery, 
+      topics: selectedTopics, 
+      cargo: filterCargo === 'all' ? '' : filterCargo, 
+      status: filterStatus 
+    });
   };
   
   const getTopicButtonLabel = () => {
@@ -225,7 +230,7 @@ export default function QuestionsPage() {
                     <SelectValue placeholder="Cargo" />
                 </SelectTrigger>
                 <SelectContent position="popper">
-                    <SelectItem value="">Todos os Cargos</SelectItem>
+                    <SelectItem value="all">Todos os Cargos</SelectItem>
                     {availableCargos.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                 </SelectContent>
             </Select>
