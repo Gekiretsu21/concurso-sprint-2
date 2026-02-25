@@ -18,6 +18,7 @@ import {
   Lock,
   Users,
   Briefcase,
+  Compass,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import {
@@ -56,6 +57,7 @@ import { doc } from 'firebase/firestore';
 
 const menuItems = [
   { href: '/mentorlite', icon: LayoutDashboard, label: 'Dashboard' },
+  { href: '/mentorlite/student-page', icon: Compass, label: 'Página do Aluno' },
   { href: '/mentorlite/feed', icon: Newspaper, label: 'Feed de Notícias' },
   { href: '/mentorlite/questions', icon: ClipboardList, label: 'Questões' },
   { href: '/mentorlite/community-simulados', icon: Users, label: 'Simulados da Comunidade'},
