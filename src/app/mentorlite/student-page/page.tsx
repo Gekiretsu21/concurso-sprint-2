@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { CheckCircle2, PlayCircle, ExternalLink, Compass, Trophy, Lightbulb, Youtube, Layout } from 'lucide-react';
+import { CheckCircle2, PlayCircle, ExternalLink, Compass, Trophy, Lightbulb, Youtube, Layout, FileText, Users } from 'lucide-react';
 import Link from 'next/link';
 
 export default function StudentPage() {
