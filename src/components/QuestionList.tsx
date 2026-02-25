@@ -2,8 +2,8 @@
 
 import { useMemo, useState, useEffect } from 'react';
 import { useCollection, useFirebase, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, where, QueryConstraint, and, getDocs } from 'firebase/firestore';
-import { saveQuestionAttempt, toggleQuestionStatus } from '@/firebase/actions';
+import { collection, query, where, QueryConstraint, and } from 'firebase/firestore';
+import { saveQuestionAttempt } from '@/firebase/actions';
 import {
   Card,
   CardContent,
@@ -12,15 +12,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Loader2, MessageSquare, Pencil, Trash2, Undo2 } from 'lucide-react';
+import { Loader2, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  Tooltip,
-  TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
 } from '@/components/ui/tooltip';
 import {
   Dialog,
@@ -64,7 +61,7 @@ function formatEnunciado(text: string) {
 }
 
 interface QuestionListProps {
-  subject: string | string[];
+  subject?: string | string[];
   topics?: string[];
   cargo?: string;
   statusFilter?: StatusFilter;
@@ -82,38 +79,50 @@ export function QuestionList({ subject, topics, cargo, statusFilter = 'all' }: Q
   const [userAttempts, setUserAttempts] = useState<Map<string, QuestionAttempt>>(new Map());
   const isAdmin = user?.email === 'amentoriaacademy@gmail.com';
 
-  // 1. Fetch base questions based on subject, topics and cargo
+  // 1. Fetch base questions based on filters
   const questionsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    const subjectConstraint = Array.isArray(subject) 
-      ? where('Materia', 'in', subject) 
-      : where('Materia', '==', subject);
+    
+    const constraints: QueryConstraint[] = [];
+    
+    if (subject && subject !== 'all') {
+        const subjectConstraint = Array.isArray(subject) 
+          ? where('Materia', 'in', subject) 
+          : where('Materia', '==', subject);
+        constraints.push(subjectConstraint);
+    }
       
-    const constraints: QueryConstraint[] = [subjectConstraint];
     if (topics && topics.length > 0) {
       constraints.push(where('Assunto', 'in', topics));
     }
-    if (cargo) {
+    
+    if (cargo && cargo !== 'all') {
         constraints.push(where('Cargo', '==', cargo));
     }
-    return query(collection(firestore, 'questoes'), and(...constraints));
+
+    const baseRef = collection(firestore, 'questoes');
+    return constraints.length > 0 ? query(baseRef, and(...constraints)) : baseRef;
   }, [firestore, user, subject, topics, cargo]);
 
   const { data: questions, isLoading: isLoadingQuestions } = useCollection<Question>(questionsQuery);
   
-  // 2. Fetch user's attempts for the current subject
+  // 2. Fetch user's attempts
   const attemptsQuery = useMemoFirebase(() => {
-      if(!firestore || !user) return null; // Wait for user
-      // Fetch for one or multiple subjects
-      const subjectConstraint = Array.isArray(subject)
-        ? where('subject', 'in', subject)
-        : where('subject', '==', subject);
-      return query(collection(firestore, `users/${user.uid}/question_attempts`), subjectConstraint);
+      if(!firestore || !user) return null;
+      const baseRef = collection(firestore, `users/${user.uid}/question_attempts`);
+      
+      if (subject && subject !== 'all') {
+          const subjectConstraint = Array.isArray(subject)
+            ? where('subject', 'in', subject)
+            : where('subject', '==', subject);
+          return query(baseRef, subjectConstraint);
+      }
+      
+      return baseRef;
   }, [firestore, user, subject]);
 
   const { data: attempts, isLoading: isLoadingAttempts } = useCollection<QuestionAttempt>(attemptsQuery);
   
-  // 3. Create a map of attempts for quick lookup
   useEffect(() => {
     if (attempts) {
       const attemptsMap = new Map(attempts.map(att => [att.id, att]));
@@ -125,7 +134,6 @@ export function QuestionList({ subject, topics, cargo, statusFilter = 'all' }: Q
   const processedQuestions = useMemo(() => {
     if (!questions) return [];
     
-    // Add attempt status to each question
     const questionsWithStatus = questions.map(q => ({
       ...q,
       lastAttemptStatus: userAttempts.has(q.id)
@@ -133,26 +141,22 @@ export function QuestionList({ subject, topics, cargo, statusFilter = 'all' }: Q
         : null,
     })).filter(q => q.status !== 'hidden');
     
-    // Apply the status filter
     if (statusFilter === 'resolved') {
       return questionsWithStatus.filter(q => q.lastAttemptStatus !== null);
     }
     if (statusFilter === 'unresolved') {
       return questionsWithStatus.filter(q => q.lastAttemptStatus === null);
     }
-    return questionsWithStatus; // 'all'
+    return questionsWithStatus;
   }, [questions, userAttempts, statusFilter]);
 
-  // Pagination logic
   const indexOfLastQuestion = currentPage * questionsPerPage;
   const indexOfFirstQuestion = indexOfLastQuestion - questionsPerPage;
   const currentQuestions = processedQuestions.slice(indexOfFirstQuestion, indexOfLastQuestion);
   const totalPages = Math.ceil(processedQuestions.length / questionsPerPage);
 
-  // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-    // When the questions themselves change, also clear local answer state
     setSelectedAnswers({});
     setAnsweredQuestions({});
   }, [subject, topics, cargo, statusFilter, questions]);

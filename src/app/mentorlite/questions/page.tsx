@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useCollection, useFirebase, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, where, or, and } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
 import {
   Select,
   SelectContent,
@@ -35,7 +35,7 @@ export type StatusFilter = 'all' | 'resolved' | 'unresolved';
 export default function QuestionsPage() {
   const { firestore, user } = useFirebase();
 
-  const [filterSubject, setFilterSubject] = useState('');
+  const [filterSubject, setFilterSubject] = useState('all');
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [filterCargo, setFilterCargo] = useState('all');
   const [filterStatus, setFilterStatus] = useState<StatusFilter>('all');
@@ -63,7 +63,7 @@ export default function QuestionsPage() {
     if (!allQuestions) return [];
     const subjectSet = new Set<string>();
     allQuestions
-        .filter(q => q.status !== 'hidden' && q.Materia && q.Materia.trim().toLowerCase() !== 'materia')
+        .filter(q => q.status !== 'hidden' && q.Materia && q.Materia.trim())
         .forEach(q => {
             let subjectName = q.Materia.trim();
             const subjectLower = subjectName.toLowerCase();
@@ -77,11 +77,11 @@ export default function QuestionsPage() {
                 subjectSet.add(subjectName);
             }
         });
-    return Array.from(subjectSet).sort();
+    return Array.from(subjectSet).filter(Boolean).sort();
   }, [allQuestions]);
 
   const availableTopics = useMemo(() => {
-    if (!allQuestions || !filterSubject) return [];
+    if (!allQuestions || filterSubject === 'all') return [];
     
     const isLinguaPortuguesa = filterSubject === 'Língua Portuguesa';
     const isLegislacaoJuridica = filterSubject === 'Legislação Jurídica';
@@ -90,6 +90,7 @@ export default function QuestionsPage() {
     const topics = new Set(
       allQuestions
         .filter(q => {
+            if (!q.Materia || !q.Assunto) return false;
             const subjectLower = q.Materia.toLowerCase();
             let subjectMatch = false;
 
@@ -103,16 +104,17 @@ export default function QuestionsPage() {
               subjectMatch = q.Materia === filterSubject;
             }
 
-            return subjectMatch && q.Assunto;
+            return subjectMatch;
         })
-        .map(q => q.Assunto)
+        .map(q => q.Assunto.trim())
+        .filter(Boolean)
     );
     return Array.from(topics).sort();
   }, [allQuestions, filterSubject]);
 
   const availableCargos = useMemo(() => {
     if (!allQuestions) return [];
-    const subjectFilteredQuestions = filterSubject
+    const subjectFilteredQuestions = filterSubject !== 'all'
         ? allQuestions.filter(q => q.Materia === filterSubject)
         : allQuestions;
 
@@ -121,11 +123,10 @@ export default function QuestionsPage() {
         .filter(q => q.status !== 'hidden' && q.Cargo && q.Cargo.trim())
         .forEach(q => cargoSet.add(q.Cargo.trim()));
     
-    return Array.from(cargoSet).sort();
+    return Array.from(cargoSet).filter(Boolean).sort();
   }, [allQuestions, filterSubject]);
 
   useEffect(() => {
-    // When a new subject is selected, reset the dependent filters
     setSelectedTopics([]);
     setFilterCargo('all');
   }, [filterSubject]);
@@ -138,7 +139,10 @@ export default function QuestionsPage() {
         subjectQuery = ['Legislação Jurídica', 'Legislacao Juridica'];
     } else if (filterSubject === 'Legislação Institucional') {
         subjectQuery = ['Legislação Institucional', 'Legislacao Institucional'];
+    } else if (filterSubject === 'all') {
+        subjectQuery = '';
     }
+
     setActiveFilters({ 
       subject: subjectQuery, 
       topics: selectedTopics, 
@@ -181,6 +185,7 @@ export default function QuestionsPage() {
                 <SelectValue placeholder="Matéria" />
               </SelectTrigger>
               <SelectContent position="popper">
+                <SelectItem value="all">Todas as Matérias</SelectItem>
                 {isLoadingSubjects ? (
                   <div className="flex items-center justify-center p-4">
                     <Loader2 className="h-5 w-5 animate-spin" />
@@ -197,7 +202,7 @@ export default function QuestionsPage() {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" disabled={!filterSubject} className="w-full justify-start font-normal truncate">
+                <Button variant="outline" disabled={filterSubject === 'all'} className="w-full justify-start font-normal truncate">
                   {getTopicButtonLabel()}
                 </Button>
               </DropdownMenuTrigger>
@@ -220,12 +225,12 @@ export default function QuestionsPage() {
                     >
                       {topic}
                     </DropdownMenuCheckboxItem>
-                  )) : <p className="p-2 text-xs text-muted-foreground">Nenhum assunto para esta matéria.</p>}
+                  )) : <p className="p-2 text-xs text-muted-foreground">Selecione uma matéria primeiro.</p>}
                 </ScrollArea>
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Select value={filterCargo} onValueChange={setFilterCargo} disabled={!filterSubject || availableCargos.length === 0}>
+            <Select value={filterCargo} onValueChange={setFilterCargo} disabled={availableCargos.length === 0}>
                 <SelectTrigger>
                     <SelectValue placeholder="Cargo" />
                 </SelectTrigger>
@@ -236,7 +241,7 @@ export default function QuestionsPage() {
             </Select>
 
 
-            <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as StatusFilter)} disabled={!filterSubject}>
+            <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as StatusFilter)}>
               <SelectTrigger>
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
@@ -249,14 +254,14 @@ export default function QuestionsPage() {
 
           </div>
             <div className="mt-4 flex justify-end">
-                <Button onClick={handleFilterSubmit} disabled={!filterSubject}>
+                <Button onClick={handleFilterSubmit}>
                     Buscar Questões
                 </Button>
             </div>
         </CardContent>
       </Card>
 
-      {activeFilters.subject ? (
+      {activeFilters.subject || activeFilters.cargo || activeFilters.status !== 'all' ? (
         <QuestionList
           subject={activeFilters.subject}
           topics={activeFilters.topics}

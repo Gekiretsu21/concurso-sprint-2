@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -138,12 +137,18 @@ function FlashcardsContent() {
   const [studyMode, setStudyMode] = useState<'all' | 'review'>('all');
   const [activeFlashcards, setActiveFlashcards] = useState<Flashcard[]>([]);
 
-  // FETCH ALL FLASHCARDS WITHOUT RESTRICTION
+  // FETCH ALL FLASHCARDS: Removed orderBy to ensure docs without 'subject' field are also returned
   const allFlashcardsQuery = useMemoFirebase(() => (
-    firestore ? query(collection(firestore, 'flashcards'), orderBy('subject')) : null
+    firestore ? collection(firestore, 'flashcards') : null
   ), [firestore]);
 
-  const { data: allFlashcards, isLoading: isLoadingAll } = useCollection<Flashcard>(allFlashcardsQuery);
+  const { data: allFlashcardsRaw, isLoading: isLoadingAll } = useCollection<Flashcard>(allFlashcardsQuery);
+
+  const allFlashcards = useMemo(() => {
+    if (!allFlashcardsRaw) return null;
+    // Sort client-side to be safe and include everyone
+    return [...allFlashcardsRaw].sort((a, b) => (a.subject || '').localeCompare(b.subject || ''));
+  }, [allFlashcardsRaw]);
 
   const allProgressQuery = useMemoFirebase(() =>
     (firestore && user)
@@ -156,22 +161,22 @@ function FlashcardsContent() {
   const availableReviewSubjects = useMemo(() => {
     if (!allProgress) return [];
     return Array.from(new Set(
-      allProgress.map(p => p.subject)
+      allProgress.map(p => p.subject).filter(Boolean)
     )).sort();
   }, [allProgress]);
 
   const filterOptions = useMemo(() => {
     if (!allFlashcards) return { subjects: [], topics: [], targetRoles: [] };
 
-    const subjects = new Set(allFlashcards.map(fc => fc.subject));
+    const subjects = new Set(allFlashcards.map(fc => fc.subject).filter(Boolean));
     let filteredBySubject = allFlashcards;
 
     if (filterSubject !== 'all') {
       filteredBySubject = allFlashcards.filter(fc => fc.subject === filterSubject);
     }
 
-    const topics = new Set(filteredBySubject.map(fc => fc.topic));
-    const targetRoles = new Set(filteredBySubject.map(fc => fc.targetRole));
+    const topics = new Set(filteredBySubject.map(fc => fc.topic).filter(Boolean));
+    const targetRoles = new Set(filteredBySubject.map(fc => fc.targetRole).filter(Boolean));
 
     return {
       subjects: Array.from(subjects).sort(),
