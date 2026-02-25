@@ -180,7 +180,7 @@ export default function StudentPage() {
         
         <Card className="border-accent/10 shadow-xl bg-white">
           <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-4">
                 <Button variant="outline" className="group w-full justify-start h-auto py-4 px-5 text-left border-accent/20 hover:bg-accent/10 hover:border-accent/40 transition-all" asChild>
                 <Link href="https://youtu.be/1XfBaufahtM" target="_blank">
                     <div className="flex items-center gap-4">
