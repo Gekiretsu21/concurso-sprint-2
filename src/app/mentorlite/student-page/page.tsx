@@ -14,7 +14,7 @@ export default function StudentPage() {
           <Compass className="h-8 w-8" /> Página do Aluno
         </h1>
         <p className="text-muted-foreground text-lg">
-          Seu guia definitivo para dominar a metodologia e acelerar sua aprovação.
+          Siga atentamente os passos para usufruir ao máximo da mentoria.
         </p>
       </header>
 
@@ -31,22 +31,29 @@ export default function StudentPage() {
               <div className="flex items-start gap-3 p-3 bg-card rounded-lg border">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">1</span>
                 <div>
-                  <p className="font-semibold text-sm">Assista ao Vídeo de Boas-Vindas</p>
-                  <p className="text-xs text-muted-foreground mt-1">Entenda como a Mentoria Academy vai transformar seu estudo.</p>
+                  <p className="font-semibold text-sm">Assista aos vídeos iniciais</p>
+                  <p className="text-xs text-muted-foreground mt-1">Ali em baixo temos uma sequencia de vídeos: Mindset, Boas-vidas, Cronograma, MentorIA.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 p-3 bg-card rounded-lg border">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">2</span>
                 <div>
-                  <p className="font-semibold text-sm">Configure seu Dashboard</p>
-                  <p className="text-xs text-muted-foreground mt-1">Defina suas metas e familiarize-se com as ferramentas de questões e flashcards.</p>
+                  <p className="font-semibold text-sm">Aceite no seu email e siga as instruções dos tutoriais</p>
+                  <p className="text-xs text-muted-foreground mt-1">No seu email, haverá os links para acessar as ferramentas, acesse cada uma delas.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 p-3 bg-card rounded-lg border">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">3</span>
                 <div>
-                  <p className="font-semibold text-sm">Acesse o Material de Apoio</p>
-                  <p className="text-xs text-muted-foreground mt-1">O link do Drive contém guias de redação, cronogramas e PDFs exclusivos.</p>
+                  <p className="font-semibold text-sm">Visite as funções do Site</p>
+                  <p className="text-xs text-muted-foreground mt-1">Nosso site possui o complemento ideal para seus estudo: Flashcards, Simulados, Questões e Provas Anteriores.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-3 bg-card rounded-lg border">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">4</span>
+                <div>
+                  <p className="font-semibold text-sm">SUPER STRIKE (SS)</p>
+                  <p className="text-xs text-muted-foreground mt-1">Assista o Tutorial do Super Strike. Gere o SS todos os dias após estudar.</p>
                 </div>
               </div>
             </div>
@@ -62,14 +69,14 @@ export default function StudentPage() {
           <CardContent className="space-y-4">
             <div className="p-3 border rounded-md text-sm">
               <p className="font-medium">Mínimo de Questões</p>
-              <p className="text-2xl font-bold text-primary">50/semana</p>
+              <p className="text-2xl font-bold text-primary">100/semana</p>
             </div>
             <div className="p-3 border rounded-md text-sm">
-              <p className="font-medium">Flashcards Novos</p>
-              <p className="text-2xl font-bold text-accent">20/semana</p>
+              <p className="font-medium">Flashcards revisados</p>
+              <p className="text-2xl font-bold text-accent">80/semana</p>
             </div>
             <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" asChild>
-              <Link href="/mentorlite/questions">Ir para Prática</Link>
+              <Link href="/mentorlite/flashcards">Ir para Prática</Link>
             </Button>
           </CardContent>
         </Card>
@@ -93,7 +100,7 @@ export default function StudentPage() {
           <AccordionItem value="item-3" className="border rounded-lg px-4 bg-card">
             <AccordionTrigger className="hover:no-underline">Quando devo fazer um Simulado?</AccordionTrigger>
             <AccordionContent className="text-muted-foreground">
-              Recomendamos um simulado completo a cada 15 dias. No MentorIA+, você tem acesso a simulados exclusivos de banca que replicam o nível real de dificuldade da sua prova.
+              Recomendamos um simulado completo a cada 15 dias. No MentorIA, você tem acesso a simulados exclusivos de banca que replicam o nível real de dificuldade da sua prova.
             </AccordionContent>
           </AccordionItem>
         </Accordion>
@@ -103,26 +110,44 @@ export default function StudentPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Youtube className="text-red-600 h-5 w-5" /> Vídeos Recomendados
+              <Youtube className="text-red-600 h-5 w-5" /> Vídeos Recomendados para iniciar os estudos
             </CardTitle>
-            <CardDescription>Aulas e tutoriais essenciais.</CardDescription>
+            <CardDescription>Tudo que precisa para iniciar o caminho da sua aprovação.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <Button variant="outline" className="w-full justify-start text-left h-auto py-3 px-4" asChild>
-              <Link href="https://www.youtube.com/watch?v=1XfBaufahtM" target="_blank">
+              <Link href="https://youtu.be/1XfBaufahtM" target="_blank">
                 <PlayCircle className="mr-3 h-5 w-5 shrink-0 text-red-600" />
                 <div className="flex flex-col overflow-hidden">
                   <span className="font-semibold truncate">Mindset da Aprovação</span>
-                  <span className="text-[10px] text-muted-foreground">Mentoria Academy</span>
+                  <span className="text-[10px] text-muted-foreground">Blindando sua mente</span>
                 </div>
               </Link>
             </Button>
             <Button variant="outline" className="w-full justify-start text-left h-auto py-3 px-4" asChild>
-              <Link href="#" target="_blank">
+              <Link href="https://youtu.be/yGg5ansZ8nM" target="_blank">
                 <PlayCircle className="mr-3 h-5 w-5 shrink-0 text-red-600" />
                 <div className="flex flex-col overflow-hidden">
-                  <span className="font-semibold truncate">Como Organizar seu Cronograma</span>
-                  <span className="text-[10px] text-muted-foreground">Aula Prática</span>
+                  <span className="font-semibold truncate">Onboard</span>
+                  <span className="text-[10px] text-muted-foreground">Seja bem-vindo à Mentoria Academy</span>
+                </div>
+              </Link>
+            </Button>
+            <Button variant="outline" className="w-full justify-start text-left h-auto py-3 px-4" asChild>
+              <Link href="https://youtu.be/EjMubrYSuzo" target="_blank">
+                <PlayCircle className="mr-3 h-5 w-5 shrink-0 text-red-600" />
+                <div className="flex flex-col overflow-hidden">
+                  <span className="font-semibold truncate">Seu Cronograma</span>
+                  <span className="text-[10px] text-muted-foreground">Entenda como funciona o seu cronograma, lembre-se de executá-lo passo a passo.</span>
+                </div>
+              </Link>
+            </Button>
+            <Button variant="outline" className="w-full justify-start text-left h-auto py-3 px-4" asChild>
+              <Link href="https://youtu.be/EjMubrYSuzo" target="_blank">
+                <PlayCircle className="mr-3 h-5 w-5 shrink-0 text-red-600" />
+                <div className="flex flex-col overflow-hidden">
+                  <span className="font-semibold truncate">SUPER STRIKE</span>
+                  <span className="text-[10px] text-muted-foreground">Um grande diferencial na sua aprovação será o Super Strike (SS).</span>
                 </div>
               </Link>
             </Button>
@@ -139,7 +164,7 @@ export default function StudentPage() {
           <CardContent className="space-y-3">
             <Button variant="secondary" className="w-full justify-between" asChild>
               <Link href="https://drive.google.com/drive/folders/1nt9Tek397SZFw5mOo14Y6fzCVdhsicLX?usp=drive_link" target="_blank">
-                <span className="flex items-center gap-2"><FileText className="h-4 w-4" /> Drive de Materiais</span>
+                <span className="flex items-center gap-2"><FileText className="h-4 w-4" />Arsenal - Drive de Materiais</span>
                 <ExternalLink className="h-3 w-3" />
               </Link>
             </Button>
@@ -157,7 +182,7 @@ export default function StudentPage() {
         <div className="flex items-center justify-center gap-2 p-4 bg-muted rounded-2xl">
           <Lightbulb className="h-5 w-5 text-accent" />
           <p className="text-sm font-medium italic">
-            "A constância vence o talento quando o talento não tem constância." - Mentoria Academy
+            "A constância vence o talento.." - Mentoria Academy
           </p>
         </div>
       </footer>
