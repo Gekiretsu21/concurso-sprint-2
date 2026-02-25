@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, FileText, PlayCircle, MessageSquare, BookOpen, Target, CheckCircle2 } from 'lucide-react';
+import { ExternalLink, FileText, PlayCircle, MessageSquare, BookOpen, Target, CheckCircle2, Users } from 'lucide-react';
 import Link from 'next/link';
 
 export default function StudentPage() {
@@ -105,14 +105,13 @@ export default function StudentPage() {
         </Accordion>
       </section>
 
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-12">
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight">Vídeos Recomendados para iniciar os estudos</h2>
-            <p className="text-sm text-muted-foreground mt-1">Tudo que precisa para iniciar o caminho da sua aprovação.</p>
-          </div>
-          
-          <div className="space-y-3">
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle className="text-xl">Vídeos Recomendados para iniciar os estudos</CardTitle>
+            <CardDescription>Tudo que precisa para iniciar o caminho da sua aprovação.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
             <Button variant="outline" className="w-full justify-start h-auto py-3 px-4 text-left" asChild>
               <Link href="https://youtu.be/1XfBaufahtM" target="_blank">
                 <div className="flex items-center gap-3">
@@ -157,8 +156,8 @@ export default function StudentPage() {
                 </div>
               </Link>
             </Button>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         <Card className="h-fit">
           <CardHeader>
