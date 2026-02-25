@@ -118,7 +118,7 @@ export function ScrollGlobe({ sections, globeConfig = defaultGlobeConfig, classN
               onClick={() => sectionRefs.current[index]?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
               className={cn(
                 "w-3 h-3 rounded-full border-2 transition-all duration-300",
-                activeSection === index ? "bg-primary border-primary scale-125 shadow-lg" : "bg-transparent border-muted-foreground/40"
+                activeSection === index ? "bg-primary border-primary scale-125 shadow-lg" : "bg-transparent border-slate-400"
               )}
               aria-label={`Go to ${section.badge || section.title}`}
             />
@@ -144,26 +144,29 @@ export function ScrollGlobe({ sections, globeConfig = defaultGlobeConfig, classN
             (!section.align || section.align === 'left') && "items-start text-left"
           )}
         >
-          <div className="w-full max-w-4xl">
+          <div className={cn(
+            "w-full max-w-4xl bg-white/60 backdrop-blur-md p-8 sm:p-12 rounded-[2.5rem] border border-white/40 shadow-2xl shadow-black/5 transition-all duration-500",
+            activeSection === index ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
+          )}>
             {section.badge && (
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold mb-4 animate-pulse">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold mb-6 animate-pulse">
                 {section.badge}
               </div>
             )}
-            <h1 className="text-4xl sm:text-6xl font-bold mb-6 tracking-tight leading-[1.1]">
+            <h1 className="text-4xl sm:text-6xl font-bold mb-6 tracking-tight leading-[1.1] text-slate-950">
               {section.title}
-              {section.subtitle && <span className="block text-muted-foreground text-[0.6em] mt-2 font-medium">{section.subtitle}</span>}
+              {section.subtitle && <span className="block text-slate-700 text-[0.6em] mt-2 font-medium">{section.subtitle}</span>}
             </h1>
-            <p className="text-lg sm:text-xl text-muted-foreground mb-10 max-w-2xl font-light leading-relaxed">
+            <p className="text-lg sm:text-xl text-slate-900 mb-10 max-w-2xl font-normal leading-relaxed">
               {section.description}
             </p>
 
             {section.features && (
               <div className="grid gap-4 mb-10">
                 {section.features.map((feature) => (
-                  <div key={feature.title} className="p-4 rounded-xl border bg-card/50 backdrop-blur-sm">
-                    <h3 className="font-semibold text-lg mb-1">{feature.title}</h3>
-                    <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
+                  <div key={feature.title} className="p-5 rounded-2xl border border-slate-200 bg-white/80 shadow-sm">
+                    <h3 className="font-bold text-slate-950 text-lg mb-1">{feature.title}</h3>
+                    <p className="text-slate-800 text-sm leading-relaxed font-medium">{feature.description}</p>
                   </div>
                 ))}
               </div>
@@ -176,10 +179,10 @@ export function ScrollGlobe({ sections, globeConfig = defaultGlobeConfig, classN
                     key={action.label}
                     onClick={action.onClick}
                     className={cn(
-                      "px-8 py-4 rounded-xl font-medium transition-all duration-300",
+                      "px-8 py-4 rounded-xl font-bold transition-all duration-300",
                       action.variant === 'primary' 
-                        ? "bg-primary text-primary-foreground hover:shadow-lg" 
-                        : "border-2 border-border bg-background/50 backdrop-blur-sm hover:bg-accent"
+                        ? "bg-primary text-primary-foreground hover:shadow-lg hover:scale-105" 
+                        : "border-2 border-slate-300 bg-white/50 backdrop-blur-sm hover:bg-slate-100 text-slate-900"
                     )}
                   >
                     {action.label}
