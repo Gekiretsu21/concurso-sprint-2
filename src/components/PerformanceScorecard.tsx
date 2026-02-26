@@ -88,13 +88,13 @@ export function PerformanceScorecard() {
                 <div className="relative flex items-center justify-center h-24 w-24 rounded-full border-4 border-accent/10 bg-white shadow-inner cursor-help">
                   <div className="text-center">
                     <span className="text-2xl font-black text-slate-900 leading-none">{overallPercent.toFixed(0)}%</span>
-                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">Acerto</p>
+                    <p className="text-[9px] text-slate-500 uppercase font-bold tracking-tighter leading-tight mt-1">Acerto<br/>Histórico</p>
                   </div>
                   <Target className="absolute -top-1 -right-1 h-5 w-5 text-accent bg-white rounded-full p-0.5 border border-accent/20" />
                 </div>
               </TooltipTrigger>
               <TooltipContent>
-                <p className="max-w-xs text-xs">Sua taxa de acerto global. Representa a qualidade e precisão do seu aprendizado acumulado.</p>
+                <p className="max-w-xs text-xs">Sua taxa de acerto total, contabilizada desde a sua primeira questão até a última resolvida hoje.</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
