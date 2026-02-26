@@ -13,6 +13,12 @@ if (getApps().length === 0) {
     adminApp = initializeApp({
       projectId: 'demo-project',
     });
+    
+    // Configura o emulador apenas na primeira inicialização e antes de qualquer outra operação
+    getFirestore(adminApp).settings({
+      host: process.env.FIRESTORE_EMULATOR_HOST,
+      ssl: false,
+    });
   } else {
     // Em produção ou desenvolvimento padrão, usamos o ID real.
     // As credenciais são detectadas automaticamente pelo ambiente (App Hosting).
@@ -26,13 +32,5 @@ if (getApps().length === 0) {
 
 const adminAuth = getAuth(adminApp);
 const adminFirestore = getFirestore(adminApp);
-
-// Configura o emulador se a variável de ambiente estiver presente
-if (process.env.FIRESTORE_EMULATOR_HOST) {
-  adminFirestore.settings({
-    host: process.env.FIRESTORE_EMULATOR_HOST,
-    ssl: false,
-  });
-}
 
 export { adminApp, adminAuth, adminFirestore };
