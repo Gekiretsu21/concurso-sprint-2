@@ -255,6 +255,21 @@ export async function seedUsers(firestore: Firestore) {
   await batch.commit();
 }
 
+/**
+ * Remove os 101 usuários fictícios criados pelo script de Seed
+ */
+export async function deleteFakeUsers(firestore: Firestore) {
+  const batch = writeBatch(firestore);
+  const usersRef = collection(firestore, 'users');
+
+  for (let i = 1; i <= 101; i++) {
+    const fakeId = `fake_user_${i}`;
+    batch.delete(doc(usersRef, fakeId));
+  }
+
+  await batch.commit();
+}
+
 export async function deleteFeedPost(firestore: Firestore, postId: string): Promise<void> {
     if (!postId) throw new Error('Post ID is required.');
     const postRef = doc(firestore, 'feed_posts', postId);
