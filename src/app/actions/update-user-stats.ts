@@ -1,3 +1,4 @@
+
 'use server';
 
 import { adminFirestore } from '@/firebase/admin';
@@ -93,28 +94,56 @@ export async function updateUserStudyTime(userId: string, seconds: number): Prom
 }
 
 /**
- * Busca a posição do usuário no ranking global (Server Side)
+ * Busca a posição do usuário no ranking global e os dados do Top 10
  */
-export async function getUserGlobalRank(totalAnswered: number): Promise<{ position: number; totalStudents: number }> {
+export async function getGlobalRankingData(userId: string, totalAnswered: number): Promise<{ 
+    position: number; 
+    totalStudents: number;
+    topStudents: Array<{ id: string, name: string, photoURL: string, totalAnswered: number, isCurrentUser: boolean }>
+}> {
     try {
         const usersRef = adminFirestore.collection('users');
         
-        // Conta usuários com mais questões resolvidas
+        // 1. Conta usuários com mais questões resolvidas para definir a posição
         const moreQuestionsCount = await usersRef
             .where('stats.performance.questions.totalAnswered', '>', totalAnswered)
             .count()
             .get();
             
-        // Conta o total de alunos na base
+        // 2. Conta o total de alunos na base
         const totalCount = await usersRef.count().get();
+
+        // 3. Busca o Top 10 para a tabela
+        // Nota: O orderby em campo aninhado pode exigir a criação de índice composto no console do Firebase.
+        let topStudents: any[] = [];
+        try {
+            const topSnapshot = await usersRef
+                .orderBy('stats.performance.questions.totalAnswered', 'desc')
+                .limit(10)
+                .get();
+                
+            topStudents = topSnapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    name: data.name || 'Aluno Anônimo',
+                    photoURL: data.photoURL || '',
+                    totalAnswered: data.stats?.performance?.questions?.totalAnswered || 0,
+                    isCurrentUser: doc.id === userId
+                };
+            });
+        } catch (e) {
+            console.warn("Aviso: Consulta de Top 10 falhou. Verifique se o índice composto foi criado.");
+            topStudents = [];
+        }
 
         return {
             position: moreQuestionsCount.data().count + 1,
-            totalStudents: totalCount.data().count
+            totalStudents: totalCount.data().count,
+            topStudents
         };
     } catch (error) {
-        console.error("Erro ao buscar ranking global:", error);
-        // Retorna valores padrão em vez de lançar erro para a UI
-        return { position: 1, totalStudents: 1 };
+        console.error("Erro crítico ao buscar ranking global:", error);
+        return { position: 1, totalStudents: 1, topStudents: [] };
     }
 }

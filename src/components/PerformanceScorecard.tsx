@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useUser, useDoc, useFirebase, useMemoFirebase } from '@/firebase';
@@ -8,7 +9,7 @@ import { AddQuestionsModal } from './AddQuestionsModal';
 import { Trophy, Target, Calendar, TrendingUp, Users, Crown } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { useEffect, useState } from 'react';
-import { getUserGlobalRank } from '@/app/actions/update-user-stats';
+import { getGlobalRankingData } from '@/app/actions/update-user-stats';
 import {
   Tooltip,
   TooltipContent,
@@ -33,9 +34,11 @@ export function PerformanceScorecard() {
 
   useEffect(() => {
     if (user) {
-      // Busca o ranking global via Server Action (acessível a todos)
+      // Busca a classificação global via Server Action
       const totalDone = userData?.stats?.performance?.questions?.totalAnswered || 0;
-      getUserGlobalRank(totalDone).then(setRankInfo);
+      getGlobalRankingData(user.uid, totalDone).then(data => {
+          setRankInfo({ position: data.position, totalStudents: data.totalStudents });
+      });
     }
   }, [userData, user]);
 
@@ -135,7 +138,7 @@ export function PerformanceScorecard() {
               <p className="text-[9px] text-slate-400 mt-1">{stats.monthlyQuestionsDone}/{MONTHLY_GOAL} questões</p>
             </div>
 
-            {/* Ranking Aberto: Visível para todos os níveis de acesso */}
+            {/* Ranking Global: Posição calculada no servidor */}
             <div className="p-3 rounded-xl bg-accent/5 border border-accent/20 group hover:bg-accent/10 transition-colors">
               <div className="flex items-center gap-2 mb-1">
                 <Users className="h-3 w-3 text-accent" />

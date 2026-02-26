@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -11,6 +12,7 @@ import {
   Timer,
   Shield,
   Users,
+  Trophy,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -25,9 +27,11 @@ import { useUser, useDoc, useFirebase, useMemoFirebase } from '@/firebase';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { doc } from 'firebase/firestore';
-import { updateDailyStreak } from '../actions/update-user-stats';
+import { updateDailyStreak, getGlobalRankingData } from '../actions/update-user-stats';
 import { PremiumFeature } from '@/components/PremiumFeature';
 import { PerformanceScorecard } from '@/components/PerformanceScorecard';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 
 const mainFeatures = [
@@ -71,6 +75,70 @@ interface UserStats {
         totalCorrect?: number;
     }
   }
+}
+
+function GlobalRankingTable({ userId, totalAnswered }: { userId: string, totalAnswered: number }) {
+    const [ranking, setRanking] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        getGlobalRankingData(userId, totalAnswered).then(data => {
+            setRanking(data.topStudents);
+            setIsLoading(false);
+        });
+    }, [userId, totalAnswered]);
+
+    if (isLoading) return <Skeleton className="h-64 w-full rounded-xl" />;
+
+    return (
+        <Card className="border-accent/10 shadow-lg bg-white">
+            <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2 text-slate-950">
+                    <Trophy className="h-5 w-5 text-accent" /> Top 10 Alunos
+                </CardTitle>
+                <CardDescription>Estudantes com maior volume de questões resolvidas na base.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead className="w-12 text-center font-bold">Pos</TableHead>
+                            <TableHead>Aluno</TableHead>
+                            <TableHead className="text-right">Questões</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {ranking.length > 0 ? ranking.map((student, index) => (
+                            <TableRow key={student.id} className={student.isCurrentUser ? "bg-accent/5" : ""}>
+                                <TableCell className="text-center font-black text-slate-700">{index + 1}º</TableCell>
+                                <TableCell>
+                                    <div className="flex items-center gap-3">
+                                        <Avatar className="h-8 w-8 border border-accent/20">
+                                            <AvatarImage src={student.photoURL} />
+                                            <AvatarFallback className="bg-slate-100 text-slate-600 font-bold">{student.name[0]}</AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex flex-col">
+                                            <span className="truncate max-w-[150px] font-bold text-slate-900">
+                                                {student.name}
+                                            </span>
+                                            {student.isCurrentUser && <span className="text-[10px] font-bold text-accent uppercase tracking-tighter">Você</span>}
+                                        </div>
+                                    </div>
+                                </TableCell>
+                                <TableCell className="text-right font-mono font-bold text-slate-700">{student.totalAnswered}</TableCell>
+                            </TableRow>
+                        )) : (
+                            <TableRow>
+                                <TableCell colSpan={3} className="text-center py-8 text-muted-foreground italic text-sm">
+                                    Inicie seus estudos para aparecer no ranking!
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
+    );
 }
 
 function StatCardSkeleton() {
@@ -124,38 +192,22 @@ export default function Home() {
     const welcomeName = isUserLoading ? 'Concurseiro' : getFirstName(user?.displayName);
 
     const stats = userData?.stats;
-  
-    const statCards = [
-      {
-          title: 'Tempo total de estudo',
-          value: formatStudyTime(stats?.totalStudyTime),
-          icon: Timer,
-          description: "Seu tempo de foco na plataforma."
-      },
-      {
-          title: 'Strike de dias',
-          value: `${dailyStreak} dias`,
-          icon: Flame,
-          color: 'text-amber-500',
-          description: "Sua sequência de estudos diários."
-      },
-    ];
-
+    const totalAnswered = stats?.performance?.questions?.totalAnswered || 0;
 
   return (
     <div className="flex flex-col gap-8">
       <section className="space-y-6">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-950">
             Seja bem-vindo, {welcomeName}!
           </h1>
-          <p className="text-muted-foreground">O que você gostaria de fazer hoje?</p>
+          <p className="text-muted-foreground font-medium">O que você gostaria de fazer hoje?</p>
         </div>
 
-        {/* Novo Placar de Desempenho e Gamificação */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-6">
             <PerformanceScorecard />
+            {user && <GlobalRankingTable userId={user.uid} totalAnswered={totalAnswered} />}
           </div>
           <div className="grid grid-cols-1 gap-6">
              {isLoading ? (
@@ -195,14 +247,14 @@ export default function Home() {
       </section>
       
       <section>
-        <h2 className="text-2xl font-bold tracking-tight mb-4">
+        <h2 className="text-2xl font-bold tracking-tight mb-4 text-slate-950">
           Principais Ferramentas
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {mainFeatures.map(feature => (
-            <Card key={feature.title} className="flex flex-col">
+            <Card key={feature.title} className="flex flex-col border-accent/5 hover:border-accent/20 transition-all group shadow-sm">
               <CardHeader>
-                <div className="bg-primary/10 p-3 rounded-lg w-fit mb-4">
+                <div className="bg-primary/5 p-3 rounded-lg w-fit mb-4 group-hover:bg-primary/10 transition-colors">
                   <feature.icon className="h-6 w-6 text-primary" />
                 </div>
                 <CardTitle className="text-xl">{feature.title}</CardTitle>
@@ -215,9 +267,9 @@ export default function Home() {
               </CardContent>
             </Card>
           ))}
-            <Card className="flex flex-col">
+            <Card className="flex flex-col border-accent/5 hover:border-accent/20 transition-all group shadow-sm">
               <CardHeader>
-                <div className="bg-accent/10 p-3 rounded-lg w-fit mb-4">
+                <div className="bg-accent/5 p-3 rounded-lg w-fit mb-4 group-hover:bg-accent/10 transition-colors">
                   <Sparkles className="h-6 w-6 text-accent" />
                 </div>
                 <CardTitle className="text-xl">Gerar Relatório IA</CardTitle>
