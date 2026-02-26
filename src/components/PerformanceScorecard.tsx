@@ -127,7 +127,7 @@ export function PerformanceScorecard() {
               <p className="text-[9px] text-slate-400 mt-1">{stats.monthlyQuestionsDone}/{MONTHLY_GOAL} questões</p>
             </div>
 
-            <div className="p-2 rounded-xl flex flex-col items-center justify-center min-h-[80px]">
+            <div className="p-2 rounded-xl flex flex-col items-center justify-center min-h-[140px]">
               <EvolutionBadge level={levelInfo.currentLevel} />
             </div>
           </div>
