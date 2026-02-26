@@ -41,6 +41,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { FeedPostDialog } from '@/components/FeedPostDialog';
 import { StudentPerformanceModal } from '@/components/StudentPerformanceModal';
+import { StudentFlashcardsModal } from '@/components/StudentFlashcardsModal';
 
 interface PreviousExam {
   id: string;
@@ -640,6 +641,9 @@ export default function ManagementPage() {
   const [selectedUserForPerf, setSelectedUserForPerf] = useState<UserProfile | null>(null);
   const [isPerfModalOpen, setIsPerfModalOpen] = useState(false);
 
+  const [selectedUserForFlashcards, setSelectedUserForFlashcards] = useState<UserProfile | null>(null);
+  const [isFlashcardsModalOpen, setIsFlashcardsModalOpen] = useState(false);
+
 
   useEffect(() => {
     setIsClient(true);
@@ -888,6 +892,11 @@ export default function ManagementPage() {
   const handleViewPerformance = (student: UserProfile) => {
     setSelectedUserForPerf(student);
     setIsPerfModalOpen(true);
+  };
+
+  const handleViewFlashcards = (student: UserProfile) => {
+    setSelectedUserForFlashcards(student);
+    setIsFlashcardsModalOpen(true);
   };
 
   const isButtonDisabled = !user || isUserLoading;
@@ -1322,6 +1331,15 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
+                                                    className="text-slate-500 hover:text-amber-600 hover:bg-amber-50"
+                                                    title="Ver Flashcards"
+                                                    onClick={() => handleViewFlashcards(u)}
+                                                >
+                                                    <Layers className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
                                                     className="text-slate-500 hover:text-accent hover:bg-accent/10"
                                                     title="Ver Desempenho"
                                                     onClick={() => handleViewPerformance(u)}
@@ -1427,6 +1445,12 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
         user={selectedUserForPerf}
         isOpen={isPerfModalOpen}
         onOpenChange={setIsPerfModalOpen}
+      />
+
+      <StudentFlashcardsModal
+        user={selectedUserForFlashcards}
+        isOpen={isFlashcardsModalOpen}
+        onOpenChange={setIsFlashcardsModalOpen}
       />
     </div>
   );
