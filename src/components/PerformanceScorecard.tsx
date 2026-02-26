@@ -3,11 +3,9 @@
 import { useUser, useDoc, useFirebase, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { calculateLevel, calculatePercentage } from '@/lib/gamification';
 import { AddQuestionsModal } from './AddQuestionsModal';
-import { Trophy, Target, Calendar, TrendingUp, Crown, Users } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Trophy, Target, Calendar, TrendingUp, Users, Crown } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { useEffect, useState } from 'react';
 import { getUserGlobalRank } from '@/app/actions/update-user-stats';
@@ -35,7 +33,7 @@ export function PerformanceScorecard() {
 
   useEffect(() => {
     if (user) {
-      // Sempre busca o ranking quando os dados do usuário ou o progresso mudarem
+      // Busca o ranking global via Server Action (acessível a todos)
       const totalDone = userData?.stats?.performance?.questions?.totalAnswered || 0;
       getUserGlobalRank(totalDone).then(setRankInfo);
     }
@@ -54,14 +52,10 @@ export function PerformanceScorecard() {
     monthlyCorrectAnswers: 0,
   };
 
-  // Overall accuracy
   const overallPercent = calculatePercentage(stats.totalCorrect, stats.totalAnswered);
-  
-  // Weekly and Monthly accuracy (for detail)
   const weeklyAccuracy = calculatePercentage(stats.weeklyCorrectAnswers, stats.weeklyQuestionsDone);
   const monthlyAccuracy = calculatePercentage(stats.monthlyCorrectAnswers, stats.monthlyQuestionsDone);
   
-  // Goal Progress
   const weeklyProgress = Math.min((stats.weeklyQuestionsDone / WEEKLY_GOAL) * 100, 100);
   const monthlyProgress = Math.min((stats.monthlyQuestionsDone / MONTHLY_GOAL) * 100, 100);
   
@@ -80,7 +74,6 @@ export function PerformanceScorecard() {
         <AddQuestionsModal />
       </CardHeader>
       <CardContent className="space-y-6 relative z-10">
-        {/* Seção Superior: % Geral e Ranking */}
         <div className="flex flex-col sm:flex-row items-center gap-6">
           <TooltipProvider>
             <Tooltip>
@@ -100,7 +93,6 @@ export function PerformanceScorecard() {
           </TooltipProvider>
 
           <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
-            {/* Semana Card */}
             <div className="p-3 rounded-xl bg-slate-100/50 border border-slate-200/60 group hover:border-accent/30 transition-colors">
               <div className="flex items-center gap-2 mb-1">
                 <Calendar className="h-3 w-3 text-slate-400" />
@@ -122,7 +114,6 @@ export function PerformanceScorecard() {
               <p className="text-[9px] text-slate-400 mt-1">{stats.weeklyQuestionsDone}/{WEEKLY_GOAL} questões</p>
             </div>
             
-            {/* Mês Card */}
             <div className="p-3 rounded-xl bg-slate-100/50 border border-slate-200/60 group hover:border-accent/30 transition-colors">
               <div className="flex items-center gap-2 mb-1">
                 <TrendingUp className="h-3 w-3 text-slate-400" />
@@ -144,6 +135,7 @@ export function PerformanceScorecard() {
               <p className="text-[9px] text-slate-400 mt-1">{stats.monthlyQuestionsDone}/{MONTHLY_GOAL} questões</p>
             </div>
 
+            {/* Ranking Aberto: Visível para todos os níveis de acesso */}
             <div className="p-3 rounded-xl bg-accent/5 border border-accent/20 group hover:bg-accent/10 transition-colors">
               <div className="flex items-center gap-2 mb-1">
                 <Users className="h-3 w-3 text-accent" />
@@ -161,7 +153,6 @@ export function PerformanceScorecard() {
           </div>
         </div>
 
-        {/* Gamificação: Barra de Nível */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
