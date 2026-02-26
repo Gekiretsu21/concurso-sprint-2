@@ -14,6 +14,7 @@ import { useEffect, useState } from 'react';
 import { getUserRank } from '@/firebase/actions';
 
 const MONTHLY_GOAL = 200;
+const WEEKLY_GOAL = 50;
 
 export function PerformanceScorecard() {
   const { user } = useUser();
@@ -47,9 +48,16 @@ export function PerformanceScorecard() {
     monthlyCorrectAnswers: 0,
   };
 
+  // Overall accuracy
   const overallPercent = calculatePercentage(stats.totalCorrect, stats.totalAnswered);
-  const weeklyPercent = calculatePercentage(stats.weeklyCorrectAnswers, stats.weeklyQuestionsDone);
-  const monthlyPercent = calculatePercentage(stats.monthlyCorrectAnswers, stats.monthlyQuestionsDone);
+  
+  // Weekly and Monthly accuracy (for detail)
+  const weeklyAccuracy = calculatePercentage(stats.weeklyCorrectAnswers, stats.weeklyQuestionsDone);
+  const monthlyAccuracy = calculatePercentage(stats.monthlyCorrectAnswers, stats.monthlyQuestionsDone);
+  
+  // Goal Progress (The primary percentage the user asked for)
+  const weeklyProgress = Math.min((stats.weeklyQuestionsDone / WEEKLY_GOAL) * 100, 100);
+  const monthlyProgress = Math.min((stats.monthlyQuestionsDone / MONTHLY_GOAL) * 100, 100);
   
   const levelInfo = calculateLevel(stats.totalAnswered);
 
@@ -71,38 +79,54 @@ export function PerformanceScorecard() {
           <div className="relative flex items-center justify-center h-24 w-24 rounded-full border-4 border-accent/10 bg-white shadow-inner">
             <div className="text-center">
               <span className="text-2xl font-black text-slate-900 leading-none">{overallPercent.toFixed(0)}%</span>
-              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">Geral</p>
+              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">Acerto</p>
             </div>
             <Target className="absolute -top-1 -right-1 h-5 w-5 text-accent bg-white rounded-full p-0.5 border border-accent/20" />
           </div>
 
           <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
+            {/* Semana Card */}
             <div className="p-3 rounded-xl bg-slate-100/50 border border-slate-200/60 group hover:border-accent/30 transition-colors">
               <div className="flex items-center gap-2 mb-1">
                 <Calendar className="h-3 w-3 text-slate-400" />
                 <span className="text-[10px] font-bold text-slate-500 uppercase">Semana</span>
               </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-lg font-bold text-slate-800">{weeklyPercent.toFixed(0)}%</span>
-                <span className="text-[10px] text-slate-400">({stats.weeklyQuestionsDone} q)</span>
+              <div className="flex items-baseline justify-between mb-1">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-lg font-bold text-slate-800">{weeklyProgress.toFixed(0)}%</span>
+                  <span className="text-[10px] text-slate-400">da meta</span>
+                </div>
+                <span className="text-[10px] font-medium text-emerald-600">{weeklyAccuracy.toFixed(0)}% acerto</span>
               </div>
+              <div className="h-1 w-full bg-slate-200 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-accent transition-all duration-500"
+                  style={{ width: `${weeklyProgress}%` }}
+                />
+              </div>
+              <p className="text-[9px] text-slate-400 mt-1">{stats.weeklyQuestionsDone}/{WEEKLY_GOAL} questões</p>
             </div>
             
+            {/* Mês Card */}
             <div className="p-3 rounded-xl bg-slate-100/50 border border-slate-200/60 group hover:border-accent/30 transition-colors">
               <div className="flex items-center gap-2 mb-1">
                 <TrendingUp className="h-3 w-3 text-slate-400" />
                 <span className="text-[10px] font-bold text-slate-500 uppercase">Mês</span>
               </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-lg font-bold text-slate-800">{monthlyPercent.toFixed(0)}%</span>
-                <span className="text-[10px] text-slate-400">({stats.monthlyQuestionsDone}/{MONTHLY_GOAL} q)</span>
+              <div className="flex items-baseline justify-between mb-1">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-lg font-bold text-slate-800">{monthlyProgress.toFixed(0)}%</span>
+                  <span className="text-[10px] text-slate-400">da meta</span>
+                </div>
+                <span className="text-[10px] font-medium text-emerald-600">{monthlyAccuracy.toFixed(0)}% acerto</span>
               </div>
-              <div className="mt-1.5 h-1 w-full bg-slate-200 rounded-full overflow-hidden">
+              <div className="h-1 w-full bg-slate-200 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-accent transition-all duration-500"
-                  style={{ width: `${Math.min((stats.monthlyQuestionsDone / MONTHLY_GOAL) * 100, 100)}%` }}
+                  style={{ width: `${monthlyProgress}%` }}
                 />
               </div>
+              <p className="text-[9px] text-slate-400 mt-1">{stats.monthlyQuestionsDone}/{MONTHLY_GOAL} questões</p>
             </div>
 
             <div className="p-3 rounded-xl bg-accent/5 border border-accent/20 group hover:bg-accent/10 transition-colors">
