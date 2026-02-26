@@ -1,7 +1,8 @@
+
 'use client';
 
-import { useState } from 'react';
-import { useFirebase, useUser } from '@/firebase';
+import { useState, useEffect } from 'react';
+import { useFirebase, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { batchUpdateQuestions } from '@/firebase/actions';
 import {
   Dialog,
@@ -11,23 +12,62 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogClose,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Sparkles, Bot, Loader2, CheckCircle2 } from 'lucide-react';
+import { Sparkles, Bot, Loader2, CheckCircle2, ShieldAlert, Timer } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { doc, Timestamp } from 'firebase/firestore';
 
 export function AddQuestionsModal() {
   const { firestore } = useFirebase();
   const { user } = useUser();
   const { toast } = useToast();
   
+  const userDocRef = useMemoFirebase(
+    () => (user && firestore ? doc(firestore, `users/${user.uid}`) : null),
+    [user, firestore]
+  );
+  const { data: userData } = useDoc<any>(userDocRef);
+
   const [isOpen, setIsOpen] = useState(false);
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'banned'>('idle');
   const [questionsDone, setQuestionsDone] = useState('');
   const [correctAnswers, setCorrectAnswers] = useState('');
+  const [timeLeft, setTimeLeft] = useState(0);
+
+  // Lógica de verificação de ban e cronômetro
+  useEffect(() => {
+    if (!userData?.stats?.bannedFromAddingUntil) {
+      if (status === 'banned') setStatus('idle');
+      return;
+    }
+
+    const bannedUntil = (userData.stats.bannedFromAddingUntil as Timestamp).toDate();
+    const now = new Date();
+
+    if (bannedUntil > now) {
+      setStatus('banned');
+      const diff = Math.ceil((bannedUntil.getTime() - now.getTime()) / 1000);
+      setTimeLeft(diff);
+
+      const interval = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            setStatus('idle');
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(interval);
+    } else {
+      setStatus('idle');
+    }
+  }, [userData, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,35 +85,37 @@ export function AddQuestionsModal() {
       return;
     }
 
+    if (done > 100 && done <= 200) {
+      return; // Botão já deve estar desabilitado pela UI
+    }
+
     setStatus('loading');
 
-    // Simula o tempo de "pensamento" da IA solicitado (1.5s - 2s)
     setTimeout(async () => {
       try {
         await batchUpdateQuestions(firestore, user.uid, done, correct);
         setStatus('success');
         
-        // Mantém o estado de sucesso por um momento antes de fechar
         setTimeout(() => {
           setIsOpen(false);
           setStatus('idle');
           setQuestionsDone('');
           setCorrectAnswers('');
-          toast({
-            title: 'Progresso atualizado!',
-            description: 'Sua evolução foi calculada com sucesso.',
-          });
+          toast({ title: 'Progresso atualizado!', description: 'Sua evolução foi calculada com sucesso.' });
         }, 1500);
-      } catch (error) {
-        setStatus('idle');
-        toast({
-          variant: 'destructive',
-          title: 'Erro ao salvar',
-          description: 'Não foi possível atualizar seu progresso.',
-        });
+      } catch (error: any) {
+        if (done > 200) {
+          setStatus('banned');
+        } else {
+          setStatus('idle');
+          toast({ variant: 'destructive', title: 'Erro ao salvar', description: 'Não foi possível atualizar seu progresso.' });
+        }
       }
     }, 1800);
   };
+
+  const isWarning = parseInt(questionsDone) > 100 && parseInt(questionsDone) <= 200;
+  const isBanTrigger = parseInt(questionsDone) > 200;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -84,7 +126,26 @@ export function AddQuestionsModal() {
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
-        {status === 'idle' ? (
+        {status === 'banned' ? (
+          <div className="flex flex-col items-center justify-center py-8 space-y-6 text-center">
+            <div className="relative">
+              <Bot className="h-16 w-16 text-accent animate-bounce" />
+              <ShieldAlert className="absolute -bottom-2 -right-2 h-8 w-8 text-destructive animate-pulse" />
+            </div>
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold text-slate-900">Uau, que ritmo intenso de estudos! 🤖</h3>
+              <p className="text-sm text-slate-600 leading-relaxed px-4">
+                Porém, para garantir a justiça do nosso ranking e processar seus dados corretamente, identificamos um volume incomum.
+              </p>
+              <div className="flex flex-col items-center gap-2 p-4 bg-slate-100 rounded-2xl border border-slate-200">
+                <Timer className="h-5 w-5 text-accent" />
+                <p className="text-xs font-bold text-slate-500 uppercase">Aguarde para registrar</p>
+                <span className="text-2xl font-black text-accent">{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</span>
+              </div>
+              <p className="text-xs text-slate-400 italic">Por favor, descanse um pouco a mente e volte em breve.</p>
+            </div>
+          </div>
+        ) : status === 'idle' ? (
           <>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
@@ -105,7 +166,18 @@ export function AddQuestionsModal() {
                     value={questionsDone}
                     onChange={(e) => setQuestionsDone(e.target.value)}
                     required
+                    className={isWarning || isBanTrigger ? 'border-destructive focus-visible:ring-destructive' : ''}
                   />
+                  {isWarning && (
+                    <p className="text-xs font-bold text-destructive animate-pulse">
+                      ⚠️ Você só pode registrar até 100 questões por vez.
+                    </p>
+                  )}
+                  {isBanTrigger && (
+                    <p className="text-xs font-bold text-destructive uppercase tracking-tighter">
+                      🚨 CUIDADO: Volume suspeito. Risco de bloqueio temporário.
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="correct">Quantas você acertou?</Label>
@@ -120,7 +192,11 @@ export function AddQuestionsModal() {
                 </div>
               </div>
               <DialogFooter>
-                <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+                <Button 
+                  type="submit" 
+                  className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
+                  disabled={isWarning}
+                >
                   Calcular Evolução
                 </Button>
               </DialogFooter>

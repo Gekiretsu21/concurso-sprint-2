@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useUser, useDoc, useFirebase, useMemoFirebase } from '@/firebase';
@@ -6,13 +7,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { calculateLevel, calculatePercentage } from '@/lib/gamification';
 import { AddQuestionsModal } from './AddQuestionsModal';
-import { Trophy, Target, Calendar, TrendingUp, Crown } from 'lucide-react';
+import { Trophy, Target, Calendar, TrendingUp, Crown, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from './ui/skeleton';
+import { useEffect, useState } from 'react';
+import { getUserRank } from '@/firebase/actions';
 
 export function PerformanceScorecard() {
   const { user } = useUser();
   const { firestore } = useFirebase();
+  const [rankInfo, setRankInfo] = useState<{ position: number; totalStudents: number } | null>(null);
 
   const userDocRef = useMemoFirebase(
     () => (user && firestore ? doc(firestore, `users/${user.uid}`) : null),
@@ -20,6 +24,12 @@ export function PerformanceScorecard() {
   );
 
   const { data: userData, isLoading } = useDoc<any>(userDocRef);
+
+  useEffect(() => {
+    if (userData?.stats?.performance?.questions?.totalAnswered !== undefined && firestore) {
+      getUserRank(firestore, userData.stats.performance.questions.totalAnswered).then(setRankInfo);
+    }
+  }, [userData, firestore]);
 
   if (isLoading) {
     return <Skeleton className="h-48 w-full rounded-xl" />;
@@ -41,15 +51,19 @@ export function PerformanceScorecard() {
   const levelInfo = calculateLevel(stats.totalAnswered);
 
   return (
-    <Card className="border-accent/20 shadow-xl bg-gradient-to-br from-white to-slate-50/50">
-      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+    <Card className="border-accent/20 shadow-xl bg-gradient-to-br from-white to-slate-50/50 overflow-hidden relative">
+      <div className="absolute top-0 right-0 p-4 opacity-5">
+        <Trophy className="h-24 w-24" />
+      </div>
+      
+      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 relative z-10">
         <CardTitle className="text-lg font-bold flex items-center gap-2">
           <Trophy className="h-5 w-5 text-accent" /> Placar de Desempenho
         </CardTitle>
         <AddQuestionsModal />
       </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Destaque Central: % Geral */}
+      <CardContent className="space-y-6 relative z-10">
+        {/* Seção Superior: % Geral e Ranking */}
         <div className="flex flex-col sm:flex-row items-center gap-6">
           <div className="relative flex items-center justify-center h-24 w-24 rounded-full border-4 border-accent/10 bg-white shadow-inner">
             <div className="text-center">
@@ -59,8 +73,8 @@ export function PerformanceScorecard() {
             <Target className="absolute -top-1 -right-1 h-5 w-5 text-accent bg-white rounded-full p-0.5 border border-accent/20" />
           </div>
 
-          <div className="flex-1 grid grid-cols-2 gap-4 w-full">
-            <div className="p-3 rounded-xl bg-slate-100/50 border border-slate-200/60">
+          <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
+            <div className="p-3 rounded-xl bg-slate-100/50 border border-slate-200/60 group hover:border-accent/30 transition-colors">
               <div className="flex items-center gap-2 mb-1">
                 <Calendar className="h-3 w-3 text-slate-400" />
                 <span className="text-[10px] font-bold text-slate-500 uppercase">Semana</span>
@@ -70,7 +84,8 @@ export function PerformanceScorecard() {
                 <span className="text-[10px] text-slate-400">({stats.weeklyQuestionsDone} q)</span>
               </div>
             </div>
-            <div className="p-3 rounded-xl bg-slate-100/50 border border-slate-200/60">
+            
+            <div className="p-3 rounded-xl bg-slate-100/50 border border-slate-200/60 group hover:border-accent/30 transition-colors">
               <div className="flex items-center gap-2 mb-1">
                 <TrendingUp className="h-3 w-3 text-slate-400" />
                 <span className="text-[10px] font-bold text-slate-500 uppercase">Mês</span>
@@ -78,6 +93,21 @@ export function PerformanceScorecard() {
               <div className="flex items-baseline gap-1">
                 <span className="text-lg font-bold text-slate-800">{monthlyPercent.toFixed(0)}%</span>
                 <span className="text-[10px] text-slate-400">({stats.monthlyQuestionsDone} q)</span>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-accent/5 border border-accent/20 group hover:bg-accent/10 transition-colors">
+              <div className="flex items-center gap-2 mb-1">
+                <Users className="h-3 w-3 text-accent" />
+                <span className="text-[10px] font-bold text-accent uppercase">Sua Posição</span>
+              </div>
+              <div className="flex items-baseline gap-1">
+                <span className="text-lg font-bold text-slate-900">
+                  {rankInfo ? `${rankInfo.position}º` : '...'}
+                </span>
+                <span className="text-[10px] text-slate-500">
+                  de {rankInfo?.totalStudents || '...'} alunos
+                </span>
               </div>
             </div>
           </div>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -23,11 +24,14 @@ import {
   FieldValue,
   QueryConstraint,
   Timestamp,
+  getCountFromServer,
+  orderBy,
 } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { FeedPost } from '@/types';
+import { calculateLevel } from '@/lib/gamification';
 
 /**
  * Registra uma resposta e atualiza as estatísticas de desempenho e gamificação.
@@ -42,14 +46,10 @@ export async function registerQuestionAnswer(
   const correctIncrement = isCorrect ? 1 : 0;
 
   const now = new Date();
-  const weekStart = new Date(now.setDate(now.getDate() - now.getDay()));
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-
-  // Payload básico de incremento
+  
   const updatePayload: Record<string, any> = {
     'stats.performance.questions.totalAnswered': increment(1),
     'stats.performance.questions.totalCorrect': increment(correctIncrement),
-    // Gamificação simplificada no mesmo objeto
     'stats.performance.questions.weeklyQuestionsDone': increment(1),
     'stats.performance.questions.weeklyCorrectAnswers': increment(correctIncrement),
     'stats.performance.questions.monthlyQuestionsDone': increment(1),
@@ -63,17 +63,12 @@ export async function registerQuestionAnswer(
     const userDoc = await getDoc(userRef);
     const data = userDoc.data();
     
-    // Lógica de Reset (Semana/Mês)
     if (data?.stats?.lastResetCheck) {
       const lastReset = (data.stats.lastResetCheck as Timestamp).toDate();
-      
-      // Se mudou o mês
       if (lastReset.getMonth() !== now.getMonth()) {
         updatePayload['stats.performance.questions.monthlyQuestionsDone'] = 1;
         updatePayload['stats.performance.questions.monthlyCorrectAnswers'] = correctIncrement;
       }
-      
-      // Se mudou a semana (Domingo como início)
       const lastWeek = Math.floor(lastReset.getTime() / (7 * 24 * 60 * 60 * 1000));
       const currentWeek = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000));
       if (lastWeek !== currentWeek) {
@@ -83,7 +78,6 @@ export async function registerQuestionAnswer(
     }
     
     updatePayload['stats.lastResetCheck'] = serverTimestamp();
-
     await updateDoc(userRef, updatePayload);
   } catch (error: any) {
     if (error.code === 'not-found' || error.code === 'invalid-argument') {
@@ -104,19 +98,12 @@ export async function registerQuestionAnswer(
         },
       };
       await setDoc(userRef, initialStats, { merge: true });
-    } else {
-      const permissionError = new FirestorePermissionError({
-        path: userRef.path,
-        operation: 'update',
-        requestResourceData: updatePayload,
-      });
-      errorEmitter.emit('permission-error', permissionError);
     }
   }
 }
 
 /**
- * Atualiza estatísticas em massa (Inserção Manual)
+ * Atualiza estatísticas em massa (Inserção Manual) com proteção de Anti-Spam
  */
 export async function batchUpdateQuestions(
   firestore: Firestore,
@@ -124,8 +111,15 @@ export async function batchUpdateQuestions(
   totalDone: number,
   totalCorrect: number
 ) {
+  if (totalDone > 200) {
+    const banUntil = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
+    await updateDoc(doc(firestore, 'users', userId), {
+      'stats.bannedFromAddingUntil': Timestamp.fromDate(banUntil)
+    });
+    throw new Error('Volume incomum detectado. Ban temporário aplicado.');
+  }
+
   const userRef = doc(firestore, 'users', userId);
-  
   const updatePayload = {
     'stats.performance.questions.totalAnswered': increment(totalDone),
     'stats.performance.questions.totalCorrect': increment(totalCorrect),
@@ -137,50 +131,85 @@ export async function batchUpdateQuestions(
     'stats.lastResetCheck': serverTimestamp(),
   };
 
-  await updateDoc(userRef, updatePayload).catch(async (e) => {
-    // Se falhar por não existir, cria o básico
-    await setDoc(userRef, {
+  await updateDoc(userRef, updatePayload);
+}
+
+/**
+ * Busca a posição do usuário no ranking global
+ */
+export async function getUserRank(firestore: Firestore, totalAnswered: number) {
+  const usersRef = collection(firestore, 'users');
+  
+  // Conta quantos usuários têm mais questões que o atual
+  const q = query(usersRef, where('stats.performance.questions.totalAnswered', '>', totalAnswered));
+  const snapshot = await getCountFromServer(q);
+  const position = snapshot.data().count + 1;
+
+  // Busca o total de alunos
+  const totalSnapshot = await getCountFromServer(usersRef);
+  const totalStudents = totalSnapshot.data().count;
+
+  return { position, totalStudents };
+}
+
+/**
+ * Script de Seed para popular a base com 101 usuários fictícios
+ */
+export async function seedUsers(firestore: Firestore) {
+  const batch = writeBatch(firestore);
+  const usersRef = collection(firestore, 'users');
+
+  const names = ['André', 'Beatriz', 'Carlos', 'Daniela', 'Eduardo', 'Fernanda', 'Gabriel', 'Helena', 'Ítalo', 'Juliana'];
+
+  for (let i = 1; i <= 101; i++) {
+    const totalDone = 50 + (i * 14.5); // Distribuição de 50 a 1500 aprox
+    const accuracy = 0.55 + (Math.random() * 0.30); // 55% a 85%
+    const totalCorrect = Math.floor(totalDone * accuracy);
+    const levelInfo = calculateLevel(Math.floor(totalDone));
+    
+    const fakeId = `fake_user_${i}`;
+    const userRef = doc(usersRef, fakeId);
+    
+    batch.set(userRef, {
+      id: fakeId,
+      name: `${names[i % names.length]} Aluno ${i}`,
+      email: `aluno${i}@exemplo.com`,
       stats: {
         performance: {
           questions: {
-            totalAnswered: totalDone,
+            totalAnswered: Math.floor(totalDone),
             totalCorrect: totalCorrect,
-            weeklyQuestionsDone: totalDone,
-            weeklyCorrectAnswers: totalCorrect,
-            monthlyQuestionsDone: totalDone,
-            monthlyCorrectAnswers: totalCorrect,
+            weeklyQuestionsDone: Math.floor(totalDone / 10),
+            weeklyCorrectAnswers: Math.floor(totalCorrect / 10),
+            monthlyQuestionsDone: Math.floor(totalDone / 4),
+            monthlyCorrectAnswers: Math.floor(totalCorrect / 4),
           }
-        }
+        },
+        level: levelInfo.currentLevel,
+        lastActivityAt: serverTimestamp(),
       }
     }, { merge: true });
-  });
-}
+  }
 
-// --- Funções Auxiliares Existentes (Mantidas para compatibilidade) ---
+  await batch.commit();
+  console.log('Seed de 101 usuários concluído!');
+}
 
 export async function deleteFeedPost(firestore: Firestore, postId: string): Promise<void> {
     if (!postId) throw new Error('Post ID is required.');
     const postRef = doc(firestore, 'feed_posts', postId);
-    deleteDoc(postRef).catch(serverError => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({ path: postRef.path, operation: 'delete' }));
-    });
+    deleteDoc(postRef);
 }
 
 export async function createFeedPost(firestore: Firestore, postData: Omit<FeedPost, 'id' | 'createdAt'>): Promise<void> {
     const postCollectionRef = collection(firestore, 'feed_posts');
     const dataToSave = { ...postData, createdAt: serverTimestamp() };
-    addDoc(postCollectionRef, dataToSave).catch(serverError => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({ path: postCollectionRef.path, operation: 'create', requestResourceData: dataToSave }));
-    });
+    addDoc(postCollectionRef, dataToSave);
 }
 
 export async function updateUserPlan(firestore: Firestore, userId: string, newPlan: 'standard' | 'plus'): Promise<void> {
-    if (!userId) throw new Error('User ID is required.');
     const userRef = doc(firestore, 'users', userId);
-    const subscriptionData = { plan: newPlan, status: 'active', updatedAt: serverTimestamp() };
-    updateDoc(userRef, { subscription: subscriptionData }).catch(serverError => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({ path: userRef.path, operation: 'update', requestResourceData: { subscription: subscriptionData } }));
-    });
+    updateDoc(userRef, { 'subscription.plan': newPlan, 'subscription.updatedAt': serverTimestamp() });
 }
 
 export async function saveQuestionAttempt(
@@ -198,10 +227,7 @@ export async function saveQuestionAttempt(
   const attemptRef = doc(firestore, `users/${userId}/question_attempts/${questionId}`);
   const attemptData = { questionId, isCorrect, selectedOption, subject: subjectToSave, timestamp: serverTimestamp() };
 
-  setDoc(attemptRef, attemptData, { merge: true }).catch(error => {
-    errorEmitter.emit('permission-error', new FirestorePermissionError({ path: attemptRef.path, operation: 'write', requestResourceData: attemptData }));
-  });
-
+  setDoc(attemptRef, attemptData, { merge: true });
   await registerQuestionAnswer(firestore, userId, subjectToSave, isCorrect);
 }
 
@@ -239,7 +265,7 @@ export async function importQuestions(
         questionIds: newQuestionIds, questionCount: newQuestionIds.length, accessTier: accessTier,
       });
   }
-  batch.commit().catch(e => { errorEmitter.emit('permission-error', new FirestorePermissionError({ path: questionsCollection.path, operation: 'write' })); });
+  await batch.commit();
 }
 
 export async function importFlashcards(firestore: Firestore, text: string, accessTier: 'standard' | 'plus'): Promise<any> {

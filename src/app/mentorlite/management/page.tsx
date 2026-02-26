@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -14,9 +15,9 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle, Sparkles, User, Crown, Search, Lock, Megaphone, ExternalLink, List } from 'lucide-react';
+import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle, Sparkles, User, Crown, Search, Lock, Megaphone, ExternalLink, List, Database } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
-import { importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteAllFlashcards, deleteFlashcardsByFilter, deleteFlashcardsByIds, deleteQuestionsByIds, deleteDuplicateQuestions, deleteDuplicateFlashcards, updateUserPlan } from '@/firebase/actions';
+import { importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteAllFlashcards, deleteFlashcardsByFilter, deleteFlashcardsByIds, deleteQuestionsByIds, deleteDuplicateQuestions, deleteDuplicateFlashcards, updateUserPlan, seedUsers } from '@/firebase/actions';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
 import { SimulatedExamDialog } from '@/components/SimulatedExamDialog';
@@ -677,6 +678,7 @@ export default function ManagementPage() {
   const [isVipContent, setIsVipContent] = useState(false);
   const [examName, setExamName] = useState('');
   const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [isSeeding, setIsSeeding] = useState(false);
 
 
   useEffect(() => {
@@ -871,15 +873,34 @@ export default function ManagementPage() {
     }
   };
 
+  const handleRunSeed = async () => {
+    if (!firestore) return;
+    setIsSeeding(true);
+    try {
+      await seedUsers(firestore);
+      toast({ title: 'Ranking Alimentado', description: '101 usuários fictícios foram criados para o ranking.' });
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Erro no Seed', description: 'Falha ao criar usuários fictícios.' });
+    } finally {
+      setIsSeeding(false);
+    }
+  }
+
   const isButtonDisabled = !user || isUserLoading;
 
   return (
     <div className="flex flex-col gap-8">
-      <header>
-        <h1 className="text-3xl font-bold tracking-tight">Gerenciamento</h1>
-        <p className="text-muted-foreground">
-          Gerencie as configurações e dados do aplicativo.
-        </p>
+      <header className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Gerenciamento</h1>
+          <p className="text-muted-foreground">
+            Gerencie as configurações e dados do aplicativo.
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleRunSeed} disabled={isSeeding}>
+          {isSeeding ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Database className="h-4 w-4 mr-2" />}
+          Popular Ranking (Dev)
+        </Button>
       </header>
 
       <div className="grid grid-cols-1 gap-6">
@@ -904,7 +925,7 @@ export default function ManagementPage() {
                                         <HelpCircle className="h-4 w-4" />
                                     </Button>
                                 </DialogTrigger>
-                                <DialogContent className="sm:max-w-2xl">
+                                <DialogContent className="sm:max-w-[22rem]">
                                     <DialogHeader>
                                         <DialogTitle>Modelo de Importação</DialogTitle>
                                         <DialogDescription>
