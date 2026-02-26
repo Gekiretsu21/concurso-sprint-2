@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -27,9 +26,10 @@ import { useUser, useDoc, useFirebase, useMemoFirebase } from '@/firebase';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { doc } from 'firebase/firestore';
-import { updateDailyStreak, getGlobalRankingData } from '../actions/update-user-stats';
+import { updateDailyStreak } from '../actions/update-user-stats';
 import { PremiumFeature } from '@/components/PremiumFeature';
 import { PerformanceScorecard } from '@/components/PerformanceScorecard';
+import { SubjectPerformance } from '@/components/SubjectPerformance';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -140,10 +140,10 @@ export default function Home() {
         </div>
 
         <div className="flex flex-col gap-6">
-          {/* Placar de Desempenho agora ocupa a largura total */}
           <PerformanceScorecard />
+          
+          <SubjectPerformance />
 
-          {/* Cards de estatísticas secundárias agora ficam abaixo em uma grade responsiva */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
              {isLoading ? (
                 <StatCardSkeleton />

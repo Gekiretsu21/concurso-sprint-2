@@ -108,7 +108,8 @@ export async function batchUpdateQuestions(
   firestore: Firestore,
   userId: string,
   totalDone: number,
-  totalCorrect: number
+  totalCorrect: number,
+  subject: string
 ) {
   if (totalDone > 200) {
     const banUntil = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
@@ -126,11 +127,80 @@ export async function batchUpdateQuestions(
     'stats.performance.questions.weeklyCorrectAnswers': increment(totalCorrect),
     'stats.performance.questions.monthlyQuestionsDone': increment(totalDone),
     'stats.performance.questions.monthlyCorrectAnswers': increment(totalCorrect),
+    [`stats.performance.questions.bySubject.${subject}.answered`]: increment(totalDone),
+    [`stats.performance.questions.bySubject.${subject}.correct`]: increment(totalCorrect),
     'stats.lastActivityAt': serverTimestamp(),
     'stats.lastResetCheck': serverTimestamp(),
   };
 
   await updateDoc(userRef, updatePayload);
+}
+
+/**
+ * Reseta o progresso de um usuário específico
+ */
+export async function resetUserProgress(firestore: Firestore, userId: string) {
+  const userRef = doc(firestore, 'users', userId);
+  await updateDoc(userRef, {
+    stats: {
+      performance: {
+        questions: {
+          totalAnswered: 0,
+          totalCorrect: 0,
+          weeklyQuestionsDone: 0,
+          weeklyCorrectAnswers: 0,
+          monthlyQuestionsDone: 0,
+          monthlyCorrectAnswers: 0,
+          bySubject: {}
+        },
+        flashcards: {
+          totalReviewed: 0,
+          totalCorrect: 0,
+          bySubject: {}
+        }
+      },
+      level: 1,
+      totalStudyTime: 0,
+      dailyStreak: 0,
+      lastActivityAt: serverTimestamp(),
+      lastResetCheck: serverTimestamp(),
+    }
+  });
+}
+
+/**
+ * Reseta o progresso de todos os usuários (Admin Danger Zone)
+ */
+export async function resetAllUsersProgress(firestore: Firestore) {
+  const usersSnapshot = await getDocs(collection(firestore, 'users'));
+  const batch = writeBatch(firestore);
+
+  usersSnapshot.forEach((userDoc) => {
+    batch.update(userDoc.ref, {
+      'stats.performance': {
+        questions: {
+          totalAnswered: 0,
+          totalCorrect: 0,
+          weeklyQuestionsDone: 0,
+          weeklyCorrectAnswers: 0,
+          monthlyQuestionsDone: 0,
+          monthlyCorrectAnswers: 0,
+          bySubject: {}
+        },
+        flashcards: {
+          totalReviewed: 0,
+          totalCorrect: 0,
+          bySubject: {}
+        }
+      },
+      'stats.level': 1,
+      'stats.totalStudyTime': 0,
+      'stats.dailyStreak': 0,
+      'stats.lastResetCheck': serverTimestamp()
+    });
+  });
+
+  await batch.commit();
 }
 
 /**
@@ -143,9 +213,8 @@ export async function seedUsers(firestore: Firestore) {
   const names = ['André', 'Beatriz', 'Carlos', 'Daniela', 'Eduardo', 'Fernanda', 'Gabriel', 'Helena', 'Ítalo', 'Juliana'];
 
   for (let i = 1; i <= 101; i++) {
-    // Distribuição de questões de 50 a 1500 aprox.
     const totalDone = 50 + (i * 14.5); 
-    const accuracy = 0.55 + (Math.random() * 0.30); // 55% a 85% de acerto
+    const accuracy = 0.55 + (Math.random() * 0.30);
     const totalCorrect = Math.floor(totalDone * accuracy);
     const levelInfo = calculateLevel(Math.floor(totalDone));
     
@@ -166,6 +235,10 @@ export async function seedUsers(firestore: Firestore) {
             weeklyCorrectAnswers: Math.floor(totalCorrect / 10),
             monthlyQuestionsDone: Math.floor(totalDone / 4),
             monthlyCorrectAnswers: Math.floor(totalCorrect / 4),
+            bySubject: {
+              'Português': { answered: Math.floor(totalDone * 0.4), correct: Math.floor(totalCorrect * 0.4) },
+              'Direito Administrativo': { answered: Math.floor(totalDone * 0.6), correct: Math.floor(totalCorrect * 0.6) }
+            }
           }
         },
         level: levelInfo.currentLevel,

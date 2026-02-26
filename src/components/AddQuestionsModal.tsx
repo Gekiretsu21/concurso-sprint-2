@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -16,9 +15,25 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Sparkles, Bot, Loader2, CheckCircle2, ShieldAlert, Timer } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { doc, Timestamp } from 'firebase/firestore';
+
+const SUBJECTS = [
+  "Português",
+  "Matemática",
+  "Raciocínio Lógico",
+  "Direito Constitucional",
+  "Direito Administrativo",
+  "Informática"
+];
 
 export function AddQuestionsModal() {
   const { firestore } = useFirebase();
@@ -35,9 +50,9 @@ export function AddQuestionsModal() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'banned'>('idle');
   const [questionsDone, setQuestionsDone] = useState('');
   const [correctAnswers, setCorrectAnswers] = useState('');
+  const [selectedSubject, setSelectedSubject] = useState<string>('');
   const [timeLeft, setTimeLeft] = useState(0);
 
-  // Lógica de verificação de ban e cronômetro
   useEffect(() => {
     if (!userData?.stats?.bannedFromAddingUntil) {
       if (status === 'banned') setStatus('idle');
@@ -73,6 +88,11 @@ export function AddQuestionsModal() {
     e.preventDefault();
     if (!firestore || !user) return;
 
+    if (!selectedSubject) {
+      toast({ variant: 'destructive', title: 'Matéria obrigatória', description: 'Por favor, selecione a disciplina.' });
+      return;
+    }
+
     const done = parseInt(questionsDone);
     const correct = parseInt(correctAnswers);
 
@@ -85,15 +105,11 @@ export function AddQuestionsModal() {
       return;
     }
 
-    if (done > 100 && done <= 200) {
-      return; // Botão já deve estar desabilitado pela UI
-    }
-
     setStatus('loading');
 
     setTimeout(async () => {
       try {
-        await batchUpdateQuestions(firestore, user.uid, done, correct);
+        await batchUpdateQuestions(firestore, user.uid, done, correct, selectedSubject);
         setStatus('success');
         
         setTimeout(() => {
@@ -101,6 +117,7 @@ export function AddQuestionsModal() {
           setStatus('idle');
           setQuestionsDone('');
           setCorrectAnswers('');
+          setSelectedSubject('');
           toast({ title: 'Progresso atualizado!', description: 'Sua evolução foi calculada com sucesso.' });
         }, 1500);
       } catch (error: any) {
@@ -115,7 +132,6 @@ export function AddQuestionsModal() {
   };
 
   const isWarning = parseInt(questionsDone) > 100 && parseInt(questionsDone) <= 200;
-  const isBanTrigger = parseInt(questionsDone) > 200;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -158,6 +174,19 @@ export function AddQuestionsModal() {
             <form onSubmit={handleSubmit} className="space-y-6 py-4">
               <div className="grid gap-4">
                 <div className="space-y-2">
+                  <Label htmlFor="subject">Qual matéria você estudou?</Label>
+                  <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a disciplina" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SUBJECTS.map(s => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="done">Quantas questões você fez?</Label>
                   <Input
                     id="done"
@@ -166,16 +195,11 @@ export function AddQuestionsModal() {
                     value={questionsDone}
                     onChange={(e) => setQuestionsDone(e.target.value)}
                     required
-                    className={isWarning || isBanTrigger ? 'border-destructive focus-visible:ring-destructive' : ''}
+                    className={isWarning ? 'border-destructive focus-visible:ring-destructive' : ''}
                   />
                   {isWarning && (
                     <p className="text-xs font-bold text-destructive animate-pulse">
                       ⚠️ Você só pode registrar até 100 questões por vez.
-                    </p>
-                  )}
-                  {isBanTrigger && (
-                    <p className="text-xs font-bold text-destructive uppercase tracking-tighter">
-                      🚨 CUIDADO: Volume suspeito. Risco de bloqueio temporário.
                     </p>
                   )}
                 </div>
@@ -195,7 +219,7 @@ export function AddQuestionsModal() {
                 <Button 
                   type="submit" 
                   className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
-                  disabled={isWarning}
+                  disabled={isWarning || !selectedSubject}
                 >
                   Calcular Evolução
                 </Button>

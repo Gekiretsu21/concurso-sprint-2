@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -15,9 +14,9 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle, Sparkles, User, Crown, Search, Lock, Megaphone, ExternalLink, List, Database, Users } from 'lucide-react';
+import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle, Sparkles, User, Crown, Search, Lock, Megaphone, ExternalLink, List, Database, Users, AlertTriangle, RefreshCw } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
-import { importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteAllFlashcards, deleteFlashcardsByFilter, deleteFlashcardsByIds, deleteQuestionsByIds, deleteDuplicateQuestions, deleteDuplicateFlashcards, updateUserPlan, seedUsers } from '@/firebase/actions';
+import { importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteAllFlashcards, deleteFlashcardsByFilter, deleteFlashcardsByIds, deleteQuestionsByIds, deleteDuplicateQuestions, deleteDuplicateFlashcards, updateUserPlan, seedUsers, resetUserProgress, resetAllUsersProgress } from '@/firebase/actions';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
 import { SimulatedExamDialog } from '@/components/SimulatedExamDialog';
@@ -99,7 +98,6 @@ function DeleteQuestionsDialog({ availableResources, allQuestions, isLoadingQues
   const [filterCargo, setFilterCargo] = useState<string>('all');
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
 
-  // Reset filters and selection when dialog is closed/opened
   useEffect(() => {
     if (!isOpen) {
       setFilterSubject('all');
@@ -136,7 +134,6 @@ function DeleteQuestionsDialog({ availableResources, allQuestions, isLoadingQues
         description: `${selectedQuestions.length} questão(ões) foram excluídas.`
       });
       setSelectedQuestions([]);
-      // Do not close dialog, allow for more deletions
     } catch (error) {
        toast({
         variant: 'destructive',
@@ -437,13 +434,11 @@ function DeleteFlashcardsDialog({ availableResources, allFlashcards, isLoadingFl
   const [selectedFlashcards, setSelectedFlashcards] = useState<string[]>([]);
 
   useEffect(() => {
-    // Reset dependent filters when the main filter changes
     setFilterTopic('all');
     setFilterCargo('all');
-    setSelectedFlashcards([]); // Also reset selection
+    setSelectedFlashcards([]);
   }, [filterSubject]);
   
-  // Also reset selection when these filters change
   useEffect(() => setSelectedFlashcards([]), [filterTopic, filterCargo]);
 
 
@@ -474,7 +469,6 @@ function DeleteFlashcardsDialog({ availableResources, allFlashcards, isLoadingFl
         description: `${selectedFlashcards.length} flashcard(s) foram excluídos.`
       });
       setSelectedFlashcards([]);
-      // We don't close the dialog, just clear selection
     } catch (error) {
        toast({
         variant: 'destructive',
@@ -486,41 +480,6 @@ function DeleteFlashcardsDialog({ availableResources, allFlashcards, isLoadingFl
     }
   }
 
-
-  const handleDeleteByFilter = async () => {
-    if (!firestore) return;
-    if (filterSubject === 'all' && filterTopic === 'all' && filterCargo === 'all') {
-      toast({
-        variant: 'destructive',
-        title: 'Ação Necessária',
-        description: 'Selecione pelo menos um filtro para exclusão em massa, ou use "Excluir Todos".'
-      });
-      return;
-    }
-    
-    setIsDeleting(true);
-    try {
-      const deletedCount = await deleteFlashcardsByFilter(firestore, {
-        subject: filterSubject === 'all' ? undefined : filterSubject,
-        topic: filterTopic === 'all' ? undefined : filterTopic,
-        cargo: filterCargo === 'all' ? undefined : filterCargo,
-      });
-      toast({
-        title: "Sucesso!",
-        description: `${deletedCount} flashcard(s) foram excluídos com base nos filtros.`
-      });
-      // Reset filters after deletion
-      setFilterSubject('all');
-    } catch (error) {
-       toast({
-        variant: 'destructive',
-        title: 'Erro ao Excluir',
-        description: 'Não foi possível excluir os flashcards selecionados.',
-      });
-    } finally {
-      setIsDeleting(false);
-    }
-  }
 
   const handleDeleteAll = async () => {
     if (!firestore) return;
@@ -679,6 +638,7 @@ export default function ManagementPage() {
   const [examName, setExamName] = useState('');
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [isSeeding, setIsSeeding] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
 
   useEffect(() => {
@@ -774,7 +734,7 @@ export default function ManagementPage() {
 
     return {
         questionSubjects: Array.from(subjects).sort(),
-        questionAnos: Array.from(anos).sort((a,b) => b.localeCompare(a)), // sort descending
+        questionAnos: Array.from(anos).sort((a,b) => b.localeCompare(a)), 
         questionCargos: Array.from(cargos).sort(),
         questionAssuntos: Array.from(assuntos).sort(),
     };
@@ -886,6 +846,32 @@ export default function ManagementPage() {
     }
   }
 
+  const handleResetSelf = async () => {
+    if (!firestore || !user) return;
+    setIsResetting(true);
+    try {
+      await resetUserProgress(firestore, user.uid);
+      toast({ title: 'Sucesso', description: 'Seu progresso foi zerado.' });
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Erro', description: 'Falha ao resetar progresso.' });
+    } finally {
+      setIsResetting(false);
+    }
+  }
+
+  const handleResetAll = async () => {
+    if (!firestore) return;
+    setIsResetting(true);
+    try {
+      await resetAllUsersProgress(firestore);
+      toast({ title: 'Sucesso', description: 'O progresso de todos os alunos foi zerado.' });
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Erro', description: 'Falha ao resetar base de dados.' });
+    } finally {
+      setIsResetting(false);
+    }
+  }
+
   const isButtonDisabled = !user || isUserLoading;
 
   return (
@@ -917,7 +903,6 @@ export default function ManagementPage() {
             </CardHeader>
             <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 
-                {/* Importar Questões */}
                 <div className="flex flex-col p-4 rounded-lg border min-h-[160px]">
                     <div className="flex-grow">
                          <div className="flex justify-between items-start">
@@ -1011,7 +996,6 @@ export default function ManagementPage() {
                     </div>
                 </div>
                 
-                {/* Gerador de Simulados */}
                 <div className="flex flex-col p-4 rounded-lg border min-h-[160px]">
                     <div className="flex-grow">
                         <h4 className="font-semibold">Gerador de Simulados</h4>
@@ -1026,7 +1010,6 @@ export default function ManagementPage() {
                     </div>
                 </div>
 
-                {/* Importar Flashcards */}
                 <div className="flex flex-col p-4 rounded-lg border min-h-[160px]">
                      <div className="flex-grow">
                         <div className="flex justify-between items-start">
@@ -1111,7 +1094,6 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
                     </div>
                 </div>
                 
-                 {/* Gerenciar Feed */}
                 <div className="flex flex-col p-4 rounded-lg border min-h-[160px]">
                     <div className="flex-grow">
                         <div className="flex justify-between items-start">
@@ -1184,6 +1166,77 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
                         isLoadingFlashcards={isLoadingFlashcards}
                         />
                     </div>
+                </div>
+            </CardContent>
+        </Card>
+
+        {/* Zona de Perigo - Reset de Dados */}
+        <Card className="border-destructive/20 shadow-destructive/5 bg-destructive/5">
+            <CardHeader>
+                <CardTitle className="text-destructive flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5" /> Zona de Perigo
+                </CardTitle>
+                <CardDescription className="text-destructive/80">Ações irreversíveis de gerenciamento de dados.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-4 rounded-lg border border-destructive/20 bg-white space-y-4">
+                    <div>
+                        <h4 className="font-bold text-slate-900">Zerar Meu Progresso</h4>
+                        <p className="text-xs text-muted-foreground">Apaga todas as suas estatísticas, nível e histórico de matérias.</p>
+                    </div>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="outline" className="w-full border-destructive text-destructive hover:bg-destructive hover:text-white" disabled={isResetting}>
+                                {isResetting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+                                Resetar Meus Dados
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Esta ação zerará seu nível, strike, tempo de estudo e todas as estatísticas por matéria. Não é possível desfazer.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleResetSelf} className="bg-destructive hover:bg-destructive/90">
+                                    Sim, Resetar Agora
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </div>
+
+                <div className="p-4 rounded-lg border border-destructive/20 bg-white space-y-4">
+                    <div>
+                        <h4 className="font-bold text-destructive">RESET GLOBAL DA BASE</h4>
+                        <p className="text-xs text-muted-foreground text-destructive/70 font-medium">⚠️ Ação de administrador. Zera o progresso de TODOS os alunos (fakes e reais).</p>
+                    </div>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="destructive" className="w-full font-black shadow-lg" disabled={isResetting}>
+                                {isResetting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <AlertTriangle className="h-4 w-4 mr-2" />}
+                                ZERAR TODOS OS ALUNOS
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="border-4 border-destructive">
+                            <AlertDialogHeader>
+                                <AlertDialogTitle className="text-destructive font-black text-2xl">AVISO CRÍTICO!</AlertDialogTitle>
+                                <AlertDialogDescription className="text-slate-900 font-bold">
+                                    Você está prestes a apagar o progresso de TODOS os usuários da plataforma MentorIA Academy.
+                                    <br/><br/>
+                                    Isso removerá rankings, níveis e estatísticas de cada documento na base de dados.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel className="font-bold">ABORTAR</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleResetAll} className="bg-destructive text-white font-black animate-pulse">
+                                    EU COMPREENDO, ZERAR TUDO
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </div>
             </CardContent>
         </Card>
