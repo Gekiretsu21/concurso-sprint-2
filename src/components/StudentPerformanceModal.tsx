@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { calculateLevel, calculatePercentage } from '@/lib/gamification';
+import { calculateLevel, calculatePercentage, getAchievement } from '@/lib/gamification';
 import { EvolutionBadge } from './EvolutionBadge';
 import { Crown, BookOpen, Target, CheckCircle2, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -44,6 +44,7 @@ export function StudentPerformanceModal({ user, isOpen, onOpenChange }: StudentP
   };
 
   const levelInfo = calculateLevel(stats.totalAnswered);
+  const achievement = getAchievement(levelInfo.currentLevel);
   const overallAccuracy = calculatePercentage(stats.totalCorrect, stats.totalAnswered);
   const subjects = Object.entries(stats.bySubject || {});
 
@@ -68,13 +69,13 @@ export function StudentPerformanceModal({ user, isOpen, onOpenChange }: StudentP
                   {isPlus && <Crown className="mr-1 h-3 w-3" />}
                   {planLabel}
                 </Badge>
-                <Badge variant="outline" className="border-accent/30 text-accent font-bold">
-                  Nível {levelInfo.currentLevel}
-                </Badge>
+                <div className={cn("flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-black uppercase", achievement.color)}>
+                  {achievement.icon} {achievement.title}
+                </div>
               </div>
             </div>
             <div className="ml-auto">
-              <EvolutionBadge level={levelInfo.currentLevel} />
+              <EvolutionBadge level={levelInfo.currentLevel} showLabel={false} />
             </div>
           </div>
         </DialogHeader>
