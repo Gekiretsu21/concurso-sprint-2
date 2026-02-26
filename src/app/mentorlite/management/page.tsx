@@ -14,9 +14,9 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle, Sparkles, User, Crown, Search, Lock, Megaphone, ExternalLink, List, Database, Users, AlertTriangle, RefreshCw } from 'lucide-react';
+import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle, Sparkles, Crown, Search, Megaphone, ExternalLink, List, Database, Users, AlertTriangle, RefreshCw, BarChart2 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
-import { importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteAllFlashcards, deleteFlashcardsByFilter, deleteFlashcardsByIds, deleteQuestionsByIds, deleteDuplicateQuestions, deleteDuplicateFlashcards, updateUserPlan, seedUsers, resetUserProgress, resetAllUsersProgress } from '@/firebase/actions';
+import { importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteAllFlashcards, deleteFlashcardsByIds, deleteQuestionsByIds, deleteDuplicateQuestions, deleteDuplicateFlashcards, updateUserPlan, seedUsers, resetUserProgress, resetAllUsersProgress } from '@/firebase/actions';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
 import { SimulatedExamDialog } from '@/components/SimulatedExamDialog';
@@ -28,23 +28,19 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import Link from 'next/link';
-import { collection, DocumentData, query } from 'firebase/firestore';
+import { collection, query } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { useForm, Controller } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { FeedPostDialog } from '@/components/FeedPostDialog';
+import { StudentPerformanceModal } from '@/components/StudentPerformanceModal';
 
 interface PreviousExam {
   id: string;
@@ -83,6 +79,7 @@ interface UserProfile {
         plan: 'standard' | 'plus';
         status: 'active' | 'inactive' | 'canceled';
     };
+    stats?: any;
 }
 
 
@@ -506,7 +503,7 @@ function DeleteFlashcardsDialog({ availableResources, allFlashcards, isLoadingFl
     if (!firestore) return;
     setIsDeleting(true);
     try {
-        const deletedCount = await deleteDuplicateFlashcards(firestore);
+        const deletedCount = await deleteDuplicateQuestions(firestore);
         toast({
             title: "Limpeza Concluída",
             description: `${deletedCount} flashcard(s) duplicado(s) foram excluídos.`,
@@ -639,6 +636,9 @@ export default function ManagementPage() {
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [isSeeding, setIsSeeding] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  
+  const [selectedUserForPerf, setSelectedUserForPerf] = useState<UserProfile | null>(null);
+  const [isPerfModalOpen, setIsPerfModalOpen] = useState(false);
 
 
   useEffect(() => {
@@ -884,6 +884,11 @@ export default function ManagementPage() {
       setIsResetting(false);
     }
   }
+
+  const handleViewPerformance = (student: UserProfile) => {
+    setSelectedUserForPerf(student);
+    setIsPerfModalOpen(true);
+  };
 
   const isButtonDisabled = !user || isUserLoading;
 
@@ -1315,6 +1320,15 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-2">
                                                 <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="text-slate-500 hover:text-accent hover:bg-accent/10"
+                                                    title="Ver Desempenho"
+                                                    onClick={() => handleViewPerformance(u)}
+                                                >
+                                                    <BarChart2 className="h-4 w-4" />
+                                                </Button>
+                                                <Button
                                                     variant="outline"
                                                     size="sm"
                                                     onClick={() => handlePlanChange(u.id, plan)}
@@ -1408,6 +1422,12 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
               </Card>
           </div>
       </div>
+
+      <StudentPerformanceModal 
+        user={selectedUserForPerf}
+        isOpen={isPerfModalOpen}
+        onOpenChange={setIsPerfModalOpen}
+      />
     </div>
   );
 }
