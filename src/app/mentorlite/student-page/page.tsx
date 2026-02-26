@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -84,14 +85,14 @@ export default function StudentPage() {
             <CardHeader className="text-center pb-2">
               <Trophy className="h-10 w-10 text-accent mx-auto mb-2 animate-bounce" />
               <CardTitle className="text-xl font-bold text-slate-900">Metas da Vitória</CardTitle>
-              <CardDescription>Mantenha esse ritmo semanal</CardDescription>
+              <CardDescription>Mantenha esse ritmo mensal (Meta: 200)</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
                 <div className="flex flex-col items-center p-4 rounded-xl bg-white border border-accent/10 shadow-sm">
                   <span className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Mínimo de Questões</span>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-black text-accent">100</span>
+                    <span className="text-4xl font-black text-accent">50</span>
                     <span className="text-slate-400 font-medium">/sem</span>
                   </div>
                 </div>
@@ -99,7 +100,7 @@ export default function StudentPage() {
                 <div className="flex flex-col items-center p-4 rounded-xl bg-white border border-accent/10 shadow-sm">
                   <span className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Flashcards Revisados</span>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-black text-accent">80</span>
+                    <span className="text-4xl font-black text-accent">20</span>
                     <span className="text-slate-400 font-medium">/sem</span>
                   </div>
                 </div>

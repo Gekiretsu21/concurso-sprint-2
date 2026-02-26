@@ -13,6 +13,8 @@ import { Skeleton } from './ui/skeleton';
 import { useEffect, useState } from 'react';
 import { getUserRank } from '@/firebase/actions';
 
+const MONTHLY_GOAL = 200;
+
 export function PerformanceScorecard() {
   const { user } = useUser();
   const { firestore } = useFirebase();
@@ -27,7 +29,6 @@ export function PerformanceScorecard() {
 
   useEffect(() => {
     if (firestore && user) {
-      // Busca o ranking mesmo que o totalAnswered seja 0 ou o objeto não exista
       const totalDone = userData?.stats?.performance?.questions?.totalAnswered || 0;
       getUserRank(firestore, totalDone).then(setRankInfo);
     }
@@ -59,7 +60,7 @@ export function PerformanceScorecard() {
       </div>
       
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 relative z-10">
-        <CardTitle className="text-lg font-bold flex items-center gap-2">
+        <CardTitle className="text-lg font-bold flex items-center gap-2 text-slate-950">
           <Trophy className="h-5 w-5 text-accent" /> Placar de Desempenho
         </CardTitle>
         <AddQuestionsModal />
@@ -94,7 +95,13 @@ export function PerformanceScorecard() {
               </div>
               <div className="flex items-baseline gap-1">
                 <span className="text-lg font-bold text-slate-800">{monthlyPercent.toFixed(0)}%</span>
-                <span className="text-[10px] text-slate-400">({stats.monthlyQuestionsDone} q)</span>
+                <span className="text-[10px] text-slate-400">({stats.monthlyQuestionsDone}/{MONTHLY_GOAL} q)</span>
+              </div>
+              <div className="mt-1.5 h-1 w-full bg-slate-200 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-accent transition-all duration-500"
+                  style={{ width: `${Math.min((stats.monthlyQuestionsDone / MONTHLY_GOAL) * 100, 100)}%` }}
+                />
               </div>
             </div>
 
