@@ -11,6 +11,12 @@ import { cn } from '@/lib/utils';
 import { Skeleton } from './ui/skeleton';
 import { useEffect, useState } from 'react';
 import { getUserGlobalRank } from '@/app/actions/update-user-stats';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 const MONTHLY_GOAL = 200;
 const WEEKLY_GOAL = 50;
@@ -76,13 +82,22 @@ export function PerformanceScorecard() {
       <CardContent className="space-y-6 relative z-10">
         {/* Seção Superior: % Geral e Ranking */}
         <div className="flex flex-col sm:flex-row items-center gap-6">
-          <div className="relative flex items-center justify-center h-24 w-24 rounded-full border-4 border-accent/10 bg-white shadow-inner">
-            <div className="text-center">
-              <span className="text-2xl font-black text-slate-900 leading-none">{overallPercent.toFixed(0)}%</span>
-              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">Acerto</p>
-            </div>
-            <Target className="absolute -top-1 -right-1 h-5 w-5 text-accent bg-white rounded-full p-0.5 border border-accent/20" />
-          </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="relative flex items-center justify-center h-24 w-24 rounded-full border-4 border-accent/10 bg-white shadow-inner cursor-help">
+                  <div className="text-center">
+                    <span className="text-2xl font-black text-slate-900 leading-none">{overallPercent.toFixed(0)}%</span>
+                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">Acerto</p>
+                  </div>
+                  <Target className="absolute -top-1 -right-1 h-5 w-5 text-accent bg-white rounded-full p-0.5 border border-accent/20" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="max-w-xs text-xs">Sua taxa de acerto global. Representa a qualidade e precisão do seu aprendizado acumulado.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
           <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
             {/* Semana Card */}
