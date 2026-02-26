@@ -77,73 +77,6 @@ interface UserStats {
   }
 }
 
-/* 
-// Funcionalidade de ranking desativada temporariamente conforme solicitação
-function GlobalRankingTable({ userId, totalAnswered }: { userId: string, totalAnswered: number }) {
-    const [ranking, setRanking] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        getGlobalRankingData(userId, totalAnswered).then(data => {
-            setRanking(data.topStudents);
-            setIsLoading(false);
-        });
-    }, [userId, totalAnswered]);
-
-    if (isLoading) return <Skeleton className="h-64 w-full rounded-xl" />;
-
-    return (
-        <Card className="border-accent/10 shadow-lg bg-white">
-            <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2 text-slate-950">
-                    <Trophy className="h-5 w-5 text-accent" /> Top 10 Alunos
-                </CardTitle>
-                <CardDescription>Estudantes com maior volume de questões resolvidas na base.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead className="w-12 text-center font-bold">Pos</TableHead>
-                            <TableHead>Aluno</TableHead>
-                            <TableHead className="text-right">Questões</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {ranking.length > 0 ? ranking.map((student, index) => (
-                            <TableRow key={student.id} className={student.isCurrentUser ? "bg-accent/5" : ""}>
-                                <TableCell className="text-center font-black text-slate-700">{index + 1}º</TableCell>
-                                <TableCell>
-                                    <div className="flex items-center gap-3">
-                                        <Avatar className="h-8 w-8 border border-accent/20">
-                                            <AvatarImage src={student.photoURL} />
-                                            <AvatarFallback className="bg-slate-100 text-slate-600 font-bold">{student.name[0]}</AvatarFallback>
-                                        </Avatar>
-                                        <div className="flex flex-col">
-                                            <span className="truncate max-w-[150px] font-bold text-slate-900">
-                                                {student.name}
-                                            </span>
-                                            {student.isCurrentUser && <span className="text-[10px] font-bold text-accent uppercase tracking-tighter">Você</span>}
-                                        </div>
-                                    </div>
-                                </TableCell>
-                                <TableCell className="text-right font-mono font-bold text-slate-700">{student.totalAnswered}</TableCell>
-                            </TableRow>
-                        )) : (
-                            <TableRow>
-                                <TableCell colSpan={3} className="text-center py-8 text-muted-foreground italic text-sm">
-                                    Inicie seus estudos para aparecer no ranking!
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
-    );
-}
-*/
-
 function StatCardSkeleton() {
     return (
         <Card>
@@ -195,7 +128,6 @@ export default function Home() {
     const welcomeName = isUserLoading ? 'Concurseiro' : getFirstName(user?.displayName);
 
     const stats = userData?.stats;
-    const totalAnswered = stats?.performance?.questions?.totalAnswered || 0;
 
   return (
     <div className="flex flex-col gap-8">
@@ -207,12 +139,12 @@ export default function Home() {
           <p className="text-muted-foreground font-medium">O que você gostaria de fazer hoje?</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <PerformanceScorecard />
-            {/* ranking e tabela removidos temporariamente */}
-          </div>
-          <div className="grid grid-cols-1 gap-6">
+        <div className="flex flex-col gap-6">
+          {/* Placar de Desempenho agora ocupa a largura total */}
+          <PerformanceScorecard />
+
+          {/* Cards de estatísticas secundárias agora ficam abaixo em uma grade responsiva */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
              {isLoading ? (
                 <StatCardSkeleton />
             ) : (
