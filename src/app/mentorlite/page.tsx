@@ -27,6 +27,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { doc } from 'firebase/firestore';
 import { updateDailyStreak } from '../actions/update-user-stats';
 import { PremiumFeature } from '@/components/PremiumFeature';
+import { PerformanceScorecard } from '@/components/PerformanceScorecard';
 
 
 const mainFeatures = [
@@ -150,30 +151,46 @@ export default function Home() {
           </h1>
           <p className="text-muted-foreground">O que você gostaria de fazer hoje?</p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {isLoading ? (
-                <>
-                    <StatCardSkeleton />
-                    <StatCardSkeleton />
-                </>
+
+        {/* Novo Placar de Desempenho e Gamificação */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <PerformanceScorecard />
+          </div>
+          <div className="grid grid-cols-1 gap-6">
+             {isLoading ? (
+                <StatCardSkeleton />
             ) : (
-                statCards.map(stat => (
-                <Card key={stat.title} className="lg:col-span-2">
+                <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                    <stat.icon
-                        className={`h-4 w-4 text-muted-foreground ${stat.color || ''}`}
-                    />
+                    <CardTitle className="text-sm font-medium">Strike de dias</CardTitle>
+                    <Flame className="h-4 w-4 text-amber-500" />
                     </CardHeader>
                     <CardContent>
-                    <div className="text-2xl font-bold">{stat.value}</div>
+                    <div className="text-2xl font-bold">{dailyStreak} dias</div>
                     <p className="text-xs text-muted-foreground">
-                        {stat.description}
+                        Sua sequência de estudos diários.
                     </p>
                     </CardContent>
                 </Card>
-                ))
             )}
+            {isLoading ? (
+                <StatCardSkeleton />
+            ) : (
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Tempo total de estudo</CardTitle>
+                    <Timer className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                    <div className="text-2xl font-bold">{formatStudyTime(stats?.totalStudyTime)}</div>
+                    <p className="text-xs text-muted-foreground">
+                        Seu tempo de foco na plataforma.
+                    </p>
+                    </CardContent>
+                </Card>
+            )}
+          </div>
         </div>
       </section>
       
