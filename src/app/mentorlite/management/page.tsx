@@ -859,6 +859,19 @@ export default function ManagementPage() {
     }
   }
 
+  const handleResetOther = async (userId: string, userName: string) => {
+    if (!firestore) return;
+    setIsResetting(true);
+    try {
+      await resetUserProgress(firestore, userId);
+      toast({ title: 'Sucesso', description: `O progresso de ${userName} foi zerado.` });
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Erro', description: 'Falha ao resetar progresso do aluno.' });
+    } finally {
+      setIsResetting(false);
+    }
+  }
+
   const handleResetAll = async () => {
     if (!firestore) return;
     setIsResetting(true);
@@ -1245,7 +1258,7 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
       <Card>
         <CardHeader>
             <CardTitle>Gerenciamento de Usuários</CardTitle>
-            <CardDescription>Visualize e gerencie os planos de assinatura dos usuários.</CardDescription>
+            <CardDescription>Visualize estatísticas e gerencie as contas dos alunos.</CardDescription>
         </CardHeader>
         <CardContent>
              <div className="relative mb-4">
@@ -1300,13 +1313,36 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => handlePlanChange(u.id, plan)}
-                                            >
-                                                {isPlus ? 'Rebaixar para Standard' : 'Promover para Plus'}
-                                            </Button>
+                                            <div className="flex justify-end gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => handlePlanChange(u.id, plan)}
+                                                >
+                                                    {isPlus ? 'Rebaixar para Standard' : 'Promover para Plus'}
+                                                </Button>
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10" title="Resetar Histórico">
+                                                            <RefreshCw className="h-4 w-4" />
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>Zerar progresso de {u.name}?</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                Esta ação apagará nível, strike e todas as estatísticas de questões deste aluno. Não é possível desfazer.
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                                            <AlertDialogAction onClick={() => handleResetOther(u.id, u.name || 'aluno')} className="bg-destructive hover:bg-destructive/90">
+                                                                Sim, Resetar Aluno
+                                                            </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 )
