@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -132,25 +131,6 @@ export async function batchUpdateQuestions(
   };
 
   await updateDoc(userRef, updatePayload);
-}
-
-/**
- * Busca a posição do usuário no ranking global
- */
-export async function getUserRank(firestore: Firestore, totalAnswered: number) {
-  const usersRef = collection(firestore, 'users');
-  
-  // Conta quantos usuários têm mais questões que o atual
-  // Usamos o campo específico para garantir que o ranking seja justo
-  const q = query(usersRef, where('stats.performance.questions.totalAnswered', '>', totalAnswered));
-  const snapshot = await getCountFromServer(q);
-  const position = snapshot.data().count + 1;
-
-  // Busca o total de alunos na base (reais + fakes)
-  const totalSnapshot = await getCountFromServer(usersRef);
-  const totalStudents = totalSnapshot.data().count;
-
-  return { position, totalStudents };
 }
 
 /**

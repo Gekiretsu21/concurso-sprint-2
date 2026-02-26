@@ -106,3 +106,29 @@ export async function updateUserStudyTime(userId: string, seconds: number): Prom
     // You might want to add more specific error handling or re-throwing logic here.
   }
 }
+
+/**
+ * Busca a posição do usuário no ranking global (Server Side)
+ */
+export async function getUserGlobalRank(totalAnswered: number): Promise<{ position: number; totalStudents: number }> {
+    try {
+        const usersRef = adminFirestore.collection('users');
+        
+        // Conta quantos usuários têm mais questões que o atual de forma eficiente
+        const moreQuestionsCount = await usersRef
+            .where('stats.performance.questions.totalAnswered', '>', totalAnswered)
+            .count()
+            .get();
+            
+        // Conta o total de alunos na base
+        const totalCount = await usersRef.count().get();
+
+        return {
+            position: moreQuestionsCount.data().count + 1,
+            totalStudents: totalCount.data().count
+        };
+    } catch (error) {
+        console.error("Erro ao buscar ranking global:", error);
+        return { position: 1, totalStudents: 1 };
+    }
+}

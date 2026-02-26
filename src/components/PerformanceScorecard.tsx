@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useUser, useDoc, useFirebase, useMemoFirebase } from '@/firebase';
@@ -11,7 +10,7 @@ import { Trophy, Target, Calendar, TrendingUp, Crown, Users } from 'lucide-react
 import { cn } from '@/lib/utils';
 import { Skeleton } from './ui/skeleton';
 import { useEffect, useState } from 'react';
-import { getUserRank } from '@/firebase/actions';
+import { getUserGlobalRank } from '@/app/actions/update-user-stats';
 
 const MONTHLY_GOAL = 200;
 const WEEKLY_GOAL = 50;
@@ -29,11 +28,12 @@ export function PerformanceScorecard() {
   const { data: userData, isLoading } = useDoc<any>(userDocRef);
 
   useEffect(() => {
-    if (firestore && user) {
+    if (user) {
+      // Sempre busca o ranking quando os dados do usuário ou o progresso mudarem
       const totalDone = userData?.stats?.performance?.questions?.totalAnswered || 0;
-      getUserRank(firestore, totalDone).then(setRankInfo);
+      getUserGlobalRank(totalDone).then(setRankInfo);
     }
-  }, [userData, firestore, user]);
+  }, [userData, user]);
 
   if (isLoading) {
     return <Skeleton className="h-48 w-full rounded-xl" />;
@@ -55,7 +55,7 @@ export function PerformanceScorecard() {
   const weeklyAccuracy = calculatePercentage(stats.weeklyCorrectAnswers, stats.weeklyQuestionsDone);
   const monthlyAccuracy = calculatePercentage(stats.monthlyCorrectAnswers, stats.monthlyQuestionsDone);
   
-  // Goal Progress (The primary percentage the user asked for)
+  // Goal Progress
   const weeklyProgress = Math.min((stats.weeklyQuestionsDone / WEEKLY_GOAL) * 100, 100);
   const monthlyProgress = Math.min((stats.monthlyQuestionsDone / MONTHLY_GOAL) * 100, 100);
   
