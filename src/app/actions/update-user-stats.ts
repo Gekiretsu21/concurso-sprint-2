@@ -18,7 +18,7 @@ function isYesterday(lastDate: Date, today: Date): boolean {
 
 export async function updateDailyStreak(userId: string): Promise<{ dailyStreak: number }> {
     if (!userId) {
-        console.warn("updateDailyStreak called without userId");
+        console.warn("updateDailyStreak chamado sem userId");
         return { dailyStreak: 0 };
     }
 
@@ -39,7 +39,18 @@ export async function updateDailyStreak(userId: string): Promise<{ dailyStreak: 
 
         const userData = doc.data();
         const lastLoginTimestamp = userData?.stats?.lastLoginDate as Timestamp | undefined;
-        const lastLoginDate = lastLoginTimestamp ? lastLoginTimestamp.toDate() : new Date(0);
+        
+        // Proteção contra erro de conversão de data
+        let lastLoginDate = new Date(0);
+        try {
+            if (lastLoginTimestamp && typeof lastLoginTimestamp.toDate === 'function') {
+                lastLoginDate = lastLoginTimestamp.toDate();
+            } else if (lastLoginTimestamp) {
+                lastLoginDate = new Date(lastLoginTimestamp as any);
+            }
+        } catch (e) {
+            console.error("Erro ao converter lastLoginDate:", e);
+        }
 
         let newStreak = userData?.stats?.dailyStreak || 0;
 
@@ -61,49 +72,23 @@ export async function updateDailyStreak(userId: string): Promise<{ dailyStreak: 
         return { dailyStreak: newStreak };
 
     } catch (error) {
-        console.error(`Failed to update daily streak for user ${userId}:`, error);
-        try {
-            await userRef.set({
-                stats: {
-                    dailyStreak: 1,
-                    lastLoginDate: today
-                }
-            }, { merge: true });
-            return { dailyStreak: 1 };
-        } catch (initError) {
-            console.error(`Failed to initialize stats for user ${userId}:`, initError);
-            return { dailyStreak: 0 };
-        }
+        console.error(`Falha ao atualizar daily streak para o usuário ${userId}:`, error);
+        return { dailyStreak: 0 };
     }
 }
 
 export async function updateUserStudyTime(userId: string, seconds: number): Promise<void> {
-  if (!userId || seconds <= 0) {
-    console.warn(`updateUserStudyTime called with invalid arguments: userId=${userId}, seconds=${seconds}`);
-    return;
-  }
-
-  const userRef = adminFirestore.collection('users').doc(userId);
-  const updatePayload = {
-    'stats.totalStudyTime': FieldValue.increment(seconds)
-  };
+  if (!userId || seconds <= 0) return;
 
   try {
-    const userDoc = await userRef.get();
-    if (!userDoc.exists) {
-        // If the user document doesn't exist, create it with the initial study time.
-        await userRef.set({
-            stats: {
-                totalStudyTime: seconds
-            }
-        }, { merge: true });
-    } else {
-        // Otherwise, update the existing document.
-        await userRef.update(updatePayload);
-    }
+    const userRef = adminFirestore.collection('users').doc(userId);
+    await userRef.set({
+        stats: {
+            totalStudyTime: FieldValue.increment(seconds)
+        }
+    }, { merge: true });
   } catch (error) {
-    console.error(`Failed to update study time for user ${userId}:`, error);
-    // You might want to add more specific error handling or re-throwing logic here.
+    console.error(`Falha ao atualizar tempo de estudo para o usuário ${userId}:`, error);
   }
 }
 
@@ -114,7 +99,7 @@ export async function getUserGlobalRank(totalAnswered: number): Promise<{ positi
     try {
         const usersRef = adminFirestore.collection('users');
         
-        // Conta quantos usuários têm mais questões que o atual de forma eficiente
+        // Conta usuários com mais questões resolvidas
         const moreQuestionsCount = await usersRef
             .where('stats.performance.questions.totalAnswered', '>', totalAnswered)
             .count()
@@ -129,6 +114,7 @@ export async function getUserGlobalRank(totalAnswered: number): Promise<{ positi
         };
     } catch (error) {
         console.error("Erro ao buscar ranking global:", error);
+        // Retorna valores padrão em vez de lançar erro para a UI
         return { position: 1, totalStudents: 1 };
     }
 }
