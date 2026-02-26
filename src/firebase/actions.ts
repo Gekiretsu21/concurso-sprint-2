@@ -141,11 +141,12 @@ export async function getUserRank(firestore: Firestore, totalAnswered: number) {
   const usersRef = collection(firestore, 'users');
   
   // Conta quantos usuários têm mais questões que o atual
+  // Usamos o campo específico para garantir que o ranking seja justo
   const q = query(usersRef, where('stats.performance.questions.totalAnswered', '>', totalAnswered));
   const snapshot = await getCountFromServer(q);
   const position = snapshot.data().count + 1;
 
-  // Busca o total de alunos
+  // Busca o total de alunos na base (reais + fakes)
   const totalSnapshot = await getCountFromServer(usersRef);
   const totalStudents = totalSnapshot.data().count;
 
@@ -162,8 +163,9 @@ export async function seedUsers(firestore: Firestore) {
   const names = ['André', 'Beatriz', 'Carlos', 'Daniela', 'Eduardo', 'Fernanda', 'Gabriel', 'Helena', 'Ítalo', 'Juliana'];
 
   for (let i = 1; i <= 101; i++) {
-    const totalDone = 50 + (i * 14.5); // Distribuição de 50 a 1500 aprox
-    const accuracy = 0.55 + (Math.random() * 0.30); // 55% a 85%
+    // Distribuição de questões de 50 a 1500 aprox.
+    const totalDone = 50 + (i * 14.5); 
+    const accuracy = 0.55 + (Math.random() * 0.30); // 55% a 85% de acerto
     const totalCorrect = Math.floor(totalDone * accuracy);
     const levelInfo = calculateLevel(Math.floor(totalDone));
     
@@ -174,6 +176,7 @@ export async function seedUsers(firestore: Firestore) {
       id: fakeId,
       name: `${names[i % names.length]} Aluno ${i}`,
       email: `aluno${i}@exemplo.com`,
+      photoURL: `https://picsum.photos/seed/${i}/200`,
       stats: {
         performance: {
           questions: {
@@ -187,12 +190,16 @@ export async function seedUsers(firestore: Firestore) {
         },
         level: levelInfo.currentLevel,
         lastActivityAt: serverTimestamp(),
+        lastResetCheck: serverTimestamp(),
+      },
+      subscription: {
+        plan: 'standard',
+        status: 'active'
       }
     }, { merge: true });
   }
 
   await batch.commit();
-  console.log('Seed de 101 usuários concluído!');
 }
 
 export async function deleteFeedPost(firestore: Firestore, postId: string): Promise<void> {

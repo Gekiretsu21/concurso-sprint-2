@@ -15,7 +15,7 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle, Sparkles, User, Crown, Search, Lock, Megaphone, ExternalLink, List, Database } from 'lucide-react';
+import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle, Sparkles, User, Crown, Search, Lock, Megaphone, ExternalLink, List, Database, Users } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteAllFlashcards, deleteFlashcardsByFilter, deleteFlashcardsByIds, deleteQuestionsByIds, deleteDuplicateQuestions, deleteDuplicateFlashcards, updateUserPlan, seedUsers } from '@/firebase/actions';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
@@ -897,10 +897,16 @@ export default function ManagementPage() {
             Gerencie as configurações e dados do aplicativo.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={handleRunSeed} disabled={isSeeding}>
-          {isSeeding ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Database className="h-4 w-4 mr-2" />}
-          Popular Ranking (Dev)
-        </Button>
+        <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 border text-sm font-medium">
+                <Users className="h-4 w-4 text-slate-500" />
+                <span>Total de Alunos: {isLoadingUsers ? '...' : allUsers?.length || 0}</span>
+            </div>
+            <Button variant="outline" size="sm" onClick={handleRunSeed} disabled={isSeeding}>
+            {isSeeding ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Database className="h-4 w-4 mr-2" />}
+            Popular Ranking (Dev)
+            </Button>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 gap-6">

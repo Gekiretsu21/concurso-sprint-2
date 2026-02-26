@@ -26,10 +26,12 @@ export function PerformanceScorecard() {
   const { data: userData, isLoading } = useDoc<any>(userDocRef);
 
   useEffect(() => {
-    if (userData?.stats?.performance?.questions?.totalAnswered !== undefined && firestore) {
-      getUserRank(firestore, userData.stats.performance.questions.totalAnswered).then(setRankInfo);
+    if (firestore && user) {
+      // Busca o ranking mesmo que o totalAnswered seja 0 ou o objeto não exista
+      const totalDone = userData?.stats?.performance?.questions?.totalAnswered || 0;
+      getUserRank(firestore, totalDone).then(setRankInfo);
     }
-  }, [userData, firestore]);
+  }, [userData, firestore, user]);
 
   if (isLoading) {
     return <Skeleton className="h-48 w-full rounded-xl" />;
