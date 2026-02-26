@@ -22,7 +22,7 @@ interface UserProfile {
   email: string;
   photoURL?: string;
   subscription?: {
-    plan: 'standard' | 'plus';
+    plan: 'standard' | 'plus' | 'mentoria_plus_plus';
     status: 'active' | 'inactive' | 'canceled';
   };
   stats?: any;
@@ -47,13 +47,14 @@ export function StudentPerformanceModal({ user, isOpen, onOpenChange }: StudentP
   const overallAccuracy = calculatePercentage(stats.totalCorrect, stats.totalAnswered);
   const subjects = Object.entries(stats.bySubject || {});
 
-  const planLabel = user.subscription?.plan === 'plus' ? 'MentorIA+' : 'Standard';
-  const isPlus = user.subscription?.plan === 'plus';
+  const planLabel = user.subscription?.plan === 'plus' ? 'MentorIA+' : 
+                    user.subscription?.plan === 'mentoria_plus_plus' ? 'MentorIA++' : 'Standard';
+  const isPlus = user.subscription?.plan === 'plus' || user.subscription?.plan === 'mentoria_plus_plus';
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader className="border-b pb-4">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+        <DialogHeader className="p-6 border-b">
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16 border-2 border-accent/20">
               <AvatarImage src={user.photoURL} />
@@ -78,40 +79,40 @@ export function StudentPerformanceModal({ user, isOpen, onOpenChange }: StudentP
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4 py-6">
-          <div className="space-y-8">
-            {/* Resumo de Performance */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col items-center text-center">
-                <LayoutGrid className="h-5 w-5 text-slate-400 mb-2" />
-                <span className="text-2xl font-black text-slate-900">{stats.totalAnswered}</span>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Total Questões</span>
-              </div>
-              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-100 flex flex-col items-center text-center">
-                <CheckCircle2 className="h-5 w-5 text-emerald-500 mb-2" />
-                <span className="text-2xl font-black text-emerald-600">{stats.totalCorrect}</span>
-                <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-tighter">Total Acertos</span>
-              </div>
-              <div className="p-4 rounded-2xl bg-accent/5 border border-accent/10 flex flex-col items-center text-center">
-                <Target className="h-5 w-5 text-accent mb-2" />
-                <span className="text-2xl font-black text-accent">{overallAccuracy.toFixed(0)}%</span>
-                <span className="text-[10px] font-bold text-accent uppercase tracking-tighter">Aproveitamento</span>
-              </div>
+        <div className="flex-1 flex flex-col min-h-0 p-6 space-y-8">
+          {/* Resumo de Performance (Fixo no topo do corpo) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col items-center text-center">
+              <LayoutGrid className="h-5 w-5 text-slate-400 mb-2" />
+              <span className="text-2xl font-black text-slate-900">{stats.totalAnswered}</span>
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Total Questões</span>
+            </div>
+            <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-100 flex flex-col items-center text-center">
+              <CheckCircle2 className="h-5 w-5 text-emerald-500 mb-2" />
+              <span className="text-2xl font-black text-emerald-600">{stats.totalCorrect}</span>
+              <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-tighter">Total Acertos</span>
+            </div>
+            <div className="p-4 rounded-2xl bg-accent/5 border border-accent/10 flex flex-col items-center text-center">
+              <Target className="h-5 w-5 text-accent mb-2" />
+              <span className="text-2xl font-black text-accent">{overallAccuracy.toFixed(0)}%</span>
+              <span className="text-[10px] font-bold text-accent uppercase tracking-tighter">Aproveitamento</span>
+            </div>
+          </div>
+
+          {/* Detalhamento por Disciplina com Barra de Rolagem */}
+          <div className="space-y-4 flex-1 flex flex-col min-h-0">
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-accent" />
+              <h3 className="font-bold text-slate-900">Evolução por Disciplina</h3>
             </div>
 
-            {/* Detalhamento por Disciplina */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-accent" />
-                <h3 className="font-bold text-slate-900">Evolução por Disciplina</h3>
-              </div>
-
-              {subjects.length > 0 ? (
-                <div className="grid gap-3">
+            {subjects.length > 0 ? (
+              <ScrollArea className="flex-1 -mr-2 pr-4">
+                <div className="grid gap-3 pb-2">
                   {subjects.map(([name, data]: [string, any]) => {
                     const accuracy = calculatePercentage(data.correct, data.answered);
                     return (
-                      <div key={name} className="p-4 rounded-xl border bg-white space-y-3">
+                      <div key={name} className="p-4 rounded-xl border bg-white shadow-sm space-y-3">
                         <div className="flex justify-between items-center">
                           <span className="font-bold text-sm text-slate-800">{name}</span>
                           <span className={cn(
@@ -134,17 +135,17 @@ export function StudentPerformanceModal({ user, isOpen, onOpenChange }: StudentP
                     );
                   })}
                 </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed rounded-2xl">
-                  <BookOpen className="h-12 w-12 text-slate-200 mb-4" />
-                  <p className="text-slate-500 font-medium max-w-[250px]">
-                    Este aluno ainda não registrou nenhuma atividade na plataforma.
-                  </p>
-                </div>
-              )}
-            </div>
+              </ScrollArea>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed rounded-2xl bg-slate-50/50">
+                <BookOpen className="h-12 w-12 text-slate-200 mb-4" />
+                <p className="text-slate-500 font-medium max-w-[250px]">
+                  Este aluno ainda não registrou nenhuma atividade na plataforma.
+                </p>
+              </div>
+            )}
           </div>
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
