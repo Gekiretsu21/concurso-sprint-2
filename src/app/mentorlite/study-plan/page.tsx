@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -55,8 +56,17 @@ export default function StudyPlanPage() {
   const [newTask, setNewTask] = useState({ title: '', subject: '', dayOffset: '0' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // HYDRATION FIX: Defer dynamic "isToday" styling until after client hydration
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   // Calculate current week dates
-  const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+  const weekStart = useMemo(() => {
+    return startOfWeek(new Date(), { weekStartsOn: 1 });
+  }, []);
+
   const weekDates = useMemo(() => {
     return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   }, [weekStart]);
@@ -174,11 +184,14 @@ export default function StudyPlanPage() {
             return isSameDay(taskDate, date);
           }) || [];
 
+          // Highlight "today" only after the client component has hydrated to avoid server/client mismatch
+          const isToday = isMounted && isSameDay(new Date(), date);
+
           return (
             <div key={index} className="flex flex-col gap-3 min-w-[200px] md:min-w-0">
               <div className={cn(
                 "p-3 rounded-xl text-center border-b-2 transition-all",
-                isSameDay(new Date(), date) ? "bg-primary/5 border-primary" : "bg-muted/30 border-transparent"
+                isToday ? "bg-primary/5 border-primary" : "bg-muted/30 border-transparent"
               )}>
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{DAYS_OF_WEEK[index]}</p>
                 <p className="text-xl font-bold">{format(date, 'dd')}</p>
