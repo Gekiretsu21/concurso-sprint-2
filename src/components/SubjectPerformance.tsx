@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useUser, useDoc, useFirebase, useMemoFirebase, useCollection } from '@/firebase';
@@ -44,6 +43,7 @@ import { ptBR } from 'date-fns/locale';
 import { ScrollArea } from './ui/scroll-area';
 import { Badge } from './ui/badge';
 import { Ripple } from './ui/material-design-3-ripple';
+import { GlowingEffect } from './ui/glowing-effect';
 
 interface Attempt {
     id: string;
@@ -321,92 +321,101 @@ export function SubjectPerformance() {
           const SubjectIcon = getSubjectIcon(name);
           
           return (
-            <Card 
-              key={name} 
-              className="group relative border-2 border-slate-100 bg-white rounded-[2.5rem] shadow-xl hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] hover:border-accent/40 transition-all duration-500 overflow-hidden"
-            >
-              <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity pointer-events-none scale-150">
-                <SubjectIcon className="h-24 w-24 -rotate-12" />
-              </div>
+            <div key={name} className="relative rounded-[2.5rem] border-[0.75px] border-border p-1 group">
+              <GlowingEffect
+                spread={40}
+                glow={true}
+                disabled={false}
+                proximity={64}
+                inactiveZone={0.01}
+                borderWidth={3}
+              />
+              <Card 
+                className="relative z-10 group border-2 border-slate-100 bg-white rounded-[2.3rem] shadow-xl hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] hover:border-accent/40 transition-all duration-500 overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity pointer-events-none scale-150">
+                  <SubjectIcon className="h-24 w-24 -rotate-12" />
+                </div>
 
-              <CardContent className="p-8 space-y-6 relative z-10">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-2">
-                    <h4 className="font-black text-lg text-slate-950 leading-tight uppercase tracking-tight line-clamp-2 drop-shadow-sm">
-                      {name}
-                    </h4>
-                    <div className="flex items-center gap-2">
-                        <div className={cn(
-                            "h-2 w-2 rounded-full animate-pulse",
-                            percent >= 80 ? "bg-emerald-500" : percent >= 60 ? "bg-accent" : "bg-red-500"
-                        )} />
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                            Zona de Performance
-                        </span>
+                <CardContent className="p-8 space-y-6 relative z-10">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-2">
+                      <h4 className="font-black text-lg text-slate-950 leading-tight uppercase tracking-tight line-clamp-2 drop-shadow-sm">
+                        {name}
+                      </h4>
+                      <div className="flex items-center gap-2">
+                          <div className={cn(
+                              "h-2 w-2 rounded-full animate-pulse",
+                              percent >= 80 ? "bg-emerald-500" : percent >= 60 ? "bg-accent" : "bg-red-500"
+                          )} />
+                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                              Zona de Performance
+                          </span>
+                      </div>
+                    </div>
+                    
+                    <div className={cn(
+                      "shrink-0 flex flex-col items-center justify-center h-16 w-16 rounded-[1.25rem] border-4 shadow-xl transition-all duration-500 group-hover:rotate-3 group-hover:scale-110",
+                      percent >= 80 ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 
+                      percent >= 60 ? 'bg-amber-50 border-amber-100 text-amber-700' : 
+                      'bg-red-50 border-red-100 text-red-700'
+                    )}>
+                      <span className="text-xl font-black leading-none italic">{percent.toFixed(0)}%</span>
                     </div>
                   </div>
                   
-                  <div className={cn(
-                    "shrink-0 flex flex-col items-center justify-center h-16 w-16 rounded-[1.25rem] border-4 shadow-xl transition-all duration-500 group-hover:rotate-3 group-hover:scale-110",
-                    percent >= 80 ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 
-                    percent >= 60 ? 'bg-amber-50 border-amber-100 text-amber-700' : 
-                    'bg-red-50 border-red-100 text-red-700'
-                  )}>
-                    <span className="text-xl font-black leading-none italic">{percent.toFixed(0)}%</span>
-                  </div>
-                </div>
-                
-                <div className="space-y-3">
-                  <div className="flex justify-between items-end">
-                    <div className="flex items-center gap-1.5">
-                        <Target className="h-3 w-3 text-slate-400" />
-                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
-                            Maestria Tática
-                        </span>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-end">
+                      <div className="flex items-center gap-1.5">
+                          <Target className="h-3 w-3 text-slate-400" />
+                          <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
+                              Maestria Tática
+                          </span>
+                      </div>
+                      <span className="text-xs font-black text-slate-900 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100">
+                        {stats.correct} / <span className="text-slate-400">{stats.answered}</span>
+                      </span>
                     </div>
-                    <span className="text-xs font-black text-slate-900 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100">
-                      {stats.correct} / <span className="text-slate-400">{stats.answered}</span>
-                    </span>
-                  </div>
-                  
-                  <div className="relative h-4 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner p-1">
-                    <div 
-                      className={cn(
-                        "h-full transition-all duration-[1.5s] ease-[cubic-bezier(0.34,1.56,0.64,1)] rounded-full relative",
-                        percent >= 80 ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]' : 
-                        percent >= 60 ? 'bg-accent shadow-[0_0_10px_rgba(197,148,40,0.4)]' : 
-                        'bg-destructive shadow-[0_0_10px_rgba(239,68,68,0.4)]'
-                      )} 
-                      style={{ width: `${percent}%` }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 animate-[shimmer_2s_infinite]" />
+                    
+                    <div className="relative h-4 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner p-1">
+                      <div 
+                        className={cn(
+                          "h-full transition-all duration-[1.5s] ease-[cubic-bezier(0.34,1.56,0.64,1)] rounded-full relative",
+                          percent >= 80 ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]' : 
+                          percent >= 60 ? 'bg-accent shadow-[0_0_10px_rgba(197,148,40,0.4)]' : 
+                          'bg-destructive shadow-[0_0_10px_rgba(239,68,68,0.4)]'
+                        )} 
+                        style={{ width: `${percent}%` }}
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 animate-[shimmer_2s_infinite]" />
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <Dialog>
-                    <DialogTrigger asChild>
-                        <div className="w-full pt-2 cursor-pointer group/ripple">
-                            <Ripple 
-                                className="w-full rounded-2xl overflow-visible" 
-                                color="text-accent"
-                                opacity={0.15}
-                            >
-                                <div className="flex items-center justify-between opacity-40 group-hover/ripple:opacity-100 transition-all duration-500 group-hover/ripple:translate-y-[-2px]">
-                                    <div className="h-px flex-1 bg-slate-100" />
-                                    <div className="flex items-center gap-3 px-6 py-2 rounded-2xl bg-white border border-slate-200 shadow-sm group-hover/ripple:bg-accent group-hover/ripple:border-accent group-hover/ripple:text-white transition-all group-hover/ripple:shadow-lg group-hover/ripple:shadow-accent/20">
-                                        <span className="text-[10px] font-black uppercase tracking-[0.25em]">Ver Raio-X</span>
-                                        <ChevronRight className="h-4 w-4 transition-transform group-hover/ripple:translate-x-1" />
-                                    </div>
-                                    <div className="h-px flex-1 bg-slate-100" />
-                                </div>
-                            </Ripple>
-                        </div>
-                    </DialogTrigger>
-                    <SubjectDetailsModal subjectName={name} stats={stats} />
-                </Dialog>
-              </CardContent>
-            </Card>
+                  <Dialog>
+                      <DialogTrigger asChild>
+                          <div className="w-full pt-2 cursor-pointer group/ripple">
+                              <Ripple 
+                                  className="w-full rounded-2xl overflow-visible" 
+                                  color="text-accent"
+                                  opacity={0.15}
+                              >
+                                  <div className="flex items-center justify-between opacity-40 group-hover/ripple:opacity-100 transition-all duration-500 group-hover/ripple:translate-y-[-2px]">
+                                      <div className="h-px flex-1 bg-slate-100" />
+                                      <div className="flex items-center gap-3 px-6 py-2 rounded-2xl bg-white border border-slate-200 shadow-sm group-hover/ripple:bg-accent group-hover/ripple:border-accent group-hover/ripple:text-white transition-all group-hover/ripple:shadow-lg group-hover/ripple:shadow-accent/20">
+                                          <span className="text-[10px] font-black uppercase tracking-[0.25em]">Ver Raio-X</span>
+                                          <ChevronRight className="h-4 w-4 transition-transform group-hover/ripple:translate-x-1" />
+                                      </div>
+                                      <div className="h-px flex-1 bg-slate-100" />
+                                  </div>
+                              </Ripple>
+                          </div>
+                      </DialogTrigger>
+                      <SubjectDetailsModal subjectName={name} stats={stats} />
+                  </Dialog>
+                </CardContent>
+              </Card>
+            </div>
           );
         })}
       </div>
