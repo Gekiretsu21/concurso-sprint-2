@@ -241,17 +241,22 @@ export function AddQuestionsModal() {
                         <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[375px] p-0" align="start">
+                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
                       <div className="flex items-center border-b px-3">
                         <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
                         <Input
                           placeholder="Pesquisar matéria..."
-                          className="h-9 border-0 focus-visible:ring-0 px-0 shadow-none"
+                          className="h-9 border-0 focus-visible:ring-0 px-0 shadow-none focus:ring-0"
                           value={subjectSearch}
                           onChange={(e) => setSubjectSearch(e.target.value)}
+                          onKeyDown={(e) => {
+                            // Evita que o Popover feche ou capture teclas de navegação
+                            e.stopPropagation();
+                          }}
+                          autoFocus
                         />
                       </div>
-                      <ScrollArea className="h-72">
+                      <div className="max-h-72 overflow-y-auto">
                         <div className="p-1">
                           {isLoadingQuestions && (
                             <div className="flex items-center justify-center py-6">
@@ -285,7 +290,7 @@ export function AddQuestionsModal() {
                             <div className="py-6 text-center text-sm text-muted-foreground">Nenhuma matéria encontrada.</div>
                           )}
                         </div>
-                      </ScrollArea>
+                      </div>
                     </PopoverContent>
                   </Popover>
                 </div>
