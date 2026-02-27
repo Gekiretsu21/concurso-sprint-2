@@ -5,7 +5,7 @@ import { doc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { calculateLevel, calculatePercentage, getAchievement } from '@/lib/gamification';
 import { AddQuestionsModal } from './AddQuestionsModal';
-import { Trophy, Target, Calendar, TrendingUp, Sparkles } from 'lucide-react';
+import { Trophy, Target, Calendar, TrendingUp } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { EvolutionBadge } from './EvolutionBadge';
 import {
@@ -63,7 +63,6 @@ export function PerformanceScorecard() {
         <CardTitle className="text-lg font-bold flex items-center gap-2 text-slate-950">
           <Trophy className="h-5 w-5 text-accent" /> Placar de Desempenho
         </CardTitle>
-        <AddQuestionsModal />
       </CardHeader>
       <CardContent className="space-y-6 relative z-10">
         <div className="flex flex-col sm:flex-row items-center gap-6">
@@ -157,6 +156,11 @@ export function PerformanceScorecard() {
               <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.2)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.2)_50%,rgba(255,255,255,0.2)_75%,transparent_75%,transparent)] bg-[length:20px_20px] animate-[progress-stripe_2s_linear_infinite]" />
             </div>
           </div>
+        </div>
+
+        {/* CTA Section - Repositioned for maximum emphasis */}
+        <div className="pt-4 mt-2 border-t border-slate-100 flex justify-center">
+           <AddQuestionsModal />
         </div>
       </CardContent>
       <style jsx global>{`

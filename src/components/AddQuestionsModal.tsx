@@ -136,9 +136,16 @@ export function AddQuestionsModal() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="w-full sm:w-auto border-accent/30 hover:bg-accent/10">
-          <Sparkles className="mr-2 h-4 w-4 text-accent" />
-          Adicionar questões de hoje
+        <Button 
+          variant="default" 
+          className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-black uppercase tracking-widest text-[10px] sm:text-xs py-7 shadow-2xl shadow-accent/30 animate-pulse-glow group rounded-2xl relative overflow-hidden"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] transition-transform" />
+          <div className="flex items-center justify-center gap-3 relative z-10">
+            <Sparkles className="h-5 w-5 animate-bounce group-hover:scale-125 transition-transform" />
+            <span className="drop-shadow-md">Registrar Evolução de Hoje</span>
+            <Sparkles className="h-5 w-5 animate-bounce group-hover:scale-125 transition-transform" />
+          </div>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
@@ -251,6 +258,11 @@ export function AddQuestionsModal() {
           </div>
         )}
       </DialogContent>
+      <style jsx global>{`
+        @keyframes shimmer {
+          100% { transform: translateX(100%); }
+        }
+      `}</style>
     </Dialog>
   );
 }
