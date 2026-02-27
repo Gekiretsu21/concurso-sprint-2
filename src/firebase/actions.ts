@@ -18,7 +18,6 @@ import {
 } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import { FeedPost } from '@/types';
-import { calculateLevel } from '@/lib/gamification';
 
 // --- STUDY PLAN ACTIONS ---
 
@@ -168,7 +167,7 @@ export async function importQuestions(
   userId: string,
   accessTier: 'standard' | 'plus',
   examDetails?: any,
-): Promise<void> {
+) {
   const questionsStr = text.trim().split('\n');
   const batch = writeBatch(firestore);
   const newQuestionIds: string[] = [];
@@ -193,7 +192,7 @@ export async function importQuestions(
   await batch.commit();
 }
 
-export async function importFlashcards(firestore: Firestore, text: string, accessTier: 'standard' | 'plus'): Promise<any> {
+export async function importFlashcards(firestore: Firestore, text: string, accessTier: 'standard' | 'plus') {
   const lines = text.trim().split('\n');
   const batch = writeBatch(firestore);
   lines.forEach(line => {
@@ -208,7 +207,7 @@ export async function importFlashcards(firestore: Firestore, text: string, acces
   return batch.commit();
 }
 
-export async function handleFlashcardResponse(firestore: Firestore, userId: string, flashcard: any, result: 'correct' | 'incorrect'): Promise<void> {
+export async function handleFlashcardResponse(firestore: Firestore, userId: string, flashcard: any, result: 'correct' | 'incorrect') {
   const progressRef = doc(firestore, `users/${userId}/flashcard_progress/${flashcard.id}`);
   await setDoc(progressRef, { userId, flashcardId: flashcard.id, lastResult: result, lastReviewedAt: serverTimestamp(), subject: flashcard.subject }, { merge: true });
 }
