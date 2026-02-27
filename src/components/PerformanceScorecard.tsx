@@ -5,7 +5,7 @@ import { doc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { calculateLevel, calculatePercentage, getAchievement } from '@/lib/gamification';
 import { AddQuestionsModal } from './AddQuestionsModal';
-import { Trophy, Target, Calendar, TrendingUp, Zap, Star } from 'lucide-react';
+import { Trophy, Target, Calendar, TrendingUp, Zap, Star, Info } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { EvolutionBadge } from './EvolutionBadge';
 import {
@@ -16,6 +16,8 @@ import {
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { GlowingEffect } from '@/components/ui/glowing-effect';
+import { useState } from 'react';
+import { MentoringTipModal } from './MentoringTipModal';
 
 const MONTHLY_GOAL = 200;
 const WEEKLY_GOAL = 50;
@@ -23,6 +25,7 @@ const WEEKLY_GOAL = 50;
 export function PerformanceScorecard() {
   const { user } = useUser();
   const { firestore } = useFirebase();
+  const [isTipModalOpen, setIsTipModalOpen] = useState(false);
 
   const userDocRef = useMemoFirebase(
     () => (user && firestore ? doc(firestore, `users/${user.uid}`) : null),
@@ -180,13 +183,20 @@ export function PerformanceScorecard() {
               <div className="flex-1 space-y-4 w-full">
                 <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                   <div className="space-y-1">
-                    <div className={cn(
-                      "inline-flex items-center gap-3 px-5 py-2 rounded-2xl border-2 font-black text-sm uppercase tracking-wider shadow-xl transition-all duration-500 group-hover/lvlsec:scale-105",
-                      achievement.color
-                    )}>
+                    <button 
+                      onClick={() => setIsTipModalOpen(true)}
+                      className={cn(
+                        "inline-flex items-center gap-3 px-5 py-2 rounded-2xl border-2 font-black text-sm uppercase tracking-wider shadow-xl transition-all duration-500 hover:scale-105 active:scale-95 relative group/badge cursor-pointer",
+                        achievement.color
+                      )}
+                    >
                       <span className="text-2xl">{achievement.icon}</span>
                       <span className="drop-shadow-sm">{achievement.title}</span>
-                    </div>
+                      <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-white shadow-sm border border-slate-200 animate-bounce">
+                        <Info className="h-2.5 w-2.5 text-slate-400" />
+                      </div>
+                      <div className="absolute inset-0 rounded-2xl bg-current opacity-0 group-hover/badge:opacity-5 transition-opacity" />
+                    </button>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em] ml-1 flex items-center gap-2">
                       <Zap className="h-3 w-3 text-accent fill-current" /> Rumo ao Nível {levelInfo.currentLevel + 1}
                     </p>
@@ -232,6 +242,14 @@ export function PerformanceScorecard() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Modal de Dica de Mentoria */}
+      <MentoringTipModal 
+        isOpen={isTipModalOpen} 
+        onOpenChange={setIsTipModalOpen} 
+        achievement={achievement} 
+      />
+
       <style jsx global>{`
         @keyframes progress-stripe {
           from { background-position: 0 0; }
