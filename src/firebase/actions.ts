@@ -15,6 +15,8 @@ import {
   deleteDoc,
   increment,
   Timestamp,
+  documentId,
+  and,
 } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import { FeedPost } from '@/types';
