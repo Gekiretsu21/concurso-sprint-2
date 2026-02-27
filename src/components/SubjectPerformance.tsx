@@ -4,7 +4,7 @@ import { useUser, useDoc, useFirebase, useMemoFirebase, useCollection } from '@/
 import { doc, collection, query, where, orderBy, Timestamp } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from './ui/skeleton';
-import { BookOpen, PieChart, Target, Zap, Award, History, Calendar as CalendarIcon, Activity } from 'lucide-react';
+import { BookOpen, PieChart, Target, Zap, Award, History, Calendar as CalendarIcon, Activity, ChevronRight } from 'lucide-react';
 import { Progress } from './ui/progress';
 import { calculatePercentage } from '@/lib/gamification';
 import { cn } from '@/lib/utils';
