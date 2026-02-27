@@ -18,7 +18,10 @@ function isPlusSubscriber() {
 }
 
 function isAdmin() {
-  return request.auth != null && request.auth.token.email == 'amentoriaacademy@gmail.com';
+  return request.auth != null && (
+    request.auth.token.email == 'amentoriaacademy@gmail.com' || 
+    request.auth.token.email == 'mentorlite.admin@gmail.com'
+  );
 }
 
 service cloud.firestore {
@@ -44,7 +47,7 @@ service cloud.firestore {
     match /questoes/{questionId} {
       allow read: if resource.data.accessTier == 'standard' || isPlusSubscriber() || isAdmin() || resource.data.accessTier == null;
       allow list: if isSignedIn();
-      allow write: if isSignedIn(); 
+      allow write: if isAdmin(); 
     }
     
     match /questoes/{questionId}/comments/{commentId} {
@@ -55,21 +58,19 @@ service cloud.firestore {
     }
 
     match /flashcards/{flashcardId} {
-      allow read: if isSignedIn();
-      allow list: if isSignedIn();
-      allow write: if isSignedIn();
+      allow read, list: if isSignedIn();
+      allow write: if isAdmin();
     }
     
     match /communitySimulados/{simuladoId} {
        allow read, list: if isSignedIn();
        allow create: if isSignedIn();
-       allow update: if false;
+       allow update: if isAdmin();
        allow delete: if isAdmin();
     }
     
     match /feed_posts/{postId} {
-      allow read: if isSignedIn();
-      allow list: if isSignedIn();
+      allow read, list: if isSignedIn();
       allow create, update, delete: if isAdmin();
     }
 
