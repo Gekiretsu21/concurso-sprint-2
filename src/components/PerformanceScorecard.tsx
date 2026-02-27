@@ -82,40 +82,54 @@ export function PerformanceScorecard() {
           {/* Top Row: Mastery & Goals */}
           <div className="flex flex-col lg:flex-row items-center gap-8">
             
-            {/* Accuracy Circle */}
+            {/* Accuracy Circle - Re-styled for Maximum Emphasis */}
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="relative flex items-center justify-center h-32 w-32 rounded-full border-[6px] border-slate-100 bg-white shadow-2xl shadow-black/5 cursor-help group transition-all hover:scale-105 active:scale-95">
-                    <div className="text-center">
-                      <span className="text-3xl font-black text-slate-950 leading-none drop-shadow-sm">{overallPercent.toFixed(0)}%</span>
-                      <p className="text-[10px] text-slate-500 uppercase font-black tracking-tighter leading-tight mt-1">Geral<br/>Acertos</p>
+                  <div className="relative flex items-center justify-center h-36 w-36 rounded-full border-[8px] border-slate-50 bg-white shadow-[0_20px_50px_rgba(0,0,0,0.1)] cursor-help group transition-all hover:scale-110 active:scale-95">
+                    <div className="text-center px-3 z-10">
+                      <span className="text-4xl font-black text-slate-950 leading-none drop-shadow-md italic">
+                        {overallPercent.toFixed(0)}%
+                      </span>
+                      <p className="text-[8px] text-slate-400 uppercase font-black tracking-widest leading-tight mt-2 max-w-[80px] mx-auto">
+                        Histórico de<br/>acertos totais
+                      </p>
                     </div>
-                    <div className="absolute -top-2 -right-2 bg-emerald-500 text-white rounded-full p-1.5 shadow-lg border-2 border-white">
+                    
+                    <div className="absolute -top-3 -right-1 bg-slate-950 text-accent rounded-full p-2 shadow-xl border-2 border-white z-20 group-hover:rotate-12 transition-transform">
                       <Target className="h-4 w-4" />
                     </div>
-                    {/* Dynamic Ring Part (Simulado com borda) */}
-                    <svg className="absolute inset-[-6px] h-[calc(100%+12px)] w-[calc(100%+12px)] -rotate-90 pointer-events-none">
+
+                    {/* Dynamic Modern Ring */}
+                    <svg className="absolute inset-[-8px] h-[calc(100%+16px)] w-[calc(100%+16px)] -rotate-90 pointer-events-none drop-shadow-lg">
                       <circle
                         cx="50%"
                         cy="50%"
-                        r="64"
+                        r="72"
                         fill="none"
                         stroke="currentColor"
-                        strokeWidth="6"
-                        strokeDasharray="402"
-                        strokeDashoffset={402 - (402 * overallPercent) / 100}
+                        strokeWidth="8"
+                        strokeDasharray="452"
+                        strokeDashoffset={452 - (452 * overallPercent) / 100}
                         className={cn(
-                          "transition-all duration-1000",
-                          overallPercent >= 80 ? "text-emerald-500" : overallPercent >= 60 ? "text-accent" : "text-slate-300"
+                          "transition-all duration-1000 ease-out",
+                          overallPercent >= 80 ? "text-emerald-500" : overallPercent >= 60 ? "text-accent" : "text-slate-200"
                         )}
                         strokeLinecap="round"
                       />
                     </svg>
+                    
+                    {/* Inner Glow */}
+                    <div className={cn(
+                        "absolute inset-0 rounded-full opacity-5 transition-opacity duration-500 group-hover:opacity-10",
+                        overallPercent >= 80 ? "bg-emerald-500" : "bg-accent"
+                    )} />
                   </div>
                 </TooltipTrigger>
-                <TooltipContent>
-                  <p className="max-w-xs text-xs font-bold">Domínio Histórico: Precisão total acumulada em todas as questões.</p>
+                <TooltipContent side="right">
+                  <p className="max-w-xs text-xs font-bold leading-relaxed">
+                    Este é o seu índice de maestria global. Ele reflete sua precisão em cada questão resolvida na plataforma.
+                  </p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
