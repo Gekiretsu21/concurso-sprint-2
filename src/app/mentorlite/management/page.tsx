@@ -504,7 +504,7 @@ function DeleteFlashcardsDialog({ availableResources, allFlashcards, isLoadingFl
     if (!firestore) return;
     setIsDeleting(true);
     try {
-        const deletedCount = await deleteDuplicateQuestions(firestore);
+        const deletedCount = await deleteDuplicateFlashcards(firestore);
         toast({
             title: "Limpeza Concluída",
             description: `${deletedCount} flashcard(s) duplicado(s) foram excluídos.`,
