@@ -441,7 +441,6 @@ export async function deleteCommunitySimulados(firestore: Firestore, ids: string
   return b.commit();
 }
 export async function deleteAllFlashcards(firestore: Firestore) { return; }
-export async function deleteFlashcardsByFilter(firestore: Firestore, f: any) { return 0; }
 export async function deleteFlashcardsByIds(firestore: Firestore, ids: string[]) {
   const b = writeBatch(firestore);
   ids.forEach(id => b.delete(doc(firestore, 'flashcards', id)));
