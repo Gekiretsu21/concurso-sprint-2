@@ -32,6 +32,7 @@ import { PerformanceScorecard } from '@/components/PerformanceScorecard';
 import { SubjectPerformance } from '@/components/SubjectPerformance';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { GlowingEffect } from '@/components/ui/glowing-effect';
 
 
 const mainFeatures = [
@@ -187,44 +188,64 @@ export default function Home() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {mainFeatures.map(feature => (
-            <Card key={feature.title} className="flex flex-col border-accent/5 hover:border-accent/20 transition-all group shadow-sm">
-              <CardHeader>
-                <div className="bg-primary/5 p-3 rounded-lg w-fit mb-4 group-hover:bg-primary/10 transition-colors">
-                  <feature.icon className="h-6 w-6 text-primary" />
-                </div>
-                <CardTitle className="text-xl">{feature.title}</CardTitle>
-                <CardDescription>{feature.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="flex-grow flex items-end">
-                <Button asChild className="w-full md:w-auto mt-auto">
-                  <Link href={feature.href}>{feature.cta}</Link>
-                </Button>
-              </CardContent>
-            </Card>
+            <div key={feature.title} className="relative rounded-[1.5rem] border-[0.75px] border-border p-1 group">
+              <GlowingEffect
+                spread={40}
+                glow={true}
+                disabled={false}
+                proximity={64}
+                inactiveZone={0.01}
+                borderWidth={3}
+              />
+              <Card className="relative z-10 h-full flex flex-col border-none hover:bg-slate-50/50 transition-all shadow-sm overflow-hidden">
+                <CardHeader>
+                  <div className="bg-primary/5 p-3 rounded-lg w-fit mb-4 group-hover:bg-primary/10 transition-colors">
+                    <feature.icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <CardTitle className="text-xl">{feature.title}</CardTitle>
+                  <CardDescription>{feature.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="flex-grow flex items-end">
+                  <Button asChild className="w-full md:w-auto mt-auto">
+                    <Link href={feature.href}>{feature.cta}</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
           ))}
-            <Card className="flex flex-col border-accent/5 hover:border-accent/20 transition-all group shadow-sm">
-              <CardHeader>
-                <div className="bg-accent/5 p-3 rounded-lg w-fit mb-4 group-hover:bg-accent/10 transition-colors">
-                  <Sparkles className="h-6 w-6 text-accent" />
-                </div>
-                <CardTitle className="text-xl">Gerar Relatório IA</CardTitle>
-                <CardDescription>Obtenha uma análise detalhada do seu desempenho com IA.</CardDescription>
-              </CardHeader>
-              <CardContent className="flex-grow flex items-end">
-                <PremiumFeature
-                    fallback={
-                        <Button className="w-full md:w-auto mt-auto" disabled>
-                            <Lock className="mr-2" />
-                            Exclusivo para MentorIA+
-                        </Button>
-                    }
-                    >
-                    <Button className="w-full md:w-auto mt-auto bg-accent text-accent-foreground hover:bg-accent/90">
-                        Gerar Relatório
-                    </Button>
-                </PremiumFeature>
-              </CardContent>
-            </Card>
+            <div className="relative rounded-[1.5rem] border-[0.75px] border-border p-1 group">
+              <GlowingEffect
+                spread={40}
+                glow={true}
+                disabled={false}
+                proximity={64}
+                inactiveZone={0.01}
+                borderWidth={3}
+              />
+              <Card className="relative z-10 h-full flex flex-col border-none hover:bg-slate-50/50 transition-all shadow-sm overflow-hidden">
+                <CardHeader>
+                  <div className="bg-accent/5 p-3 rounded-lg w-fit mb-4 group-hover:bg-accent/10 transition-colors">
+                    <Sparkles className="h-6 w-6 text-accent" />
+                  </div>
+                  <CardTitle className="text-xl">Gerar Relatório IA</CardTitle>
+                  <CardDescription>Obtenha uma análise detalhada do seu desempenho com IA.</CardDescription>
+                </CardHeader>
+                <CardContent className="flex-grow flex items-end">
+                  <PremiumFeature
+                      fallback={
+                          <Button className="w-full md:w-auto mt-auto" disabled>
+                              <Lock className="mr-2" />
+                              Exclusivo para MentorIA+
+                          </Button>
+                      }
+                      >
+                      <Button className="w-full md:w-auto mt-auto bg-accent text-accent-foreground hover:bg-accent/90">
+                          Gerar Relatório
+                      </Button>
+                  </PremiumFeature>
+                </CardContent>
+              </Card>
+            </div>
         </div>
       </section>
     </div>
