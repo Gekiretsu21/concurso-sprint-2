@@ -12,17 +12,13 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Sparkles, Bot, Loader2, CheckCircle2, ShieldAlert, Timer, Search, ChevronDown, Check } from 'lucide-react';
+import { Sparkles, Bot, Loader2, CheckCircle2, ShieldAlert, Timer, Search, ChevronDown, Check, BookOpen } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { doc, Timestamp, collection } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
@@ -59,7 +55,6 @@ export function AddQuestionsModal() {
           let subjectName = q.Materia.trim();
           const subjectLower = subjectName.toLowerCase();
           
-          // Padronização de nomes comuns para evitar duplicatas por acentuação
           if (subjectLower === 'lingua portuguesa') {
             subjectSet.add('Língua Portuguesa');
           } else if (subjectLower === 'legislacao juridica') {
@@ -67,7 +62,6 @@ export function AddQuestionsModal() {
           } else if (subjectLower === 'legislacao institucional') {
             subjectSet.add('Legislação Institucional');
           } else {
-            // Formatação padrão: Primeira letra de cada palavra maiúscula
             const formatted = subjectName.split(' ').map(word => 
                 word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
             ).join(' ');
@@ -83,16 +77,14 @@ export function AddQuestionsModal() {
     return [...sorted, "Outros"];
   }, [allQuestions]);
 
-  const [isOpen, setIsOpen] = useState(false);
+  const [isMainOpen, setIsMainOpen] = useState(false);
+  const [isSubjectPopupOpen, setIsSubjectPopupOpen] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'banned'>('idle');
   const [questionsDone, setQuestionsDone] = useState('');
   const [correctAnswers, setCorrectAnswers] = useState('');
   const [selectedSubject, setSelectedSubject] = useState<string>('');
-  const [timeLeft, setTimeLeft] = useState(0);
-  
-  // Estados para o novo mecanismo de busca
-  const [isSubjectPopoverOpen, setIsSubjectPopoverOpen] = useState(false);
   const [subjectSearch, setSubjectSearch] = useState("");
+  const [timeLeft, setTimeLeft] = useState(0);
 
   const filteredSubjects = useMemo(() => {
     const searchNormalized = subjectSearch.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -131,7 +123,7 @@ export function AddQuestionsModal() {
     } else {
       setStatus('idle');
     }
-  }, [userData, isOpen]);
+  }, [userData, isMainOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,14 +148,13 @@ export function AddQuestionsModal() {
 
     setStatus('loading');
 
-    // Simulação de processamento de IA para feedback visual
     setTimeout(async () => {
       try {
         await batchUpdateQuestions(firestore, user.uid, done, correct, selectedSubject);
         setStatus('success');
         
         setTimeout(() => {
-          setIsOpen(false);
+          setIsMainOpen(false);
           setStatus('idle');
           setQuestionsDone('');
           setCorrectAnswers('');
@@ -185,7 +176,7 @@ export function AddQuestionsModal() {
 
   return (
     <div className="flex flex-col gap-8">
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Dialog open={isMainOpen} onOpenChange={setIsMainOpen}>
         <DialogTrigger asChild>
           <Button 
             variant="default" 
@@ -234,69 +225,77 @@ export function AddQuestionsModal() {
                   <div className="space-y-2">
                     <Label htmlFor="subject">Disciplina Estudada</Label>
                     
-                    <Popover open={isSubjectPopoverOpen} onOpenChange={setIsSubjectPopoverOpen}>
-                      <PopoverTrigger asChild>
+                    <Dialog open={isSubjectPopupOpen} onOpenChange={setIsSubjectPopupOpen}>
+                      <DialogTrigger asChild>
                         <Button
                           variant="outline"
-                          role="combobox"
-                          aria-expanded={isSubjectPopoverOpen}
-                          className="w-full justify-between font-normal text-left h-11 border-slate-200"
+                          className="w-full justify-between font-normal text-left h-11 border-slate-200 bg-white"
                         >
                           <span className="truncate">
                             {selectedSubject ? selectedSubject : "Selecione a disciplina..."}
                           </span>
                           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-                        <div className="flex items-center border-b p-3 bg-slate-50/50">
-                          <Search className="mr-2 h-4 w-4 shrink-0 text-slate-400" />
-                          <Input
-                            placeholder="Pesquisar disciplina..."
-                            className="h-8 border-0 focus-visible:ring-0 px-0 shadow-none bg-transparent"
-                            value={subjectSearch}
-                            onChange={(e) => setSubjectSearch(e.target.value)}
-                            onKeyDown={(e) => e.stopPropagation()}
-                            autoFocus
-                          />
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden flex flex-col h-[80vh] sm:h-[500px]">
+                        <DialogHeader className="p-4 border-b bg-slate-50">
+                          <DialogTitle className="flex items-center gap-2">
+                            <BookOpen className="h-4 w-4 text-accent" /> Selecionar Matéria
+                          </DialogTitle>
+                        </DialogHeader>
+                        <div className="p-4 border-b bg-white">
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                            <Input
+                              placeholder="Digite para pesquisar..."
+                              className="pl-10 h-11"
+                              value={subjectSearch}
+                              onChange={(e) => setSubjectSearch(e.target.value)}
+                              autoFocus
+                            />
+                          </div>
                         </div>
-                        <ScrollArea className="h-64">
-                          <div className="p-1">
-                            {isLoadingQuestions && (
-                              <div className="flex items-center justify-center py-10">
-                                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                        <ScrollArea className="flex-1">
+                          <div className="p-2 space-y-1">
+                            {isLoadingQuestions ? (
+                              <div className="flex flex-col items-center justify-center py-12 gap-3">
+                                <Loader2 className="h-8 w-8 animate-spin text-accent" />
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Sincronizando Banco...</p>
                               </div>
-                            )}
-                            {!isLoadingQuestions && filteredSubjects.length > 0 ? (
+                            ) : filteredSubjects.length > 0 ? (
                               filteredSubjects.map((subject) => (
-                                <div
+                                <button
                                   key={subject}
+                                  type="button"
                                   className={cn(
-                                    "relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent/10 hover:text-accent font-medium",
-                                    selectedSubject === subject && "bg-accent/10 text-accent"
+                                    "w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-semibold transition-all text-left",
+                                    selectedSubject === subject 
+                                      ? "bg-accent text-accent-foreground shadow-lg shadow-accent/20" 
+                                      : "hover:bg-slate-100 text-slate-700"
                                   )}
                                   onClick={() => {
                                     setSelectedSubject(subject);
-                                    setIsSubjectPopoverOpen(false);
+                                    setIsSubjectPopupOpen(false);
                                     setSubjectSearch("");
                                   }}
                                 >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      selectedSubject === subject ? "opacity-100" : "opacity-0"
-                                    )}
-                                  />
                                   {subject}
-                                </div>
+                                  {selectedSubject === subject && <Check className="h-4 w-4" />}
+                                </button>
                               ))
-                            ) : !isLoadingQuestions && (
-                              <div className="py-10 text-center text-sm text-slate-400">Nenhuma disciplina encontrada.</div>
+                            ) : (
+                              <div className="py-12 text-center">
+                                <Search className="h-10 w-10 text-slate-200 mx-auto mb-3" />
+                                <p className="text-sm text-slate-400 font-medium">Nenhuma disciplina encontrada.</p>
+                              </div>
                             )}
                           </div>
                         </ScrollArea>
-                      </PopoverContent>
-                    </Popover>
+                        <div className="p-4 border-t bg-slate-50 text-[10px] text-center text-slate-400 font-bold uppercase tracking-tight">
+                          Total de {dynamicSubjects.length} matérias disponíveis
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
