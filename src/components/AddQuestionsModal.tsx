@@ -1,7 +1,8 @@
+
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useFirebase, useUser, useDoc, useMemoFirebase } from '@/firebase';
+import { useState, useEffect, useMemo } from 'react';
+import { useFirebase, useUser, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { batchUpdateQuestions } from '@/firebase/actions';
 import {
   Dialog,
@@ -16,24 +17,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Sparkles, Bot, Loader2, CheckCircle2, ShieldAlert, Timer } from 'lucide-react';
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Sparkles, Bot, Loader2, CheckCircle2, ShieldAlert, Timer, Search, ChevronDown, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { doc, Timestamp } from 'firebase/firestore';
-
-const SUBJECTS = [
-  "Português",
-  "Matemática",
-  "Raciocínio Lógico",
-  "Direito Constitucional",
-  "Direito Administrativo",
-  "Informática"
-];
+import { doc, Timestamp, collection } from 'firebase/firestore';
+import { cn } from '@/lib/utils';
 
 export function AddQuestionsModal() {
   const { firestore } = useFirebase();
@@ -46,12 +38,64 @@ export function AddQuestionsModal() {
   );
   const { data: userData } = useDoc<any>(userDocRef);
 
+  // Busca todas as matérias disponíveis no sistema de questões
+  const questionsQuery = useMemoFirebase(
+    () => (firestore && user ? collection(firestore, 'questoes') : null),
+    [firestore, user]
+  );
+  const { data: allQuestions, isLoading: isLoadingQuestions } = useCollection(questionsQuery);
+
+  const dynamicSubjects = useMemo(() => {
+    const subjectSet = new Set<string>();
+    
+    // Matérias base garantidas
+    const baseSubjects = ["Português", "Matemática", "Raciocínio Lógico", "Direito Constitucional", "Direito Administrativo", "Informática"];
+    baseSubjects.forEach(s => subjectSet.add(s));
+
+    if (allQuestions) {
+      allQuestions
+        .filter(q => q.status !== 'hidden' && q.Materia && q.Materia.trim())
+        .forEach(q => {
+          let subjectName = q.Materia.trim();
+          const subjectLower = subjectName.toLowerCase();
+          
+          // Padronização de nomes comuns
+          if (subjectLower === 'lingua portuguesa') {
+            subjectSet.add('Língua Portuguesa');
+          } else if (subjectLower === 'legislacao juridica') {
+            subjectSet.add('Legislação Jurídica');
+          } else if (subjectLower === 'legislacao institucional') {
+            subjectSet.add('Legislação Institucional');
+          } else {
+            // Formatação: Primeira letra maiúscula
+            const formatted = subjectName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+            if (formatted.toLowerCase() !== 'materia') {
+                subjectSet.add(formatted);
+            }
+          }
+        });
+    }
+    
+    const sorted = Array.from(subjectSet).sort((a, b) => a.localeCompare(b));
+    return [...sorted, "Outros"];
+  }, [allQuestions]);
+
   const [isOpen, setIsOpen] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'banned'>('idle');
   const [questionsDone, setQuestionsDone] = useState('');
   const [correctAnswers, setCorrectAnswers] = useState('');
   const [selectedSubject, setSelectedSubject] = useState<string>('');
   const [timeLeft, setTimeLeft] = useState(0);
+  
+  // Estados para o campo de busca
+  const [isSubjectPopoverOpen, setIsSubjectPopoverOpen] = useState(false);
+  const [subjectSearch, setSubjectSearch] = useState("");
+
+  const filteredSubjects = useMemo(() => {
+    return dynamicSubjects.filter(s => 
+      s.toLowerCase().includes(subjectSearch.toLowerCase())
+    );
+  }, [dynamicSubjects, subjectSearch]);
 
   useEffect(() => {
     if (!userData?.stats?.bannedFromAddingUntil) {
@@ -182,16 +226,68 @@ export function AddQuestionsModal() {
               <div className="grid gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="subject">Qual matéria você estudou?</Label>
-                  <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a disciplina" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SUBJECTS.map(s => (
-                        <SelectItem key={s} value={s}>{s}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  
+                  <Popover open={isSubjectPopoverOpen} onOpenChange={setIsSubjectPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={isSubjectPopoverOpen}
+                        className="w-full justify-between font-normal text-left"
+                      >
+                        <span className="truncate">
+                          {selectedSubject ? selectedSubject : "Selecione a disciplina..."}
+                        </span>
+                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[375px] p-0" align="start">
+                      <div className="flex items-center border-b px-3">
+                        <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                        <Input
+                          placeholder="Pesquisar matéria..."
+                          className="h-9 border-0 focus-visible:ring-0 px-0 shadow-none"
+                          value={subjectSearch}
+                          onChange={(e) => setSubjectSearch(e.target.value)}
+                        />
+                      </div>
+                      <ScrollArea className="h-72">
+                        <div className="p-1">
+                          {isLoadingQuestions && (
+                            <div className="flex items-center justify-center py-6">
+                              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                            </div>
+                          )}
+                          {!isLoadingQuestions && filteredSubjects.length > 0 ? (
+                            filteredSubjects.map((subject) => (
+                              <div
+                                key={subject}
+                                className={cn(
+                                  "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground",
+                                  selectedSubject === subject && "bg-accent"
+                                )}
+                                onClick={() => {
+                                  setSelectedSubject(subject);
+                                  setIsSubjectPopoverOpen(false);
+                                  setSubjectSearch("");
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    selectedSubject === subject ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {subject}
+                              </div>
+                            ))
+                          ) : !isLoadingQuestions && (
+                            <div className="py-6 text-center text-sm text-muted-foreground">Nenhuma matéria encontrada.</div>
+                          )}
+                        </div>
+                      </ScrollArea>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="done">Quantas questões você fez?</Label>
