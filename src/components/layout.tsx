@@ -63,7 +63,8 @@ const menuItems = [
   { href: '/mentorlite/community-simulados', icon: Users, label: 'Simulados da Comunidade'},
   { href: '/mentorlite/previous-exams', icon: FileText, label: 'Provas Anteriores' },
   { href: '/mentorlite/flashcards', icon: Layers, label: 'Flashcards' },
-  { href: '/mentorlite/study-plan', icon: BrainCircuit, label: 'Plano de Estudo IA' },
+  // Oculto para publicação conforme solicitado
+  // { href: '/mentorlite/study-plan', icon: BrainCircuit, label: 'Plano de Estudo IA' },
 ];
 
 const vipMenuItem = {
@@ -107,14 +108,19 @@ function MainSidebar() {
   }, []);
 
   const isAdmin = user?.email === 'amentoriaacademy@gmail.com';
-  const isExecutive = userProfile?.subscription?.plan === 'mentoria_plus_plus';
+  // Ocultando Dashboard Executiva para a publicação
+  // const isExecutive = userProfile?.subscription?.plan === 'mentoria_plus_plus';
   
   const allMenuItems = [...menuItems];
+  
+  /* 
+  Ocultando dashboards executivos para a publicação
   if (isAdmin || isExecutive) {
       if (!allMenuItems.find(item => item.href === executiveMenuItem.href)) {
         allMenuItems.push(executiveMenuItem);
     }
   }
+  */
 
   if (isAdmin) {
     if (!allMenuItems.find(item => item.href === adminMenuItem.href)) {
