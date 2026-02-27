@@ -102,7 +102,8 @@ export async function registerQuestionAnswer(
 }
 
 /**
- * Atualiza estatísticas em massa (Inserção Manual) com proteção de Anti-Spam
+ * Atualiza estatísticas em massa (Inserção Manual) com proteção de Anti-Spam.
+ * Agora também registra um "histórico de batalha" para que o dia apareça no calendário de constância.
  */
 export async function batchUpdateQuestions(
   firestore: Firestore,
@@ -120,6 +121,8 @@ export async function batchUpdateQuestions(
   }
 
   const userRef = doc(firestore, 'users', userId);
+  const batch = writeBatch(firestore);
+
   const updatePayload = {
     'stats.performance.questions.totalAnswered': increment(totalDone),
     'stats.performance.questions.totalCorrect': increment(totalCorrect),
@@ -133,7 +136,23 @@ export async function batchUpdateQuestions(
     'stats.lastResetCheck': serverTimestamp(),
   };
 
-  await updateDoc(userRef, updatePayload);
+  batch.update(userRef, updatePayload);
+
+  // Registro de histórico para o Calendário de Constância
+  const batchId = `manual_entry_${Date.now()}`;
+  const attemptRef = doc(firestore, `users/${userId}/question_attempts/${batchId}`);
+  batch.set(attemptRef, {
+    questionId: batchId,
+    isCorrect: totalCorrect >= (totalDone / 2), // Vitória se acertou 50% ou mais
+    selectedOption: 'manual_entry',
+    subject: subject,
+    timestamp: serverTimestamp(),
+    isBatch: true,
+    batchTotal: totalDone,
+    batchCorrect: totalCorrect
+  });
+
+  await batch.commit();
 }
 
 /**
@@ -428,6 +447,7 @@ export async function deleteFlashcardsByIds(firestore: Firestore, ids: string[])
   ids.forEach(id => b.delete(doc(firestore, 'flashcards', id)));
   return b.commit();
 }
+export async function deleteFlashcardsByFilter(firestore: Firestore, f: any) { return 0; }
 export async function savePreviousExamResult(firestore: Firestore, p: any) {
   await setDoc(doc(firestore, `users/${p.userId}/previousExamResults/${p.examId}`), { ...p, completedAt: serverTimestamp() }, { merge: true });
 }

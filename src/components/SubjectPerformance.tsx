@@ -28,6 +28,9 @@ interface Attempt {
     isCorrect: boolean;
     timestamp: Timestamp;
     subject: string;
+    isBatch?: boolean;
+    batchTotal?: number;
+    batchCorrect?: number;
 }
 
 function SubjectDetailsModal({ subjectName, stats }: { subjectName: string, stats: any }) {
@@ -101,7 +104,7 @@ function SubjectDetailsModal({ subjectName, stats }: { subjectName: string, stat
                     </div>
                     <div className="p-5 rounded-[1.5rem] bg-emerald-50/50 border border-emerald-100 shadow-sm flex flex-col items-center text-center group hover:border-emerald-300 transition-colors">
                         <span className="text-3xl font-black text-emerald-600 mb-1">{stats.correct}</span>
-                        <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Acertos Totais</span>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Acertos Totais</span>
                     </div>
                     <div className={cn(
                         "p-5 rounded-[1.5rem] border shadow-sm flex flex-col items-center text-center group transition-colors",
@@ -129,7 +132,7 @@ function SubjectDetailsModal({ subjectName, stats }: { subjectName: string, stat
                                 mode="single"
                                 modifiers={modifiers}
                                 modifiersStyles={modifiersStyles}
-                                className="rounded-md bg-transparent"
+                                className="rounded-md"
                                 locale={ptBR}
                             />
                         </div>
@@ -164,7 +167,7 @@ function SubjectDetailsModal({ subjectName, stats }: { subjectName: string, stat
                                                         {a.timestamp ? format(a.timestamp.toDate(), "dd 'de' MMMM", { locale: ptBR }) : 'Recentemente'}
                                                     </span>
                                                     <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
-                                                        {a.timestamp ? format(a.timestamp.toDate(), "HH:mm'h'") : ''}
+                                                        {a.isBatch ? `Registro de ${a.batchTotal} questões` : 'Questão individual'}
                                                     </span>
                                                 </div>
                                             </div>
