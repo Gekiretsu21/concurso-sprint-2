@@ -1,10 +1,31 @@
+
 'use client';
 
 import { useUser, useDoc, useFirebase, useMemoFirebase, useCollection } from '@/firebase';
 import { doc, collection, query, where, orderBy, Timestamp } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from './ui/skeleton';
-import { BookOpen, PieChart, Target, Zap, Award, History, Calendar as CalendarIcon, Activity, ChevronRight, Trophy, TrendingUp, Sparkles } from 'lucide-react';
+import { 
+  BookOpen, 
+  PieChart, 
+  Target, 
+  Zap, 
+  Award, 
+  History, 
+  Calendar as CalendarIcon, 
+  Activity, 
+  ChevronRight, 
+  Trophy, 
+  TrendingUp, 
+  Sparkles,
+  Gavel,
+  Scale,
+  Languages,
+  Monitor,
+  Shield,
+  FileText,
+  Brain
+} from 'lucide-react';
 import { Progress } from './ui/progress';
 import { calculatePercentage } from '@/lib/gamification';
 import { cn } from '@/lib/utils';
@@ -22,6 +43,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ScrollArea } from './ui/scroll-area';
 import { Badge } from './ui/badge';
+import { Ripple } from './ui/material-design-3-ripple';
 
 interface Attempt {
     id: string;
@@ -34,29 +56,37 @@ interface Attempt {
 }
 
 /**
- * Modal de Detalhes Modernizado - O "Raio-X" de Performance.
- * Focado em UX de alto nível, utilizando calendários VIP e timelines interativas.
+ * Retorna um ícone específico baseado no nome da matéria para evitar repetição.
  */
+function getSubjectIcon(subjectName: string) {
+    const name = subjectName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    
+    if (name.includes('administrativo')) return Gavel;
+    if (name.includes('constitucional')) return Scale;
+    if (name.includes('portugues')) return Languages;
+    if (name.includes('informatica')) return Monitor;
+    if (name.includes('operacional')) return Shield;
+    if (name.includes('legislacao')) return FileText;
+    if (name.includes('logico') || name.includes('matematica')) return Brain;
+    
+    return Award; // Ícone padrão
+}
+
 function SubjectDetailsModal({ subjectName, stats }: { subjectName: string, stats: any }) {
     const { user } = useUser();
     const { firestore } = useFirebase();
     
-    // Normalização robusta para busca de rastro histórico
     const subjectVariations = useMemo(() => {
         if (!subjectName) return [];
         const base = subjectName.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        
-        // Variações comuns para garantir 100% de precisão na marcação do calendário
         const variants = [subjectName];
         if (base === 'lingua portuguesa') variants.push('Língua Portuguesa', 'Lingua Portuguesa');
         if (base === 'legislacao juridica') variants.push('Legislação Jurídica', 'Legislacao Juridica');
         if (base === 'legislacao institucional') variants.push('Legislação Institucional', 'Legislacao Institucional');
         if (base === 'raciocinio logico') variants.push('Raciocínio Lógico', 'Raciocinio Logico');
-        
         return Array.from(new Set(variants));
     }, [subjectName]);
 
-    // Busca em tempo real de todas as batalhas (tentativas) registradas nesta matéria
     const attemptsQuery = useMemoFirebase(() => {
         if (!firestore || !user || subjectVariations.length === 0) return null;
         return query(
@@ -68,7 +98,6 @@ function SubjectDetailsModal({ subjectName, stats }: { subjectName: string, stat
 
     const { data: attempts, isLoading } = useCollection<Attempt>(attemptsQuery);
 
-    // Identifica os dias de glória para o calendário
     const activeDays = useMemo(() => {
         if (!attempts) return new Set<string>();
         const days = new Set<string>();
@@ -81,20 +110,18 @@ function SubjectDetailsModal({ subjectName, stats }: { subjectName: string, stat
     }, [attempts]);
 
     const accuracy = calculatePercentage(stats.correct, stats.answered);
+    const SubjectIcon = getSubjectIcon(subjectName);
 
-    // Modificadores de estilo para o Contorno VIP do calendário
     const modifiers = {
         active: (date: Date) => activeDays.has(format(date, 'yyyy-MM-dd')),
     };
 
-    // Estilização Ultra-Moderna para o Contorno VIP
     const modifiersClassNames = {
         active: "relative z-20 before:content-[''] before:absolute before:inset-0 before:bg-accent/15 before:rounded-full before:z-0 after:content-[''] after:absolute after:inset-[-2px] after:rounded-full after:border-2 after:border-accent after:shadow-[0_0_12px_rgba(197,148,40,0.6)] after:z-30 after:pointer-events-none after:animate-pulse"
     };
 
     return (
         <DialogContent className="sm:max-w-[750px] max-h-[92vh] overflow-hidden flex flex-col p-0 border-none shadow-[0_32px_64px_-12px_rgba(0,0,0,0.3)] bg-white rounded-[2.5rem]">
-            {/* Header VIP com Glassmorphism */}
             <DialogHeader className="p-8 bg-slate-950 text-white shrink-0 relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
                     <Trophy className="h-48 w-48 -rotate-12" />
@@ -103,7 +130,7 @@ function SubjectDetailsModal({ subjectName, stats }: { subjectName: string, stat
                     <div className="relative group">
                         <div className="absolute inset-0 bg-accent rounded-[1.5rem] blur-xl opacity-20 group-hover:opacity-40 transition-opacity" />
                         <div className="relative p-4 bg-gradient-to-br from-slate-800 to-slate-900 rounded-[1.5rem] border border-white/10 shadow-2xl">
-                            <BookOpen className="h-8 w-8 text-accent" />
+                            <SubjectIcon className="h-8 w-8 text-accent" />
                         </div>
                     </div>
                     <div className="space-y-1">
@@ -121,7 +148,6 @@ function SubjectDetailsModal({ subjectName, stats }: { subjectName: string, stat
             </DialogHeader>
 
             <div className="flex-1 overflow-y-auto p-8 space-y-10 bg-slate-50/30">
-                {/* Dashboard de Métricas Críticas */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                     <div className="p-6 rounded-[2rem] bg-white border border-slate-100 shadow-sm flex flex-col items-center text-center group hover:scale-[1.03] transition-all">
                         <span className="text-sm font-black text-slate-400 uppercase tracking-widest mb-2">Batalhas</span>
@@ -149,7 +175,6 @@ function SubjectDetailsModal({ subjectName, stats }: { subjectName: string, stat
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                    {/* Seção Calendário VIP */}
                     <div className="space-y-5">
                         <div className="flex items-center justify-between px-2">
                             <div className="flex items-center gap-2">
@@ -174,7 +199,6 @@ function SubjectDetailsModal({ subjectName, stats }: { subjectName: string, stat
                         </div>
                     </div>
 
-                    {/* Timeline de Batalhas Modernizada */}
                     <div className="space-y-5">
                         <div className="flex items-center gap-2 px-2">
                             <TrendingUp className="h-4 w-4 text-accent" />
@@ -294,15 +318,15 @@ export function SubjectPerformance() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {activeSubjects.map(([name, stats]: [string, any]) => {
           const percent = calculatePercentage(stats.correct, stats.answered);
+          const SubjectIcon = getSubjectIcon(name);
           
           return (
             <Card 
               key={name} 
               className="group relative border-2 border-slate-100 bg-white rounded-[2.5rem] shadow-xl hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] hover:border-accent/40 transition-all duration-500 overflow-hidden"
             >
-              {/* Overlay decorativa de fundo */}
               <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity pointer-events-none scale-150">
-                <Award className="h-24 w-24 -rotate-12" />
+                <SubjectIcon className="h-24 w-24 -rotate-12" />
               </div>
 
               <CardContent className="p-8 space-y-6 relative z-10">
@@ -362,14 +386,22 @@ export function SubjectPerformance() {
 
                 <Dialog>
                     <DialogTrigger asChild>
-                        <button className="w-full pt-2 flex items-center justify-between opacity-40 group-hover:opacity-100 transition-all duration-500 group-hover:translate-y-[-2px]">
-                            <div className="h-px flex-1 bg-slate-100" />
-                            <div className="flex items-center gap-3 px-6 py-2 rounded-2xl bg-white border border-slate-200 shadow-sm group-hover:bg-accent group-hover:border-accent group-hover:text-white transition-all group-hover:shadow-lg group-hover:shadow-accent/20">
-                                <span className="text-[10px] font-black uppercase tracking-[0.25em]">Ver Raio-X</span>
-                                <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                            </div>
-                            <div className="h-px flex-1 bg-slate-100" />
-                        </button>
+                        <div className="w-full pt-2 cursor-pointer group/ripple">
+                            <Ripple 
+                                className="w-full rounded-2xl overflow-visible" 
+                                color="text-accent"
+                                opacity={0.15}
+                            >
+                                <div className="flex items-center justify-between opacity-40 group-hover/ripple:opacity-100 transition-all duration-500 group-hover/ripple:translate-y-[-2px]">
+                                    <div className="h-px flex-1 bg-slate-100" />
+                                    <div className="flex items-center gap-3 px-6 py-2 rounded-2xl bg-white border border-slate-200 shadow-sm group-hover/ripple:bg-accent group-hover/ripple:border-accent group-hover/ripple:text-white transition-all group-hover/ripple:shadow-lg group-hover/ripple:shadow-accent/20">
+                                        <span className="text-[10px] font-black uppercase tracking-[0.25em]">Ver Raio-X</span>
+                                        <ChevronRight className="h-4 w-4 transition-transform group-hover/ripple:translate-x-1" />
+                                    </div>
+                                    <div className="h-px flex-1 bg-slate-100" />
+                                </div>
+                            </Ripple>
+                        </div>
                     </DialogTrigger>
                     <SubjectDetailsModal subjectName={name} stats={stats} />
                 </Dialog>
