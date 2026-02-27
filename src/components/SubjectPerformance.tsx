@@ -37,15 +37,30 @@ function SubjectDetailsModal({ subjectName, stats }: { subjectName: string, stat
     const { user } = useUser();
     const { firestore } = useFirebase();
     
-    // Busca todas as tentativas (individuais ou em lote) desta matéria específica
+    // Lista de variações de nomes de matérias para garantir que a busca encontre registros com ou sem acento
+    const subjectVariations = useMemo(() => {
+        if (!subjectName) return [];
+        const base = subjectName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        
+        if (base === 'lingua portuguesa') return ['Língua Portuguesa', 'Lingua Portuguesa'];
+        if (base === 'legislacao juridica') return ['Legislação Jurídica', 'Legislacao Juridica'];
+        if (base === 'legislacao institucional') return ['Legislação Institucional', 'Legislacao Institucional'];
+        if (base === 'raciocinio logico') return ['Raciocínio Lógico', 'Raciocinio Logico'];
+        if (base === 'direito constitucional') return ['Direito Constitucional', 'Direito Constitucional'];
+        if (base === 'direito administrativo') return ['Direito Administrativo', 'Direito Administrativo'];
+        
+        return [subjectName];
+    }, [subjectName]);
+
+    // Busca todas as tentativas (individuais ou em lote) desta matéria específica usando as variações
     const attemptsQuery = useMemoFirebase(() => {
-        if (!firestore || !user || !subjectName) return null;
+        if (!firestore || !user || subjectVariations.length === 0) return null;
         return query(
             collection(firestore, `users/${user.uid}/question_attempts`),
-            where('subject', '==', subjectName),
+            where('subject', 'in', subjectVariations),
             orderBy('timestamp', 'desc')
         );
-    }, [firestore, user, subjectName]);
+    }, [firestore, user, subjectVariations]);
 
     const { data: attempts, isLoading } = useCollection<Attempt>(attemptsQuery);
 
@@ -61,13 +76,14 @@ function SubjectDetailsModal({ subjectName, stats }: { subjectName: string, stat
         return days;
     }, [attempts]);
 
-    // Modificadores para o carimbo visual de atividade no calendário
+    // Modificadores para o Contorno VIP no calendário
     const modifiers = {
         active: (date: Date) => activeDays.has(format(date, 'yyyy-MM-dd')),
     };
 
+    // Estilo "Contorno VIP" - Dourado, Brilhante e com Sombra
     const modifiersClassNames = {
-        active: "relative after:content-['✕'] after:absolute after:inset-0 after:flex after:items-center after:justify-center after:text-red-600 after:font-black after:text-3xl after:opacity-80 after:pointer-events-none after:z-30 after:rotate-12 after:drop-shadow-[0_2px_2px_rgba(0,0,0,0.3)]"
+        active: "relative z-20 before:absolute before:inset-0 before:bg-accent/10 before:rounded-full before:z-0 after:absolute after:inset-0 after:rounded-full after:border-2 after:border-accent after:shadow-[0_0_15px_rgba(197,148,40,0.5)] after:z-30 after:pointer-events-none"
     };
 
     const accuracy = calculatePercentage(stats.correct, stats.answered);
@@ -119,24 +135,24 @@ function SubjectDetailsModal({ subjectName, stats }: { subjectName: string, stat
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Seção do Calendário com Carimbo X */}
+                    {/* Seção do Calendário com Contorno VIP */}
                     <div className="space-y-4">
                         <div className="flex items-center gap-2 px-1">
                             <CalendarIcon className="h-4 w-4 text-accent" />
                             <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-950">Mapa de Constância</h4>
                         </div>
-                        <div className="p-4 rounded-[2rem] border-2 border-slate-50 bg-slate-50/30 flex justify-center shadow-inner relative">
+                        <div className="p-4 rounded-[2rem] border-2 border-slate-50 bg-slate-50/30 flex justify-center shadow-inner relative overflow-hidden">
                             <Calendar
                                 mode="single"
                                 modifiers={modifiers}
                                 modifiersClassNames={modifiersClassNames}
-                                className="rounded-md"
+                                className="rounded-md scale-95 sm:scale-100"
                                 locale={ptBR}
                             />
                         </div>
-                        <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-slate-100/50 text-[9px] font-black text-slate-500 uppercase tracking-widest border border-slate-200">
-                            <span className="text-red-600 font-black text-sm drop-shadow-sm">✕</span>
-                            <span>Dias com atividade (Individual ou Manual)</span>
+                        <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-slate-950 text-[9px] font-black text-white uppercase tracking-widest border border-slate-800 shadow-xl">
+                            <div className="h-3 w-3 rounded-full border-2 border-accent shadow-[0_0_5px_rgba(197,148,40,0.8)]" />
+                            <span>Dias com atividade (Registro VIP)</span>
                         </div>
                     </div>
 
