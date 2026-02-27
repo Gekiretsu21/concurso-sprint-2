@@ -2,11 +2,11 @@
 
 import { useMemo } from 'react';
 import { useCollection, useFirebase, useMemoFirebase, useUser, useDoc } from '@/firebase';
-import { collection, query, where, orderBy, doc } from 'firebase/firestore';
+import { collection, query, where, doc } from 'firebase/firestore';
 import { FeedPost } from '@/types';
 import { FeedCard } from '@/components/FeedCard';
-import { Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Newspaper, Sparkles, Bell } from 'lucide-react';
 
 export default function FeedPage() {
     const { firestore } = useFirebase();
@@ -28,7 +28,7 @@ export default function FeedPage() {
                 audienceFilter.push('plus');
             }
         } else {
-             audienceFilter.push('standard'); // Default for users without subscription info yet
+             audienceFilter.push('standard'); 
         }
         
         return query(
@@ -52,28 +52,51 @@ export default function FeedPage() {
     const isLoading = isUserLoading || isProfileLoading || isLoadingFeed;
 
   return (
-    <div className="flex flex-col gap-8">
-      <header>
-        <h1 className="text-3xl font-bold tracking-tight">Feed de Notícias</h1>
-        <p className="text-muted-foreground">Fique por dentro das últimas novidades e avisos.</p>
+    <div className="flex flex-col gap-10 max-w-5xl mx-auto pb-20">
+      <header className="space-y-4 px-2">
+        <div className="flex items-center gap-2">
+            <div className="bg-slate-950 p-2 rounded-xl shadow-lg border-b-2 border-accent">
+                <Bell className="h-5 w-5 text-accent animate-pulse" />
+            </div>
+            <span className="text-xs font-bold tracking-widest text-slate-500 uppercase">Comunicados Oficiais</span>
+        </div>
+        <div>
+            <h1 className="text-4xl font-black tracking-tight text-slate-950 italic uppercase">
+                Feed de <span className="text-accent">Inteligência</span>
+            </h1>
+            <p className="text-slate-600 font-medium mt-2">
+                Acompanhe atualizações de edital, novos materiais e avisos da mentoria em tempo real.
+            </p>
+        </div>
       </header>
-      <section className="space-y-6">
+
+      <section className="space-y-8 px-2">
         {isLoading ? (
-             <div className="flex flex-col max-w-4xl mx-auto w-full space-y-6">
-                <Skeleton className="h-48 w-full" />
-                <Skeleton className="h-32 w-full" />
-                <Skeleton className="h-32 w-full" />
+             <div className="flex flex-col w-full space-y-8">
+                {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="space-y-4">
+                        <Skeleton className="h-12 w-3/4 rounded-2xl" />
+                        <Skeleton className="h-48 w-full rounded-[2.5rem]" />
+                    </div>
+                ))}
              </div>
         ) : sortedFeed && sortedFeed.length > 0 ? (
-          <div className="flex flex-col max-w-4xl mx-auto w-full">
+          <div className="grid grid-cols-1 gap-8">
             {sortedFeed.map(post => <FeedCard key={post.id} post={post} />)}
           </div>
         ) : (
-          <div className="col-span-full flex items-center justify-center p-8 border-dashed border rounded-lg min-h-[40vh]">
-            <p className="text-muted-foreground">Nenhuma novidade por aqui ainda.</p>
+          <div className="flex flex-col items-center justify-center py-32 text-center border-2 border-dashed rounded-[3rem] bg-slate-50/50">
+            <Newspaper className="h-16 w-16 text-slate-200 mb-4" />
+            <h3 className="text-xl font-bold text-slate-400 uppercase tracking-widest">Silêncio no Front</h3>
+            <p className="text-slate-400 mt-2 font-medium">Nenhuma novidade por aqui ainda. Fique atento!</p>
           </div>
         )}
       </section>
+
+      <footer className="flex items-center justify-center gap-2 py-10 opacity-30">
+          <Sparkles className="h-4 w-4 text-slate-400" />
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em]">MentorIA Academy • Conexão Elite</p>
+      </footer>
     </div>
   );
 }
