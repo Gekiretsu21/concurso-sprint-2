@@ -348,9 +348,9 @@ export function AddQuestionsModal() {
                 <Sparkles className="absolute -top-2 -right-2 h-6 w-6 text-accent animate-pulse" />
               </div>
               <div className="space-y-2">
-                <h3 className="text-lg font-bold text-slate-900">Calculando Evolução...</h3>
+                <h3 className="text-lg font-bold text-slate-900">Pensando...</h3>
                 <p className="text-sm text-slate-500 animate-pulse">
-                  Estamos analisando seu desempenho e ajustando seu ranking de elite.
+                  A IA está processando os seus dados.
                 </p>
               </div>
             </div>
