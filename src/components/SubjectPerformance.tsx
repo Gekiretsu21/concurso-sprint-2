@@ -37,6 +37,7 @@ function SubjectDetailsModal({ subjectName, stats }: { subjectName: string, stat
     const { user } = useUser();
     const { firestore } = useFirebase();
     
+    // Busca todas as tentativas (individuais ou em lote) desta matéria específica
     const attemptsQuery = useMemoFirebase(() => {
         if (!firestore || !user || !subjectName) return null;
         return query(
@@ -48,23 +49,25 @@ function SubjectDetailsModal({ subjectName, stats }: { subjectName: string, stat
 
     const { data: attempts, isLoading } = useCollection<Attempt>(attemptsQuery);
 
+    // Mapeia os dias em que houve qualquer tipo de atividade registrada
     const activeDays = useMemo(() => {
         if (!attempts) return new Set<string>();
         const days = new Set<string>();
         attempts.forEach(a => {
-            if (a.timestamp) {
+            if (a.timestamp && typeof a.timestamp.toDate === 'function') {
                 days.add(format(a.timestamp.toDate(), 'yyyy-MM-dd'));
             }
         });
         return days;
     }, [attempts]);
 
+    // Modificadores para o carimbo visual de atividade no calendário
     const modifiers = {
         active: (date: Date) => activeDays.has(format(date, 'yyyy-MM-dd')),
     };
 
     const modifiersClassNames = {
-        active: "relative font-bold after:content-['✕'] after:absolute after:inset-0 after:flex after:items-center after:justify-center after:text-red-500 after:font-black after:text-2xl after:opacity-60 after:pointer-events-none"
+        active: "relative after:content-['✕'] after:absolute after:inset-0 after:flex after:items-center after:justify-center after:text-red-600 after:font-black after:text-3xl after:opacity-80 after:pointer-events-none after:z-30 after:rotate-12 after:drop-shadow-[0_2px_2px_rgba(0,0,0,0.3)]"
     };
 
     const accuracy = calculatePercentage(stats.correct, stats.answered);
@@ -91,7 +94,7 @@ function SubjectDetailsModal({ subjectName, stats }: { subjectName: string, stat
             </DialogHeader>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-white">
-                {/* Stats Grid */}
+                {/* Painel de Estatísticas Rápidas */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="p-5 rounded-[1.5rem] bg-slate-50 border border-slate-100 shadow-sm flex flex-col items-center text-center group hover:border-accent/20 transition-colors">
                         <span className="text-3xl font-black text-slate-950 mb-1">{stats.answered}</span>
@@ -116,13 +119,13 @@ function SubjectDetailsModal({ subjectName, stats }: { subjectName: string, stat
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Calendar Section */}
+                    {/* Seção do Calendário com Carimbo X */}
                     <div className="space-y-4">
                         <div className="flex items-center gap-2 px-1">
                             <CalendarIcon className="h-4 w-4 text-accent" />
                             <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-950">Mapa de Constância</h4>
                         </div>
-                        <div className="p-4 rounded-[2rem] border-2 border-slate-50 bg-slate-50/30 flex justify-center shadow-inner">
+                        <div className="p-4 rounded-[2rem] border-2 border-slate-50 bg-slate-50/30 flex justify-center shadow-inner relative">
                             <Calendar
                                 mode="single"
                                 modifiers={modifiers}
@@ -131,13 +134,13 @@ function SubjectDetailsModal({ subjectName, stats }: { subjectName: string, stat
                                 locale={ptBR}
                             />
                         </div>
-                        <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-slate-50 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                            <span className="text-red-500 font-black text-xs">✕</span>
-                            <span>Dias com atividade registrada</span>
+                        <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-slate-100/50 text-[9px] font-black text-slate-500 uppercase tracking-widest border border-slate-200">
+                            <span className="text-red-600 font-black text-sm drop-shadow-sm">✕</span>
+                            <span>Dias com atividade (Individual ou Manual)</span>
                         </div>
                     </div>
 
-                    {/* Timeline Section */}
+                    {/* Timeline Detalhada das Batalhas */}
                     <div className="space-y-4">
                         <div className="flex items-center gap-2 px-1">
                             <Activity className="h-4 w-4 text-accent" />

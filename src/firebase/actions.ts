@@ -138,7 +138,7 @@ export async function batchUpdateQuestions(
 
   batch.update(userRef, updatePayload);
 
-  // Registro de histórico para o Calendário de Constância
+  // Registro de histórico para o Calendário de Constância (Condição para o X automático)
   const batchId = `manual_entry_${Date.now()}`;
   const attemptRef = doc(firestore, `users/${userId}/question_attempts/${batchId}`);
   batch.set(attemptRef, {
