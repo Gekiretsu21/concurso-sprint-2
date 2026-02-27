@@ -11,7 +11,7 @@ export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
 /**
  * Componente de Calendário otimizado para React Day Picker v9.
- * Ajustado para garantir que a grade de dias e os carimbos visuais (X) funcionem corretamente.
+ * Ajustado para garantir que a grade de dias e os carimbos visuais (Contorno VIP) funcionem corretamente.
  */
 function Calendar({
   className,
@@ -41,10 +41,11 @@ function Calendar({
         weekdays: "flex",
         weekday: "text-muted-foreground rounded-md w-9 font-black text-[10px] uppercase text-center",
         week: "flex w-full mt-2",
-        day: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20", // Mantido relative para os carimbos
+        // Adicionado overflow-visible para permitir que o brilho do contorno VIP apareça
+        day: "h-9 w-9 text-center text-sm p-0 relative overflow-visible focus-within:relative focus-within:z-20", 
         day_button: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-accent/10 hover:text-accent relative z-10" // Adicionado z-10 para ficar abaixo do carimbo se necessário, ou z-40 no carimbo
+          "h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-accent/10 hover:text-accent relative z-10"
         ),
         range_end: "day-range-end",
         selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",

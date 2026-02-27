@@ -81,9 +81,10 @@ function SubjectDetailsModal({ subjectName, stats }: { subjectName: string, stat
         active: (date: Date) => activeDays.has(format(date, 'yyyy-MM-dd')),
     };
 
-    // Estilo "Contorno VIP" - Dourado, Brilhante e com Sombra
+    // Estilo "Contorno VIP" - Dourado, Brilhante e com Sombra. 
+    // CRITICAL: before e after PRECISAM de content-[''] para renderizar no Tailwind.
     const modifiersClassNames = {
-        active: "relative z-20 before:absolute before:inset-0 before:bg-accent/10 before:rounded-full before:z-0 after:absolute after:inset-0 after:rounded-full after:border-2 after:border-accent after:shadow-[0_0_15px_rgba(197,148,40,0.5)] after:z-30 after:pointer-events-none"
+        active: "relative z-20 before:content-[''] before:absolute before:inset-0 before:bg-accent/10 before:rounded-full before:z-0 after:content-[''] after:absolute after:inset-[-2px] after:rounded-full after:border-2 after:border-accent after:shadow-[0_0_15px_rgba(197,148,40,0.5)] after:z-30 after:pointer-events-none"
     };
 
     const accuracy = calculatePercentage(stats.correct, stats.answered);
