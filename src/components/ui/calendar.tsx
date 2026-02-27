@@ -12,6 +12,7 @@ export type CalendarProps = React.ComponentProps<typeof DayPicker>
 /**
  * Componente de Calendário otimizado para React Day Picker v9.
  * Ajustado para garantir que a grade de dias e os carimbos visuais (Contorno VIP) funcionem corretamente.
+ * Adicionado suporte para overflow-visible permitindo brilhos e efeitos fora da célula.
  */
 function Calendar({
   className,
@@ -41,7 +42,7 @@ function Calendar({
         weekdays: "flex",
         weekday: "text-muted-foreground rounded-md w-9 font-black text-[10px] uppercase text-center",
         week: "flex w-full mt-2",
-        // Adicionado overflow-visible para permitir que o brilho do contorno VIP apareça
+        // Aumentado z-index e garantido overflow visible para o brilho do anel VIP
         day: "h-9 w-9 text-center text-sm p-0 relative overflow-visible focus-within:relative focus-within:z-20", 
         day_button: cn(
           buttonVariants({ variant: "ghost" }),

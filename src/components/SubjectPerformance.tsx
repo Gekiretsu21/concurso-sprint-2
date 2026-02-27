@@ -4,7 +4,7 @@ import { useUser, useDoc, useFirebase, useMemoFirebase, useCollection } from '@/
 import { doc, collection, query, where, orderBy, Timestamp } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from './ui/skeleton';
-import { BookOpen, PieChart, Target, Zap, Award, History, Calendar as CalendarIcon, Activity, ChevronRight } from 'lucide-react';
+import { BookOpen, PieChart, Target, Zap, Award, History, Calendar as CalendarIcon, Activity, ChevronRight, Trophy, TrendingUp, Sparkles } from 'lucide-react';
 import { Progress } from './ui/progress';
 import { calculatePercentage } from '@/lib/gamification';
 import { cn } from '@/lib/utils';
@@ -33,26 +33,30 @@ interface Attempt {
     batchCorrect?: number;
 }
 
+/**
+ * Modal de Detalhes Modernizado - O "Raio-X" de Performance.
+ * Focado em UX de alto nível, utilizando calendários VIP e timelines interativas.
+ */
 function SubjectDetailsModal({ subjectName, stats }: { subjectName: string, stats: any }) {
     const { user } = useUser();
     const { firestore } = useFirebase();
     
-    // Lista de variações de nomes de matérias para garantir que a busca encontre registros com ou sem acento
+    // Normalização robusta para busca de rastro histórico
     const subjectVariations = useMemo(() => {
         if (!subjectName) return [];
-        const base = subjectName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const base = subjectName.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         
-        if (base === 'lingua portuguesa') return ['Língua Portuguesa', 'Lingua Portuguesa'];
-        if (base === 'legislacao juridica') return ['Legislação Jurídica', 'Legislacao Juridica'];
-        if (base === 'legislacao institucional') return ['Legislação Institucional', 'Legislacao Institucional'];
-        if (base === 'raciocinio logico') return ['Raciocínio Lógico', 'Raciocinio Logico'];
-        if (base === 'direito constitucional') return ['Direito Constitucional', 'Direito Constitucional'];
-        if (base === 'direito administrativo') return ['Direito Administrativo', 'Direito Administrativo'];
+        // Variações comuns para garantir 100% de precisão na marcação do calendário
+        const variants = [subjectName];
+        if (base === 'lingua portuguesa') variants.push('Língua Portuguesa', 'Lingua Portuguesa');
+        if (base === 'legislacao juridica') variants.push('Legislação Jurídica', 'Legislacao Juridica');
+        if (base === 'legislacao institucional') variants.push('Legislação Institucional', 'Legislacao Institucional');
+        if (base === 'raciocinio logico') variants.push('Raciocínio Lógico', 'Raciocinio Logico');
         
-        return [subjectName];
+        return Array.from(new Set(variants));
     }, [subjectName]);
 
-    // Busca todas as tentativas (individuais ou em lote) desta matéria específica usando as variações
+    // Busca em tempo real de todas as batalhas (tentativas) registradas nesta matéria
     const attemptsQuery = useMemoFirebase(() => {
         if (!firestore || !user || subjectVariations.length === 0) return null;
         return query(
@@ -64,7 +68,7 @@ function SubjectDetailsModal({ subjectName, stats }: { subjectName: string, stat
 
     const { data: attempts, isLoading } = useCollection<Attempt>(attemptsQuery);
 
-    // Mapeia os dias em que houve qualquer tipo de atividade registrada
+    // Identifica os dias de glória para o calendário
     const activeDays = useMemo(() => {
         if (!attempts) return new Set<string>();
         const days = new Set<string>();
@@ -76,137 +80,154 @@ function SubjectDetailsModal({ subjectName, stats }: { subjectName: string, stat
         return days;
     }, [attempts]);
 
-    // Modificadores para o Contorno VIP no calendário
+    const accuracy = calculatePercentage(stats.correct, stats.answered);
+
+    // Modificadores de estilo para o Contorno VIP do calendário
     const modifiers = {
         active: (date: Date) => activeDays.has(format(date, 'yyyy-MM-dd')),
     };
 
-    // Estilo "Contorno VIP" - Dourado, Brilhante e com Sombra. 
-    // CRITICAL: before e after PRECISAM de content-[''] para renderizar no Tailwind.
+    // Estilização Ultra-Moderna para o Contorno VIP
     const modifiersClassNames = {
-        active: "relative z-20 before:content-[''] before:absolute before:inset-0 before:bg-accent/10 before:rounded-full before:z-0 after:content-[''] after:absolute after:inset-[-2px] after:rounded-full after:border-2 after:border-accent after:shadow-[0_0_15px_rgba(197,148,40,0.5)] after:z-30 after:pointer-events-none"
+        active: "relative z-20 before:content-[''] before:absolute before:inset-0 before:bg-accent/15 before:rounded-full before:z-0 after:content-[''] after:absolute after:inset-[-2px] after:rounded-full after:border-2 after:border-accent after:shadow-[0_0_12px_rgba(197,148,40,0.6)] after:z-30 after:pointer-events-none after:animate-pulse"
     };
 
-    const accuracy = calculatePercentage(stats.correct, stats.answered);
-
     return (
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col p-0 border-none shadow-2xl">
-            <DialogHeader className="p-6 pb-4 bg-slate-950 text-white shrink-0 relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
-                    <Activity className="h-32 w-32 -rotate-12" />
+        <DialogContent className="sm:max-w-[750px] max-h-[92vh] overflow-hidden flex flex-col p-0 border-none shadow-[0_32px_64px_-12px_rgba(0,0,0,0.3)] bg-white rounded-[2.5rem]">
+            {/* Header VIP com Glassmorphism */}
+            <DialogHeader className="p-8 bg-slate-950 text-white shrink-0 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                    <Trophy className="h-48 w-48 -rotate-12" />
                 </div>
-                <div className="flex items-center gap-4 relative z-10">
-                    <div className="p-3 bg-accent/20 rounded-2xl border border-accent/30 backdrop-blur-sm">
-                        <History className="h-6 w-6 text-accent" />
+                <div className="flex items-center gap-6 relative z-10">
+                    <div className="relative group">
+                        <div className="absolute inset-0 bg-accent rounded-[1.5rem] blur-xl opacity-20 group-hover:opacity-40 transition-opacity" />
+                        <div className="relative p-4 bg-gradient-to-br from-slate-800 to-slate-900 rounded-[1.5rem] border border-white/10 shadow-2xl">
+                            <BookOpen className="h-8 w-8 text-accent" />
+                        </div>
                     </div>
-                    <div>
-                        <DialogTitle className="text-2xl font-black uppercase tracking-tighter italic leading-none mb-1">
-                            Raio-X: {subjectName}
+                    <div className="space-y-1">
+                        <DialogTitle className="text-3xl font-black uppercase tracking-tight italic leading-none">
+                            {subjectName}
                         </DialogTitle>
-                        <DialogDescription className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">
-                            Mapeamento tático de performance e constância
-                        </DialogDescription>
+                        <div className="flex items-center gap-2">
+                            <Sparkles className="h-3 w-3 text-accent fill-current" />
+                            <DialogDescription className="text-slate-400 text-[10px] font-black uppercase tracking-[0.25em]">
+                                Mapeamento Estratégico de Evolução
+                            </DialogDescription>
+                        </div>
                     </div>
                 </div>
             </DialogHeader>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-white">
-                {/* Painel de Estatísticas Rápidas */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="p-5 rounded-[1.5rem] bg-slate-50 border border-slate-100 shadow-sm flex flex-col items-center text-center group hover:border-accent/20 transition-colors">
-                        <span className="text-3xl font-black text-slate-950 mb-1">{stats.answered}</span>
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Questões Resolvidas</span>
+            <div className="flex-1 overflow-y-auto p-8 space-y-10 bg-slate-50/30">
+                {/* Dashboard de Métricas Críticas */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div className="p-6 rounded-[2rem] bg-white border border-slate-100 shadow-sm flex flex-col items-center text-center group hover:scale-[1.03] transition-all">
+                        <span className="text-sm font-black text-slate-400 uppercase tracking-widest mb-2">Batalhas</span>
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-4xl font-black text-slate-950">{stats.answered}</span>
+                            <span className="text-xs font-bold text-slate-400">Q</span>
+                        </div>
                     </div>
-                    <div className="p-5 rounded-[1.5rem] bg-emerald-50/50 border border-emerald-100 shadow-sm flex flex-col items-center text-center group hover:border-emerald-300 transition-colors">
-                        <span className="text-3xl font-black text-emerald-600 mb-1">{stats.correct}</span>
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Acertos Totais</span>
+                    <div className="p-6 rounded-[2rem] bg-emerald-50/30 border border-emerald-100 shadow-sm flex flex-col items-center text-center group hover:scale-[1.03] transition-all">
+                        <span className="text-sm font-black text-emerald-600/60 uppercase tracking-widest mb-2">Vitórias</span>
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-4xl font-black text-emerald-600">{stats.correct}</span>
+                            <span className="text-xs font-bold text-emerald-400">Q</span>
+                        </div>
                     </div>
                     <div className={cn(
-                        "p-5 rounded-[1.5rem] border shadow-sm flex flex-col items-center text-center group transition-colors",
-                        accuracy >= 80 ? 'bg-emerald-50 border-emerald-100 hover:border-emerald-300' : 
-                        accuracy >= 60 ? 'bg-amber-50 border-amber-100 hover:border-accent/30' : 
-                        'bg-red-50 border-red-100 hover:border-red-300'
+                        "p-6 rounded-[2rem] border shadow-md flex flex-col items-center text-center group hover:scale-[1.03] transition-all",
+                        accuracy >= 80 ? 'bg-emerald-600 text-white border-none' : 
+                        accuracy >= 60 ? 'bg-accent text-white border-none' : 
+                        'bg-destructive text-white border-none'
                     )}>
-                        <span className={cn(
-                            "text-3xl font-black mb-1",
-                            accuracy >= 80 ? 'text-emerald-700' : accuracy >= 60 ? 'text-amber-700' : 'text-red-700'
-                        )}>{accuracy.toFixed(0)}%</span>
-                        <span className="text-[9px] font-black uppercase tracking-widest opacity-60">Precisão Tática</span>
+                        <span className="text-sm font-black uppercase tracking-widest mb-2 opacity-80">Precisão</span>
+                        <span className="text-4xl font-black">{accuracy.toFixed(0)}%</span>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Seção do Calendário com Contorno VIP */}
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-2 px-1">
-                            <CalendarIcon className="h-4 w-4 text-accent" />
-                            <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-950">Mapa de Constância</h4>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                    {/* Seção Calendário VIP */}
+                    <div className="space-y-5">
+                        <div className="flex items-center justify-between px-2">
+                            <div className="flex items-center gap-2">
+                                <CalendarIcon className="h-4 w-4 text-accent" />
+                                <h4 className="font-black text-[11px] uppercase tracking-[0.2em] text-slate-950">Mapa de Constância</h4>
+                            </div>
+                            <Badge variant="outline" className="bg-white border-slate-200 text-[9px] font-black">{activeDays.size} DIAS ATIVOS</Badge>
                         </div>
-                        <div className="p-4 rounded-[2rem] border-2 border-slate-50 bg-slate-50/30 flex justify-center shadow-inner relative overflow-hidden">
+                        <div className="p-6 rounded-[2.5rem] border-2 border-white bg-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] flex justify-center relative overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-tr from-accent/5 via-transparent to-transparent opacity-50" />
                             <Calendar
                                 mode="single"
                                 modifiers={modifiers}
                                 modifiersClassNames={modifiersClassNames}
-                                className="rounded-md scale-95 sm:scale-100"
+                                className="rounded-md scale-100 z-10"
                                 locale={ptBR}
                             />
                         </div>
-                        <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-slate-950 text-[9px] font-black text-white uppercase tracking-widest border border-slate-800 shadow-xl">
-                            <div className="h-3 w-3 rounded-full border-2 border-accent shadow-[0_0_5px_rgba(197,148,40,0.8)]" />
-                            <span>Dias com atividade (Registro VIP)</span>
+                        <div className="flex items-center justify-center gap-3 p-4 rounded-2xl bg-slate-900 text-[10px] font-bold text-white uppercase tracking-widest border-b-4 border-slate-950 shadow-xl">
+                            <div className="h-3.5 w-3.5 rounded-full border-2 border-accent animate-pulse shadow-[0_0_8px_rgba(197,148,40,1)]" />
+                            <span>Contorno VIP: Dia com Atividade</span>
                         </div>
                     </div>
 
-                    {/* Timeline Detalhada das Batalhas */}
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-2 px-1">
-                            <Activity className="h-4 w-4 text-accent" />
-                            <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-950">Histórico de Batalhas</h4>
+                    {/* Timeline de Batalhas Modernizada */}
+                    <div className="space-y-5">
+                        <div className="flex items-center gap-2 px-2">
+                            <TrendingUp className="h-4 w-4 text-accent" />
+                            <h4 className="font-black text-[11px] uppercase tracking-[0.2em] text-slate-950">Registro de Batalhas</h4>
                         </div>
-                        <ScrollArea className="h-[320px] rounded-[2rem] border-2 border-slate-50 bg-slate-50/20 p-4 shadow-inner">
+                        <ScrollArea className="h-[360px] rounded-[2.5rem] border-2 border-white bg-slate-50/50 p-5 shadow-inner">
                             {isLoading ? (
-                                <div className="space-y-3">
-                                    {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-2xl" />)}
+                                <div className="space-y-4">
+                                    {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-[1.5rem]" />)}
                                 </div>
                             ) : attempts && attempts.length > 0 ? (
-                                <div className="space-y-3 pr-2">
+                                <div className="space-y-4 pr-3">
                                     {attempts.map((a) => (
-                                        <div key={a.id} className="flex items-center justify-between p-4 rounded-2xl bg-white border border-slate-100 shadow-sm group hover:border-accent/20 transition-all">
-                                            <div className="flex items-center gap-3">
-                                                <div className={cn(
-                                                    "h-2.5 w-2.5 rounded-full shadow-sm animate-pulse",
-                                                    a.isCorrect ? "bg-emerald-500 shadow-emerald-200" : "bg-destructive shadow-red-200"
-                                                )} />
-                                                <div className="flex flex-col">
-                                                    <span className="text-[10px] font-black text-slate-900 uppercase">
-                                                        {a.timestamp ? format(a.timestamp.toDate(), "dd 'de' MMMM", { locale: ptBR }) : 'Recentemente'}
-                                                    </span>
-                                                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
-                                                        {a.isBatch ? `Registro de ${a.batchTotal} questões` : 'Questão individual'}
-                                                    </span>
+                                        <div key={a.id} className="relative group p-4 rounded-[1.5rem] bg-white border border-slate-100 shadow-sm hover:shadow-md hover:border-accent/30 transition-all duration-300">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <div className={cn(
+                                                        "h-10 w-10 rounded-xl flex items-center justify-center shadow-sm transition-transform group-hover:scale-110",
+                                                        a.isCorrect ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
+                                                    )}>
+                                                        {a.isCorrect ? <Zap className="h-5 w-5 fill-current" /> : <Activity className="h-5 w-5" />}
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[11px] font-black text-slate-900 uppercase">
+                                                            {a.timestamp ? format(a.timestamp.toDate(), "dd 'de' MMMM", { locale: ptBR }) : 'Recentemente'}
+                                                        </span>
+                                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                                            {a.isBatch ? `Lote de ${a.batchTotal} questões` : 'Resolução Individual'}
+                                                        </span>
+                                                    </div>
                                                 </div>
+                                                <Badge className={cn(
+                                                    "text-[9px] font-black px-3 py-1 rounded-full border-none shadow-sm",
+                                                    a.isCorrect ? "bg-emerald-500 text-white" : "bg-red-500 text-white"
+                                                )}>
+                                                    {a.isCorrect ? "VITORIA" : "DERROTA"}
+                                                </Badge>
                                             </div>
-                                            <Badge className={cn(
-                                                "text-[8px] font-black px-2.5 py-0.5 rounded-lg border-none",
-                                                a.isCorrect ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
-                                            )}>
-                                                {a.isCorrect ? "VITORIA" : "DERROTA"}
-                                            </Badge>
                                         </div>
                                     ))}
                                 </div>
                             ) : (
-                                <div className="flex flex-col items-center justify-center py-20 text-center space-y-2 opacity-40">
-                                    <BookOpen className="h-8 w-8" />
-                                    <p className="text-[10px] font-black uppercase tracking-widest">Sem registros detalhados</p>
+                                <div className="flex flex-col items-center justify-center py-24 text-center space-y-4 opacity-30">
+                                    <Sparkles className="h-12 w-12 text-slate-400" />
+                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] max-w-[150px]">Prepare-se para registrar sua primeira vitória</p>
                                 </div>
                             )}
                         </ScrollArea>
                     </div>
                 </div>
             </div>
-            <div className="p-4 bg-slate-50 border-t text-center shrink-0">
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.3em]">Consistência Vence Talento • MentorIA Academy</p>
+            <div className="p-5 bg-slate-50 border-t text-center shrink-0">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em]">MENTORIA ACADEMY • A CONSTÂNCIA VENCE O TALENTO</p>
             </div>
         </DialogContent>
     );
@@ -227,7 +248,7 @@ export function SubjectPerformance() {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-40 w-full rounded-[2rem]" />
+          <Skeleton key={i} className="h-48 w-full rounded-[2.5rem]" />
         ))}
       </div>
     );
@@ -238,14 +259,14 @@ export function SubjectPerformance() {
 
   if (activeSubjects.length === 0) {
     return (
-      <Card className="border-2 border-dashed border-slate-200 bg-slate-50/50 rounded-[2.5rem] overflow-hidden">
-        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="bg-white p-6 rounded-full shadow-xl mb-6">
-            <BookOpen className="h-12 w-12 text-slate-300" />
+      <Card className="border-2 border-dashed border-slate-200 bg-slate-50/50 rounded-[3rem] overflow-hidden group">
+        <CardContent className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="bg-white p-8 rounded-full shadow-2xl mb-8 group-hover:scale-110 transition-transform">
+            <BookOpen className="h-14 w-12 text-slate-300" />
           </div>
-          <h3 className="text-2xl font-black text-slate-950 uppercase tracking-tight">Maestria por Disciplina</h3>
-          <p className="text-sm text-slate-500 max-w-xs mt-2 font-medium">
-            Seu raio-x de evolução aparecerá aqui assim que você registrar suas primeiras batalhas de hoje.
+          <h3 className="text-3xl font-black text-slate-950 uppercase tracking-tight italic">Maestria por Disciplina</h3>
+          <p className="text-sm text-slate-500 max-w-sm mt-3 font-medium leading-relaxed">
+            Seu mapeamento tático de evolução por matéria aparecerá aqui assim que você registrar sua primeira atividade hoje.
           </p>
         </CardContent>
       </Card>
@@ -253,89 +274,99 @@ export function SubjectPerformance() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between px-2">
-        <div className="flex items-center gap-3">
-          <div className="bg-slate-950 p-2 rounded-xl shadow-lg">
-            <PieChart className="h-5 w-5 text-accent" />
+    <div className="space-y-8">
+      <div className="flex items-center justify-between px-4">
+        <div className="flex items-center gap-4">
+          <div className="bg-slate-950 p-3 rounded-2xl shadow-xl border-b-4 border-slate-800">
+            <PieChart className="h-6 w-6 text-accent" />
           </div>
-          <h2 className="text-2xl font-black text-slate-950 uppercase tracking-tighter italic">Domínio de Matérias</h2>
+          <div>
+            <h2 className="text-2xl font-black text-slate-950 uppercase tracking-tighter italic leading-none">Domínio de Matérias</h2>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Status individual por disciplina</p>
+          </div>
         </div>
-        <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-100 shadow-sm">
-          <Zap className="h-3 w-3 text-accent fill-current" />
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Atualizado em tempo real</span>
+        <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-100 shadow-lg">
+          <Sparkles className="h-3 w-3 text-accent fill-current animate-pulse" />
+          <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Sincronização Ativa</span>
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {activeSubjects.map(([name, stats]: [string, any]) => {
           const percent = calculatePercentage(stats.correct, stats.answered);
           
           return (
             <Card 
               key={name} 
-              className="group relative border-2 border-slate-100 bg-white rounded-[2rem] shadow-xl hover:shadow-2xl hover:border-accent/30 transition-all duration-500 overflow-hidden"
+              className="group relative border-2 border-slate-100 bg-white rounded-[2.5rem] shadow-xl hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] hover:border-accent/40 transition-all duration-500 overflow-hidden"
             >
-              <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity pointer-events-none">
+              {/* Overlay decorativa de fundo */}
+              <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity pointer-events-none scale-150">
                 <Award className="h-24 w-24 -rotate-12" />
               </div>
 
-              <CardContent className="p-6 space-y-5">
+              <CardContent className="p-8 space-y-6 relative z-10">
                 <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-1">
-                    <h4 className="font-black text-base text-slate-900 leading-tight uppercase tracking-tight line-clamp-2">
+                  <div className="space-y-2">
+                    <h4 className="font-black text-lg text-slate-950 leading-tight uppercase tracking-tight line-clamp-2 drop-shadow-sm">
                       {name}
                     </h4>
-                    <div className="flex items-center gap-1.5">
-                      <Target className="h-3 w-3 text-slate-400" />
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                        Precisão Tática
-                      </span>
+                    <div className="flex items-center gap-2">
+                        <div className={cn(
+                            "h-2 w-2 rounded-full animate-pulse",
+                            percent >= 80 ? "bg-emerald-500" : percent >= 60 ? "bg-accent" : "bg-red-500"
+                        )} />
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                            Zona de Performance
+                        </span>
                     </div>
                   </div>
                   
                   <div className={cn(
-                    "shrink-0 flex flex-col items-center justify-center h-14 w-14 rounded-2xl border-2 shadow-inner transition-transform group-hover:scale-110",
+                    "shrink-0 flex flex-col items-center justify-center h-16 w-16 rounded-[1.25rem] border-4 shadow-xl transition-all duration-500 group-hover:rotate-3 group-hover:scale-110",
                     percent >= 80 ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 
                     percent >= 60 ? 'bg-amber-50 border-amber-100 text-amber-700' : 
                     'bg-red-50 border-red-100 text-red-700'
                   )}>
-                    <span className="text-lg font-black leading-none">{percent.toFixed(0)}%</span>
+                    <span className="text-xl font-black leading-none italic">{percent.toFixed(0)}%</span>
                   </div>
                 </div>
                 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <div className="flex justify-between items-end">
-                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
-                      Progresso na Matéria
-                    </span>
-                    <span className="text-xs font-bold text-slate-900">
-                      {stats.correct} / <span className="text-slate-400">{stats.answered} questões</span>
+                    <div className="flex items-center gap-1.5">
+                        <Target className="h-3 w-3 text-slate-400" />
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
+                            Maestria Tática
+                        </span>
+                    </div>
+                    <span className="text-xs font-black text-slate-900 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100">
+                      {stats.correct} / <span className="text-slate-400">{stats.answered}</span>
                     </span>
                   </div>
                   
-                  <div className="relative h-3 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner">
+                  <div className="relative h-4 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner p-1">
                     <div 
                       className={cn(
-                        "h-full transition-all duration-1000 ease-out rounded-full",
-                        percent >= 80 ? 'bg-emerald-500' : 
-                        percent >= 60 ? 'bg-accent' : 
-                        'bg-destructive'
+                        "h-full transition-all duration-[1.5s] ease-[cubic-bezier(0.34,1.56,0.64,1)] rounded-full relative",
+                        percent >= 80 ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]' : 
+                        percent >= 60 ? 'bg-accent shadow-[0_0_10px_rgba(197,148,40,0.4)]' : 
+                        'bg-destructive shadow-[0_0_10px_rgba(239,68,68,0.4)]'
                       )} 
                       style={{ width: `${percent}%` }}
                     >
-                      <div className="absolute inset-0 bg-white/20 animate-[pulse_2s_infinite] mix-blend-overlay" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 animate-[shimmer_2s_infinite]" />
                     </div>
                   </div>
                 </div>
 
                 <Dialog>
                     <DialogTrigger asChild>
-                        <button className="w-full pt-1 flex items-center justify-between opacity-60 group-hover:opacity-100 transition-all duration-300 hover:scale-[1.02]">
+                        <button className="w-full pt-2 flex items-center justify-between opacity-40 group-hover:opacity-100 transition-all duration-500 group-hover:translate-y-[-2px]">
                             <div className="h-px flex-1 bg-slate-100" />
-                            <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-50 border border-slate-100 group-hover:bg-accent/10 group-hover:border-accent/20 transition-colors">
-                                <span className="text-[9px] font-black text-slate-400 group-hover:text-accent uppercase tracking-[0.2em]">Ver Detalhes</span>
-                                <ChevronRight className="h-3 w-3 text-slate-300 group-hover:text-accent" />
+                            <div className="flex items-center gap-3 px-6 py-2 rounded-2xl bg-white border border-slate-200 shadow-sm group-hover:bg-accent group-hover:border-accent group-hover:text-white transition-all group-hover:shadow-lg group-hover:shadow-accent/20">
+                                <span className="text-[10px] font-black uppercase tracking-[0.25em]">Ver Raio-X</span>
+                                <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                             </div>
                             <div className="h-px flex-1 bg-slate-100" />
                         </button>
@@ -347,6 +378,12 @@ export function SubjectPerformance() {
           );
         })}
       </div>
+      <style jsx global>{`
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+      `}</style>
     </div>
   );
 }
