@@ -219,67 +219,77 @@ export default function StudentPage() {
             <p className="text-slate-600 font-medium">Fundamentos essenciais para iniciar sua jornada.</p>
         </div>
         
-        <Card className="border-accent/10 shadow-xl bg-white">
-          <CardContent className="p-6">
-            <div className="flex flex-col gap-4">
-                <Button variant="outline" className="group w-full justify-start h-auto py-4 px-5 text-left border-accent/20 hover:bg-accent/10 hover:border-accent/40 transition-all" asChild>
-                <Link href="https://youtu.be/1XfBaufahtM" target="_blank">
-                    <div className="flex items-center gap-4">
-                    <div className="bg-accent/10 p-3 rounded-full group-hover:bg-accent/20 transition-colors">
-                        <PlayCircle className="h-8 w-8 text-accent" />
-                    </div>
-                    <div>
-                        <p className="font-black text-slate-900 leading-tight">Mindset da Aprovação</p>
-                        <p className="text-sm text-slate-500 mt-1">Prepare sua mente para a guerra.</p>
-                    </div>
-                    </div>
-                </Link>
-                </Button>
+        <div className="relative rounded-[1.5rem] border-[0.75px] border-border p-1">
+          <GlowingEffect
+            spread={40}
+            glow={true}
+            disabled={false}
+            proximity={64}
+            inactiveZone={0.01}
+            borderWidth={3}
+          />
+          <Card className="relative z-10 border-none shadow-xl bg-white overflow-hidden">
+            <CardContent className="p-6">
+              <div className="flex flex-col gap-4">
+                  <Button variant="outline" className="group w-full justify-start h-auto py-4 px-5 text-left border-accent/20 hover:bg-accent/10 hover:border-accent/40 transition-all" asChild>
+                  <Link href="https://youtu.be/1XfBaufahtM" target="_blank">
+                      <div className="flex items-center gap-4">
+                      <div className="bg-accent/10 p-3 rounded-full group-hover:bg-accent/20 transition-colors">
+                          <PlayCircle className="h-8 w-8 text-accent" />
+                      </div>
+                      <div>
+                          <p className="font-black text-slate-900 leading-tight">Mindset da Aprovação</p>
+                          <p className="text-sm text-slate-500 mt-1">Prepare sua mente para a guerra.</p>
+                      </div>
+                      </div>
+                  </Link>
+                  </Button>
 
-                <Button variant="outline" className="group w-full justify-start h-auto py-4 px-5 text-left border-accent/20 hover:bg-accent/10 hover:border-accent/40 transition-all" asChild>
-                <Link href="https://youtu.be/yGg5ansZ8nM" target="_blank">
-                    <div className="flex items-center gap-4">
-                    <div className="bg-accent/10 p-3 rounded-full group-hover:bg-accent/20 transition-colors">
-                        <PlayCircle className="h-8 w-8 text-accent" />
-                    </div>
-                    <div>
-                        <p className="font-black text-slate-900 leading-tight">Onboard MentorIA</p>
-                        <p className="text-sm text-slate-500 mt-1">Conheça cada detalhe da plataforma.</p>
-                    </div>
-                    </div>
-                </Link>
-                </Button>
+                  <Button variant="outline" className="group w-full justify-start h-auto py-4 px-5 text-left border-accent/20 hover:bg-accent/10 hover:border-accent/40 transition-all" asChild>
+                  <Link href="https://youtu.be/yGg5ansZ8nM" target="_blank">
+                      <div className="flex items-center gap-4">
+                      <div className="bg-accent/10 p-3 rounded-full group-hover:bg-accent/20 transition-colors">
+                          <PlayCircle className="h-8 w-8 text-accent" />
+                      </div>
+                      <div>
+                          <p className="font-black text-slate-900 leading-tight">Onboard MentorIA</p>
+                          <p className="text-sm text-slate-500 mt-1">Conheça cada detalhe da plataforma.</p>
+                      </div>
+                      </div>
+                  </Link>
+                  </Button>
 
-                <Button variant="outline" className="group w-full justify-start h-auto py-4 px-5 text-left border-accent/20 hover:bg-accent/10 hover:border-accent/40 transition-all" asChild>
-                <Link href="https://youtu.be/EjMubrYSuzo" target="_blank">
-                    <div className="flex items-center gap-4">
-                    <div className="bg-accent/10 p-3 rounded-full group-hover:bg-accent/20 transition-colors">
-                        <PlayCircle className="h-8 w-8 text-accent" />
-                    </div>
-                    <div>
-                        <p className="font-black text-slate-900 leading-tight">Seu Cronograma</p>
-                        <p className="text-sm text-slate-500 mt-1">Aprenda a executar o seu plano tático.</p>
-                    </div>
-                    </div>
-                </Link>
-                </Button>
+                  <Button variant="outline" className="group w-full justify-start h-auto py-4 px-5 text-left border-accent/20 hover:bg-accent/10 hover:border-accent/40 transition-all" asChild>
+                  <Link href="https://youtu.be/EjMubrYSuzo" target="_blank">
+                      <div className="flex items-center gap-4">
+                      <div className="bg-accent/10 p-3 rounded-full group-hover:bg-accent/20 transition-colors">
+                          <PlayCircle className="h-8 w-8 text-accent" />
+                      </div>
+                      <div>
+                          <p className="font-black text-slate-900 leading-tight">Seu Cronograma</p>
+                          <p className="text-sm text-slate-500 mt-1">Aprenda a executar o seu plano tático.</p>
+                      </div>
+                      </div>
+                  </Link>
+                  </Button>
 
-                <Button variant="outline" className="group w-full justify-start h-auto py-4 px-5 text-left border-accent/20 hover:bg-accent/10 hover:border-accent/40 transition-all" asChild>
-                <Link href="https://youtu.be/ybnbcWxMSok" target="_blank">
-                    <div className="flex items-center gap-4">
-                    <div className="bg-accent/10 p-3 rounded-full group-hover:bg-accent/20 transition-colors">
-                        <PlayCircle className="h-8 w-8 text-accent" />
-                    </div>
-                    <div>
-                        <p className="font-black text-slate-900 leading-tight">SUPER STRIKE</p>
-                        <p className="text-sm text-slate-500 mt-1">O diferencial que te coloca na frente.</p>
-                    </div>
-                    </div>
-                </Link>
-                </Button>
-            </div>
-          </CardContent>
-        </Card>
+                  <Button variant="outline" className="group w-full justify-start h-auto py-4 px-5 text-left border-accent/20 hover:bg-accent/10 hover:border-accent/40 transition-all" asChild>
+                  <Link href="https://youtu.be/ybnbcWxMSok" target="_blank">
+                      <div className="flex items-center gap-4">
+                      <div className="bg-accent/10 p-3 rounded-full group-hover:bg-accent/20 transition-colors">
+                          <PlayCircle className="h-8 w-8 text-accent" />
+                      </div>
+                      <div>
+                          <p className="font-black text-slate-900 leading-tight">SUPER STRIKE</p>
+                          <p className="text-sm text-slate-500 mt-1">O diferencial que te coloca na frente.</p>
+                      </div>
+                      </div>
+                  </Link>
+                  </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </section>
 
       <footer className="text-center py-12 border-t border-accent/10 mt-8">
