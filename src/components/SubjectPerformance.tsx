@@ -63,13 +63,8 @@ function SubjectDetailsModal({ subjectName, stats }: { subjectName: string, stat
         active: (date: Date) => activeDays.has(format(date, 'yyyy-MM-dd')),
     };
 
-    const modifiersStyles = {
-        active: {
-            backgroundColor: 'hsl(var(--accent))',
-            color: 'white',
-            fontWeight: 'bold',
-            borderRadius: '50%',
-        }
+    const modifiersClassNames = {
+        active: "relative font-bold after:content-['✕'] after:absolute after:inset-0 after:flex after:items-center after:justify-center after:text-red-500 after:font-black after:text-2xl after:opacity-60 after:pointer-events-none"
     };
 
     const accuracy = calculatePercentage(stats.correct, stats.answered);
@@ -131,13 +126,13 @@ function SubjectDetailsModal({ subjectName, stats }: { subjectName: string, stat
                             <Calendar
                                 mode="single"
                                 modifiers={modifiers}
-                                modifiersStyles={modifiersStyles}
+                                modifiersClassNames={modifiersClassNames}
                                 className="rounded-md"
                                 locale={ptBR}
                             />
                         </div>
                         <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-slate-50 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                            <div className="h-2 w-2 rounded-full bg-accent" />
+                            <span className="text-red-500 font-black text-xs">✕</span>
                             <span>Dias com atividade registrada</span>
                         </div>
                     </div>
