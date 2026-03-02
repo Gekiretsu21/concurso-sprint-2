@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, ChevronLeft, ChevronRight, Loader2, RefreshCw, ThumbsDown, ThumbsUp, X } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Loader2, RefreshCw, ThumbsDown, ThumbsUp, X, Sparkles, Layers, BookOpen } from 'lucide-react';
 import { useState, useMemo, useEffect, useCallback, Suspense } from 'react';
 import './flashcard.css';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { GlowingEffect } from '@/components/ui/glowing-effect';
 
 interface Flashcard {
   id: string;
@@ -242,7 +243,7 @@ function FlashcardsContent() {
       flashcardsToStudy = allFetchedCards;
 
     } else {
-      const constraints: QueryConstraint[] = [];
+      const constraints: any[] = [];
       const subjectToFilter = options.subject || filterSubject;
       const topicsToFilter = options.topics || selectedTopics;
       const targetRoleToFilter = options.targetRole || filterTargetRole;
@@ -293,9 +294,13 @@ function FlashcardsContent() {
 
   if (!allFlashcards || allFlashcards.length === 0) {
     return (
-      <div className="flex flex-col gap-8 items-center text-center">
-        <header>
-          <h1 className="text-3xl font-bold tracking-tight">Flashcards</h1>
+      <div className="flex flex-col gap-8 items-center text-center max-w-5xl mx-auto pb-20">
+        <header className="flex flex-col gap-2 items-center">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-accent animate-pulse" />
+            <span className="text-xs font-bold tracking-widest text-accent uppercase">Módulo de Revisão</span>
+          </div>
+          <h1 className="text-4xl font-extrabold tracking-tight text-slate-950">Flashcards</h1>
         </header>
         <Card className="flex flex-col items-center justify-center h-40 w-full max-w-2xl border-dashed">
           <CardContent className="text-center p-6">
@@ -310,109 +315,141 @@ function FlashcardsContent() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <header>
-        <h1 className="text-3xl font-bold tracking-tight">Flashcards</h1>
-        <p className="text-muted-foreground">Filtre seus flashcards ou comece uma sessão de estudo.</p>
+    <div className="flex flex-col gap-8 max-w-5xl mx-auto pb-20">
+      <header className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-accent animate-pulse" />
+          <span className="text-xs font-bold tracking-widest text-accent uppercase">Módulo de Revisão</span>
+        </div>
+        <h1 className="text-4xl font-extrabold tracking-tight text-slate-950">Flashcards</h1>
+        <p className="text-lg text-slate-700 max-w-3xl leading-relaxed">
+          Filtre seus flashcards ou comece uma sessão de estudo estruturada. A repetição espaçada é seu melhor aliado.
+        </p>
       </header>
 
       {view !== 'studying' && (
         <div className="space-y-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Estudo Focado</CardTitle>
-              <CardDescription>Filtre por matéria, assunto e cargo para aprender novos flashcards.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Select value={filterSubject} onValueChange={setFilterSubject}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Matéria" />
+          <div className="relative rounded-[1.5rem] border-[0.75px] border-border p-1">
+            <GlowingEffect
+              spread={40}
+              glow={true}
+              disabled={false}
+              proximity={64}
+              inactiveZone={0.01}
+              borderWidth={3}
+            />
+            <Card className="relative z-10 border-none shadow-xl bg-white overflow-hidden">
+              <CardHeader className="bg-slate-50/50 border-b pb-6 pt-6">
+                <CardTitle className="text-2xl flex items-center gap-2 text-slate-900">
+                  <Layers className="h-6 w-6 text-accent" /> Estudo Focado
+                </CardTitle>
+                <CardDescription className="text-slate-600">Filtre por matéria, assunto e cargo para aprender novos flashcards.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Select value={filterSubject} onValueChange={setFilterSubject}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Matéria" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas as Matérias</SelectItem>
+                      {filterOptions.subjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" disabled={filterSubject === 'all' && filterOptions.topics.length === 0} className="w-full justify-start font-normal truncate">
+                        {getTopicButtonLabel()}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56" align="start">
+                      <DropdownMenuLabel>Assuntos Disponíveis</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <ScrollArea className="h-72">
+                        {filterOptions.topics.map(topic => (
+                          <DropdownMenuCheckboxItem
+                            key={topic}
+                            checked={selectedTopics.includes(topic)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedTopics(prev => [...prev, topic]);
+                              } else {
+                                setSelectedTopics(prev => prev.filter(t => t !== topic));
+                              }
+                            }}
+                            onSelect={(e) => e.preventDefault()}
+                          >
+                            {topic}
+                          </DropdownMenuCheckboxItem>
+                        ))}
+                      </ScrollArea>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  <Select value={filterTargetRole} onValueChange={setFilterTargetRole} disabled={filterSubject === 'all' && filterOptions.targetRoles.length === 0}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Cargo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os Cargos</SelectItem>
+                      {filterOptions.targetRoles.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="pt-2">
+                  <Button onClick={() => startStudySession('all')} disabled={view === 'loading'} className="w-full md:w-auto bg-accent hover:bg-accent/90 text-accent-foreground font-bold shadow-lg shadow-accent/20">
+                    {view === 'loading' && studyMode === 'all' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Iniciar Estudo
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="relative rounded-[1.5rem] border-[0.75px] border-border p-1">
+            <GlowingEffect
+              spread={40}
+              glow={true}
+              disabled={false}
+              proximity={64}
+              inactiveZone={0.01}
+              borderWidth={3}
+            />
+            <Card className="relative z-10 border-none shadow-xl bg-white overflow-hidden">
+              <CardHeader className="bg-slate-50/50 border-b pb-6 pt-6">
+                <CardTitle className="text-2xl flex items-center gap-2 text-slate-900">
+                  <BookOpen className="h-6 w-6 text-accent" /> Revisão
+                </CardTitle>
+                <CardDescription className="text-slate-600">Revise os flashcards que você já estudou, filtrando por acertos ou erros.</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col sm:flex-row gap-4 items-start sm:items-center pt-6">
+                <Select value={reviewSubject} onValueChange={setReviewSubject} disabled={availableReviewSubjects.length === 0}>
+                  <SelectTrigger className="w-full sm:w-[240px]">
+                    <SelectValue placeholder="Filtrar por matéria" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todas as Matérias</SelectItem>
-                    {filterOptions.subjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    {availableReviewSubjects.map((s, index) => <SelectItem key={`${s}-${index}`} value={s}>{s}</SelectItem>)}
                   </SelectContent>
                 </Select>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" disabled={filterSubject === 'all' && filterOptions.topics.length === 0} className="w-full justify-start font-normal truncate">
-                      {getTopicButtonLabel()}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="start">
-                    <DropdownMenuLabel>Assuntos Disponíveis</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <ScrollArea className="h-72">
-                      {filterOptions.topics.map(topic => (
-                        <DropdownMenuCheckboxItem
-                          key={topic}
-                          checked={selectedTopics.includes(topic)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedTopics(prev => [...prev, topic]);
-                            } else {
-                              setSelectedTopics(prev => prev.filter(t => t !== topic));
-                            }
-                          }}
-                          onSelect={(e) => e.preventDefault()}
-                        >
-                          {topic}
-                        </DropdownMenuCheckboxItem>
-                      ))}
-                    </ScrollArea>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                <Select value={filterTargetRole} onValueChange={setFilterTargetRole} disabled={filterSubject === 'all' && filterOptions.targetRoles.length === 0}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Cargo" />
+                <Select value={reviewStatus} onValueChange={(value) => setReviewStatus(value as 'all' | 'correct' | 'incorrect')}>
+                  <SelectTrigger className="w-full sm:w-[240px]">
+                    <SelectValue placeholder="Filtrar por resultado" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos os Cargos</SelectItem>
-                    {filterOptions.targetRoles.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                    <SelectItem value="all">Todos os Meus Cartões</SelectItem>
+                    <SelectItem value="correct">Acertei</SelectItem>
+                    <SelectItem value="incorrect">Errei</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <Button onClick={() => startStudySession('all')} disabled={view === 'loading'}>
-                {view === 'loading' && studyMode === 'all' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Iniciar Estudo
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Revisão</CardTitle>
-              <CardDescription>Revise os flashcards que você já estudou, filtrando por acertos ou erros.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-              <Select value={reviewSubject} onValueChange={setReviewSubject} disabled={availableReviewSubjects.length === 0}>
-                <SelectTrigger className="w-full sm:w-[240px]">
-                  <SelectValue placeholder="Filtrar por matéria" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas as Matérias</SelectItem>
-                  {availableReviewSubjects.map((s, index) => <SelectItem key={`${s}-${index}`} value={s}>{s}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Select value={reviewStatus} onValueChange={(value) => setReviewStatus(value as 'all' | 'correct' | 'incorrect')}>
-                <SelectTrigger className="w-full sm:w-[240px]">
-                  <SelectValue placeholder="Filtrar por resultado" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os Meus Cartões</SelectItem>
-                  <SelectItem value="correct">Acertei</SelectItem>
-                  <SelectItem value="incorrect">Errei</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button onClick={() => startStudySession('review', { reviewSubject, reviewStatus })} disabled={view === 'loading' || isLoadingProgress}>
-                {(view === 'loading' && studyMode === 'review') || isLoadingProgress ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-                Revisar
-              </Button>
-            </CardContent>
-          </Card>
+                <Button onClick={() => startStudySession('review', { reviewSubject, reviewStatus })} disabled={view === 'loading' || isLoadingProgress} className="w-full sm:w-auto bg-primary hover:bg-primary/90 font-bold shadow-md text-white">
+                  {(view === 'loading' && studyMode === 'review') || isLoadingProgress ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                  Revisar Cartões
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       )}
 
