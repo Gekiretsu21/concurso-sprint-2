@@ -24,10 +24,12 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Loader2, Sparkles, ClipboardList } from 'lucide-react';
+import { Loader2, Sparkles, ClipboardList, Search, ChevronDown, Check } from 'lucide-react';
 import { GlowingEffect } from '@/components/ui/glowing-effect';
+import { Input } from '@/components/ui/input';
 import { QuestionList } from '@/components/QuestionList';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -127,9 +129,15 @@ export default function QuestionsPage() {
     return Array.from(cargoSet).filter(Boolean).sort();
   }, [allQuestions, filterSubject]);
 
+  const [searchTopic, setSearchTopic] = useState('');
+  const [searchSubject, setSearchSubject] = useState('');
+  const [searchCargo, setSearchCargo] = useState('');
+
   useEffect(() => {
     setSelectedTopics([]);
     setFilterCargo('all');
+    setSearchTopic('');
+    setSearchCargo('');
   }, [filterSubject]);
 
   const handleFilterSubmit = () => {
@@ -162,6 +170,9 @@ export default function QuestionsPage() {
     return `${selectedTopics.length} assuntos selecionados`;
   };
 
+  const filteredTopics = availableTopics.filter(t => t.toLowerCase().includes(searchTopic.toLowerCase()));
+  const filteredSubjects = availableSubjects.filter(s => s.toLowerCase().includes(searchSubject.toLowerCase()));
+  const filteredCargos = availableCargos.filter(c => c.toLowerCase().includes(searchCargo.toLowerCase()));
 
   return (
     <div className="flex flex-col gap-8 max-w-5xl mx-auto pb-20">
@@ -196,37 +207,75 @@ export default function QuestionsPage() {
           </CardHeader>
           <CardContent className="pt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Select value={filterSubject} onValueChange={setFilterSubject}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Matéria" />
-                </SelectTrigger>
-                <SelectContent position="popper">
-                  <SelectItem value="all">Todas as Matérias</SelectItem>
-                  {isLoadingSubjects ? (
-                    <div className="flex items-center justify-center p-4">
-                      <Loader2 className="h-5 w-5 animate-spin" />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between font-normal truncate">
+                    <span className="truncate">{filterSubject === 'all' ? 'Todas as Matérias' : filterSubject}</span>
+                    <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-[300px]" align="start">
+                  <DropdownMenuLabel>Matérias</DropdownMenuLabel>
+                  <div className="p-2">
+                    <div className="relative">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Buscar matéria..."
+                        className="pl-8 h-9 text-xs"
+                        value={searchSubject}
+                        onChange={(e) => setSearchSubject(e.target.value)}
+                        onKeyDown={(e) => e.stopPropagation()}
+                      />
                     </div>
-                  ) : (
-                    availableSubjects.map(s => (
-                      <SelectItem key={s} value={s}>
-                        {s}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <ScrollArea className="h-72">
+                    <DropdownMenuItem onClick={() => setFilterSubject('all')} className="cursor-pointer">
+                      <span className="flex-1">Todas as Matérias</span>
+                      {filterSubject === 'all' && <Check className="h-4 w-4 text-accent" />}
+                    </DropdownMenuItem>
+                    {isLoadingSubjects ? (
+                      <div className="flex items-center justify-center p-4">
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : filteredSubjects.length > 0 ? (
+                      filteredSubjects.map(s => (
+                        <DropdownMenuItem key={s} onClick={() => setFilterSubject(s)} className="cursor-pointer">
+                          <span className="flex-1 truncate">{s}</span>
+                          {filterSubject === s && <Check className="h-4 w-4 text-accent shrink-0 ml-2" />}
+                        </DropdownMenuItem>
+                      ))
+                    ) : (
+                      <p className="p-2 text-xs text-muted-foreground">Nenhuma matéria encontrada.</p>
+                    )}
+                  </ScrollArea>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" disabled={filterSubject === 'all'} className="w-full justify-start font-normal truncate">
-                    {getTopicButtonLabel()}
+                  <Button variant="outline" disabled={filterSubject === 'all'} className="w-full justify-between font-normal truncate">
+                    <span className="truncate">{getTopicButtonLabel()}</span>
+                    <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="start">
                   <DropdownMenuLabel>Assuntos Disponíveis</DropdownMenuLabel>
+                  <div className="p-2">
+                    <div className="relative">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Buscar assunto..."
+                        className="pl-8 h-9 text-xs"
+                        value={searchTopic}
+                        onChange={(e) => setSearchTopic(e.target.value)}
+                        onKeyDown={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                  </div>
                   <DropdownMenuSeparator />
                   <ScrollArea className="h-72">
-                    {availableTopics.length > 0 ? availableTopics.map(topic => (
+                    {filteredTopics.length > 0 ? filteredTopics.map(topic => (
                       <DropdownMenuCheckboxItem
                         key={topic}
                         checked={selectedTopics.includes(topic)}
@@ -241,20 +290,51 @@ export default function QuestionsPage() {
                       >
                         {topic}
                       </DropdownMenuCheckboxItem>
-                    )) : <p className="p-2 text-xs text-muted-foreground">Selecione uma matéria primeiro.</p>}
+                    )) : <p className="p-2 text-xs text-muted-foreground">{availableTopics.length === 0 ? "Selecione uma matéria primeiro." : "Nenhum assunto encontrado."}</p>}
                   </ScrollArea>
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <Select value={filterCargo} onValueChange={setFilterCargo} disabled={availableCargos.length === 0}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Cargo" />
-                </SelectTrigger>
-                <SelectContent position="popper">
-                  <SelectItem value="all">Todos os Cargos</SelectItem>
-                  {availableCargos.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" disabled={availableCargos.length === 0} className="w-full justify-between font-normal truncate">
+                    <span className="truncate">{filterCargo === 'all' ? 'Todos os Cargos' : filterCargo}</span>
+                    <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-[300px]" align="start">
+                  <DropdownMenuLabel>Cargos Disponíveis</DropdownMenuLabel>
+                  <div className="p-2">
+                    <div className="relative">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Buscar cargo..."
+                        className="pl-8 h-9 text-xs"
+                        value={searchCargo}
+                        onChange={(e) => setSearchCargo(e.target.value)}
+                        onKeyDown={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <ScrollArea className="h-72">
+                    <DropdownMenuItem onClick={() => setFilterCargo('all')} className="cursor-pointer">
+                      <span className="flex-1">Todos os Cargos</span>
+                      {filterCargo === 'all' && <Check className="h-4 w-4 text-accent" />}
+                    </DropdownMenuItem>
+                    {filteredCargos.length > 0 ? (
+                      filteredCargos.map(c => (
+                        <DropdownMenuItem key={c} onClick={() => setFilterCargo(c)} className="cursor-pointer">
+                          <span className="flex-1 truncate">{c}</span>
+                          {filterCargo === c && <Check className="h-4 w-4 text-accent shrink-0 ml-2" />}
+                        </DropdownMenuItem>
+                      ))
+                    ) : (
+                      <p className="p-2 text-xs text-muted-foreground">Nenhum cargo encontrado.</p>
+                    )}
+                  </ScrollArea>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
 
               <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as StatusFilter)}>
