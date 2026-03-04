@@ -13,7 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Loader2, MessageSquare, Crown } from 'lucide-react';
+import { Loader2, MessageSquare, Crown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -104,7 +104,6 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
   const [userAttempts, setUserAttempts] = useState<Map<string, QuestionAttempt>>(new Map());
   const isAdmin = user?.email === 'amentoriaacademy@gmail.com';
 
-  // 1. Fetch base questions based on filters
   const questionsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
 
@@ -139,7 +138,6 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
 
   const { data: questions, isLoading: isLoadingQuestions } = useCollection<Question>(questionsQuery);
 
-  // 2. Fetch user's attempts
   const attemptsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     const baseRef = collection(firestore, `users/${user.uid}/question_attempts`);
@@ -163,7 +161,6 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
     }
   }, [attempts]);
 
-
   const userDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return doc(firestore, 'users', user.uid);
@@ -171,35 +168,15 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
 
   const { data: userProfile } = useDoc<any>(userDocRef);
   const userPlan = userProfile?.subscription?.plan || 'standard';
-  const hasGodModeAccess = userPlan === 'plus' || userPlan === 'academy';
+  const isPremium = userPlan === 'plus' || userPlan === 'academy';
+  const hasGodModeAccess = (isPremium || isAdmin) && methodFilter === 'academy';
 
   const processedQuestions = useMemo(() => {
     if (!questions) return [];
 
     const questionsWithStatus = questions.map(q => {
-      const sanitizedQ = { ...q };
-      if (!hasGodModeAccess && !isAdmin) {
-        sanitizedQ.god_mode_context_title = null;
-        sanitizedQ.god_mode_context_text = null;
-        sanitizedQ.god_mode_analysis_title = null;
-        sanitizedQ.god_mode_concept_title = null;
-        sanitizedQ.god_mode_concept_text = null;
-        sanitizedQ.god_mode_summary_title = null;
-        sanitizedQ.god_mode_summary_text = null;
-        sanitizedQ.god_mode_status_a = null;
-        sanitizedQ.god_mode_justification_a = null;
-        sanitizedQ.god_mode_status_b = null;
-        sanitizedQ.god_mode_justification_b = null;
-        sanitizedQ.god_mode_status_c = null;
-        sanitizedQ.god_mode_justification_c = null;
-        sanitizedQ.god_mode_status_d = null;
-        sanitizedQ.god_mode_justification_d = null;
-        sanitizedQ.god_mode_status_e = null;
-        sanitizedQ.god_mode_justification_e = null;
-      }
-
       return {
-        ...sanitizedQ,
+        ...q,
         lastAttemptStatus: userAttempts.has(q.id)
           ? (userAttempts.get(q.id)!.isCorrect ? 'correct' : 'incorrect') as AttemptStatus
           : null,
@@ -221,7 +198,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
     }
 
     return filtered;
-  }, [questions, userAttempts, statusFilter, methodFilter, isAdmin, hasGodModeAccess]);
+  }, [questions, userAttempts, statusFilter, methodFilter]);
 
   const indexOfLastQuestion = currentPage * questionsPerPage;
   const indexOfFirstQuestion = indexOfLastQuestion - questionsPerPage;
@@ -232,9 +209,12 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
     setCurrentPage(1);
     setSelectedAnswers({});
     setAnsweredQuestions({});
-  }, [subject, topics, cargo, banca, ano, statusFilter, questions]);
+  }, [subject, topics, cargo, banca, ano, statusFilter, methodFilter, questions]);
 
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+  const paginate = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const alternativesKeys: (keyof Question)[] = ['a', 'b', 'c', 'd', 'e'];
 
@@ -256,6 +236,74 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
 
     setAnsweredQuestions(prev => ({ ...prev, [question.id]: true }));
     saveQuestionAttempt(firestore, user.uid, question.id, isCorrect, selectedOption, question.Materia);
+  };
+
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+
+    const pages = [];
+    const startPage = Math.max(1, currentPage - 3);
+    const endPage = Math.min(totalPages, currentPage + 3);
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return (
+      <div className="flex flex-wrap justify-center items-center gap-2 mt-12 pb-10">
+        <Button 
+          onClick={() => paginate(1)} 
+          disabled={currentPage === 1} 
+          variant="outline"
+          size="sm"
+          className="hidden sm:flex"
+        >
+          <ChevronsLeft className="h-4 w-4 mr-1" /> Primeira
+        </Button>
+        <Button 
+          onClick={() => paginate(currentPage - 1)} 
+          disabled={currentPage === 1} 
+          variant="outline"
+          size="icon"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+
+        {startPage > 1 && <span className="text-muted-foreground px-1">...</span>}
+
+        {pages.map(page => (
+          <Button
+            key={page}
+            onClick={() => paginate(page)}
+            variant={currentPage === page ? "default" : "outline"}
+            size="sm"
+            className={cn("w-10 font-bold", currentPage === page ? "bg-slate-950" : "")}
+          >
+            {page}
+          </Button>
+        ))}
+
+        {endPage < totalPages && <span className="text-muted-foreground px-1">...</span>}
+
+        <Button 
+          onClick={() => paginate(currentPage + 1)} 
+          disabled={currentPage === totalPages} 
+          variant="outline"
+          size="icon"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+        <Button 
+          onClick={() => paginate(totalPages)} 
+          disabled={currentPage === totalPages} 
+          variant="outline"
+          size="sm"
+          className="hidden sm:flex"
+        >
+          Última <ChevronsRight className="h-4 w-4 ml-1" />
+        </Button>
+      </div>
+    );
   };
 
   const isLoading = isLoadingQuestions || isLoadingAttempts;
@@ -298,10 +346,10 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
               <Card key={q.id} className={cn("relative overflow-hidden", isHidden && 'opacity-50 bg-secondary')}>
                 {q.lastAttemptStatus && (
                   <Badge className={cn(
-                    "absolute top-2 left-2 text-xs",
-                    q.lastAttemptStatus === 'correct' ? 'bg-green-100 text-green-800 border-green-300' : 'bg-red-100 text-red-800 border-red-300'
+                    "absolute top-2 left-2 text-[10px] font-bold uppercase tracking-wider",
+                    q.lastAttemptStatus === 'correct' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-red-100 text-red-800 border-red-300'
                   )}>
-                    {q.lastAttemptStatus === 'correct' ? 'Você acertou anteriormente' : 'Você errou anteriormente'}
+                    {q.lastAttemptStatus === 'correct' ? 'Acerto Anterior' : 'Erro Anterior'}
                   </Badge>
                 )}
                 <CardHeader className="pt-10">
@@ -309,19 +357,19 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
                     <div className="flex items-center gap-3">
                       <CardTitle>Questão {indexOfFirstQuestion + index + 1}</CardTitle>
                       {q.is_god_mode && (
-                        <Badge className="bg-gradient-to-r from-amber-500 to-purple-600 text-white border-0 shadow-[0_0_15px_rgba(234,179,8,0.5)] animate-pulse font-black px-4 py-1.5 text-sm tracking-widest">
-                          🎮 MÉTODO ACADEMY
+                        <Badge className="bg-gradient-to-r from-amber-500 to-purple-600 text-white border-0 shadow-[0_0_15px_rgba(234,179,8,0.5)] animate-pulse font-black px-4 py-1.5 text-[10px] tracking-widest uppercase">
+                          Método Academy
                         </Badge>
                       )}
                     </div>
                     <div className="hidden md:flex items-center gap-2">
                       {q.Banca && <Badge variant="outline" className="border-accent text-accent font-bold uppercase tracking-widest text-[10px]">{q.Banca}</Badge>}
-                      <Badge variant="secondary" className="text-[10px] uppercase">{q.Assunto}</Badge>
-                      <Badge variant="secondary" className="text-[10px] uppercase">{q.Cargo}</Badge>
-                      <Badge variant="outline" className="text-[10px]">{q.Ano}</Badge>
+                      <Badge variant="secondary" className="text-[10px] uppercase font-bold">{q.Assunto}</Badge>
+                      <Badge variant="secondary" className="text-[10px] uppercase font-bold">{q.Cargo}</Badge>
+                      <Badge variant="outline" className="text-[10px] font-bold">{q.Ano}</Badge>
                     </div>
                   </div>
-                  <CardDescription className="pt-4 text-base text-foreground whitespace-pre-line">
+                  <CardDescription className="pt-4 text-base text-foreground whitespace-pre-line leading-relaxed">
                     {formatEnunciado(q.Enunciado)}
                   </CardDescription>
                 </CardHeader>
@@ -354,15 +402,15 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
 
                         if (!isAnswered) {
                           if (selectedNormalized === currentKeyNormalized) return 'bg-secondary border-primary';
-                          return 'hover:bg-secondary/80 bg-white border-border dark:bg-transparent';
+                          return 'hover:bg-secondary/80 bg-white border-border';
                         }
 
                         if (selectedNormalized === currentKeyNormalized) {
-                          if (isAttemptCorrect) return 'bg-emerald-50 border-emerald-400 text-emerald-900 font-medium dark:bg-emerald-950/30 dark:text-emerald-300';
-                          return 'bg-red-50 border-red-400 text-red-900 font-medium dark:bg-red-950/30 dark:text-red-300';
+                          if (isAttemptCorrect) return 'bg-emerald-50 border-emerald-400 text-emerald-900 font-medium';
+                          return 'bg-red-50 border-red-400 text-red-900 font-medium';
                         }
 
-                        return 'bg-white opacity-60 border-border pointer-events-none dark:bg-transparent';
+                        return 'bg-white opacity-60 border-border pointer-events-none';
                       };
 
                       const godModeStatusKey = `god_mode_status_${alternativeKey}` as keyof Question;
@@ -402,62 +450,45 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
                             </div>
                           </div>
 
-                          {isAnswered && q.is_god_mode && finalGodModeText && (
+                          {isAnswered && q.is_god_mode && finalGodModeText && hasGodModeAccess && (
                             <div className={cn(
                               "text-sm p-4 rounded-lg relative overflow-hidden mt-1 mb-4",
-                              hasGodModeAccess
-                                ? isSelectedAlternative
-                                  ? isThisCorrect
-                                    ? "bg-emerald-50 border border-emerald-200 text-emerald-900 shadow-sm animate-in fade-in slide-in-from-top-2 duration-500"
-                                    : "bg-red-50 border border-red-200 text-red-900 shadow-sm animate-in fade-in slide-in-from-top-2 duration-500"
-                                  : "bg-slate-50 border border-slate-200 text-slate-700 animate-in fade-in slide-in-from-top-2 duration-500"
-                                : "bg-slate-50 border border-slate-200 select-none pointer-events-none"
+                              isSelectedAlternative
+                                ? isThisCorrect
+                                  ? "bg-emerald-50 border border-emerald-200 text-emerald-900 shadow-sm animate-in fade-in slide-in-from-top-2 duration-500"
+                                  : "bg-red-50 border border-red-200 text-red-900 shadow-sm animate-in fade-in slide-in-from-top-2 duration-500"
+                                : "bg-slate-50 border border-slate-200 text-slate-700 animate-in fade-in slide-in-from-top-2 duration-500"
                             )}>
-                              {hasGodModeAccess ? (
-                                <div className="flex items-start gap-3">
-                                  <div className="mt-1 flex-shrink-0">
-                                    <span className={cn(
-                                      "flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold",
+                              <div className="flex items-start gap-3">
+                                <div className="mt-1 flex-shrink-0">
+                                  <span className={cn(
+                                    "flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold",
+                                    isSelectedAlternative
+                                      ? isThisCorrect
+                                        ? "bg-emerald-100 text-emerald-700 border border-emerald-300"
+                                        : "bg-red-100 text-red-700 border border-red-300"
+                                      : "bg-slate-200 text-slate-600 border border-slate-300"
+                                  )}>⚡</span>
+                                </div>
+                                <div className="flex-1 leading-relaxed">
+                                  {godModeStatus ? (
+                                    <span className={cn("font-bold mb-1.5 block pb-1 border-b uppercase text-xs tracking-wider",
                                       isSelectedAlternative
-                                        ? isThisCorrect
-                                          ? "bg-emerald-100 text-emerald-700 border border-emerald-300"
-                                          : "bg-red-100 text-red-700 border border-red-300"
-                                        : "bg-slate-200 text-slate-600 border border-slate-300"
-                                    )}>⚡</span>
-                                  </div>
-                                  <div className="flex-1 leading-relaxed">
-                                    {godModeStatus ? (
-                                      <span className={cn("font-bold mb-1.5 block pb-1 border-b uppercase text-xs tracking-wider",
-                                        isSelectedAlternative
-                                          ? (isThisCorrect ? 'border-emerald-200 text-emerald-800' : 'border-red-200 text-red-800')
-                                          : 'border-slate-200 text-slate-600'
-                                      )}>
-                                        {godModeStatus}
-                                      </span>
-                                    ) : (
-                                      <span className={cn("font-bold mb-1.5 block uppercase text-xs tracking-wider",
-                                        isSelectedAlternative ? (isThisCorrect ? "text-emerald-800" : "text-red-800") : "text-slate-600"
-                                      )}>
-                                        Análise Tática - Alternativa {String.fromCharCode(65 + optIndex)}
-                                      </span>
-                                    )}
-                                    <span className="font-medium leading-relaxed">{finalGodModeText}</span>
-                                  </div>
+                                        ? (isThisCorrect ? 'border-emerald-200 text-emerald-800' : 'border-red-200 text-red-800')
+                                        : 'border-slate-200 text-slate-600'
+                                    )}>
+                                      {godModeStatus}
+                                    </span>
+                                  ) : (
+                                    <span className={cn("font-bold mb-1.5 block uppercase text-xs tracking-wider",
+                                      isSelectedAlternative ? (isThisCorrect ? "text-emerald-800" : "text-red-800") : "text-slate-600"
+                                    )}>
+                                      Análise Tática - Alternativa {String.fromCharCode(65 + optIndex)}
+                                    </span>
+                                  )}
+                                  <span className="font-medium leading-relaxed">{finalGodModeText}</span>
                                 </div>
-                              ) : (
-                                <div className="relative">
-                                  <div className="blur-sm opacity-50 select-none pb-6">
-                                    <div className="flex items-start gap-3">
-                                      <div className="mt-1 h-6 w-6 rounded-full bg-slate-300 flex-shrink-0" />
-                                      <div className="flex-1 space-y-2">
-                                        <div className="h-4 bg-slate-200 rounded w-1/3" />
-                                        <div className="h-4 bg-slate-200 rounded w-full" />
-                                        <div className="h-4 bg-slate-200 rounded w-5/6" />
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
+                              </div>
                             </div>
                           )}
                         </div>
@@ -474,11 +505,11 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
                           <div className="space-y-1">
                             <h4 className="text-lg font-black text-white tracking-wide">Ative o Método Academy!</h4>
                             <p className="text-sm text-slate-300 max-w-sm font-medium">
-                              A banca tentou te enganar, mas nós temos o código. Assine para destravar a visão tática e cirúrgica desta questão com Contexto, Casos Práticos e Resumo em Flashcard.
+                              A banca tentou te enganar, mas nós temos o código. Ative o modo Academy para destravar a visão tática e cirúrgica desta questão.
                             </p>
                           </div>
                           <Button className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-amber-950 font-black px-8">
-                            Desbloquear Acesso Premium
+                            Desbloquear Visão Tática
                           </Button>
                         </div>
                       </div>
@@ -510,24 +541,29 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
                 <CardFooter className="flex-col items-stretch gap-4 sm:flex-row sm:justify-between sm:items-center">
                   <div className="text-sm min-h-[1.25rem]">
                     {userHasCorrectlyAnswered && (
-                      <p className="text-emerald-600 font-medium">Parabéns, resposta correta.</p>
+                      <p className="text-emerald-600 font-bold flex items-center gap-2">
+                        <span className="text-xl">✅</span> Parabéns! Resposta correta.
+                      </p>
                     )}
                     {userHasIncorrectlyAnswered && (
-                      <p className="text-destructive font-medium">Você errou. Gabarito: Letra {q.correctAnswer.toUpperCase()}</p>
+                      <p className="text-destructive font-bold flex items-center gap-2">
+                        <span className="text-xl">❌</span> Você errou. Gabarito: Letra {q.correctAnswer.toUpperCase()}
+                      </p>
                     )}
                   </div>
                   <div className="flex gap-2 self-end sm:self-auto">
                     <Button
                       variant="default"
+                      className="font-bold"
                       onClick={() => handleConfirmAnswer(q)}
                       disabled={!selected || isAnswered || isHidden}
                     >
-                      {isAnswered ? "Respondido" : "Responder"}
+                      {isAnswered ? "Respondida" : "Responder"}
                     </Button>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button variant="outline" disabled={isHidden}>
-                          <MessageSquare className="mr-2" /> Comentários
+                          <MessageSquare className="mr-2 h-4 w-4" /> Comentários
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-3xl">
@@ -545,13 +581,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
           })}
         </TooltipProvider>
       </div>
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-4 mt-8">
-          <Button onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1} variant="outline">Anterior</Button>
-          <span className="text-sm text-muted-foreground">Página {currentPage} de {totalPages}</span>
-          <Button onClick={() => paginate(currentPage + 1)} disabled={currentPage === totalPages} variant="outline">Próxima</Button>
-        </div>
-      )}
+      {renderPagination()}
     </>
   );
 }
