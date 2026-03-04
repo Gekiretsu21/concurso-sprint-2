@@ -43,6 +43,7 @@ export default function QuestionsPage() {
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [filterCargo, setFilterCargo] = useState('all');
   const [filterBanca, setFilterBanca] = useState('all');
+  const [filterYear, setFilterYear] = useState('all');
   const [filterStatus, setFilterStatus] = useState<StatusFilter>('all');
   const [isAcademyMode, setIsAcademyMode] = useState(false);
 
@@ -51,6 +52,7 @@ export default function QuestionsPage() {
     topics: string[];
     cargo: string;
     banca: string;
+    year: string;
     status: StatusFilter;
     method: MethodFilter;
   }>({
@@ -58,6 +60,7 @@ export default function QuestionsPage() {
     topics: [],
     cargo: '',
     banca: '',
+    year: '',
     status: 'all',
     method: 'all'
   });
@@ -150,18 +153,30 @@ export default function QuestionsPage() {
     return Array.from(bancaSet).filter(Boolean).sort();
   }, [allQuestions, filterSubject]);
 
+  const availableYears = useMemo(() => {
+    if (!allQuestions) return [];
+    const yearSet = new Set<string>();
+    allQuestions
+      .filter(q => q.status !== 'hidden' && q.Ano && q.Ano.trim())
+      .forEach(q => yearSet.add(q.Ano.trim()));
+    return Array.from(yearSet).filter(Boolean).sort((a, b) => b.localeCompare(a));
+  }, [allQuestions]);
+
   const [searchTopic, setSearchTopic] = useState('');
   const [searchSubject, setSearchSubject] = useState('');
   const [searchCargo, setSearchCargo] = useState('');
   const [searchBanca, setSearchBanca] = useState('');
+  const [searchYear, setSearchYear] = useState('');
 
   useEffect(() => {
     setSelectedTopics([]);
     setFilterCargo('all');
     setFilterBanca('all');
+    setFilterYear('all');
     setSearchTopic('');
     setSearchCargo('');
     setSearchBanca('');
+    setSearchYear('');
   }, [filterSubject]);
 
   const handleFilterSubmit = () => {
@@ -181,6 +196,7 @@ export default function QuestionsPage() {
       topics: selectedTopics,
       cargo: filterCargo === 'all' ? '' : filterCargo,
       banca: filterBanca === 'all' ? '' : filterBanca,
+      year: filterYear === 'all' ? '' : filterYear,
       status: filterStatus,
       method: isAcademyMode ? 'academy' : 'no_academy'
     });
@@ -189,13 +205,14 @@ export default function QuestionsPage() {
   const getTopicButtonLabel = () => {
     if (selectedTopics.length === 0) return "Assuntos";
     if (selectedTopics.length === 1) return selectedTopics[0];
-    return `${selectedTopics.length} assuntos selecionados`;
+    return `${selectedTopics.length} selecionados`;
   };
 
   const filteredTopics = availableTopics.filter(t => t.toLowerCase().includes(searchTopic.toLowerCase()));
   const filteredSubjects = availableSubjects.filter(s => s.toLowerCase().includes(searchSubject.toLowerCase()));
   const filteredCargos = availableCargos.filter(c => c.toLowerCase().includes(searchCargo.toLowerCase()));
   const filteredBancas = availableBancas.filter(b => b.toLowerCase().includes(searchBanca.toLowerCase()));
+  const filteredYears = availableYears.filter(y => y.toLowerCase().includes(searchYear.toLowerCase()));
 
   return (
     <div className={cn(
@@ -232,11 +249,11 @@ export default function QuestionsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="w-full justify-between font-normal truncate">
-                    <span className="truncate">{filterSubject === 'all' ? 'Todas as Matérias' : filterSubject}</span>
+                    <span className="truncate">{filterSubject === 'all' ? 'Matérias' : filterSubject}</span>
                     <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -286,7 +303,7 @@ export default function QuestionsPage() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="start">
-                  <DropdownMenuLabel>Assuntos Disponíveis</DropdownMenuLabel>
+                  <DropdownMenuLabel>Assuntos</DropdownMenuLabel>
                   <div className="p-2">
                     <div className="relative">
                       <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -324,12 +341,12 @@ export default function QuestionsPage() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" disabled={availableCargos.length === 0} className="w-full justify-between font-normal truncate">
-                    <span className="truncate">{filterCargo === 'all' ? 'Todos os Cargos' : filterCargo}</span>
+                    <span className="truncate">{filterCargo === 'all' ? 'Cargos' : filterCargo}</span>
                     <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-[300px]" align="start">
-                  <DropdownMenuLabel>Cargos Disponíveis</DropdownMenuLabel>
+                  <DropdownMenuLabel>Cargos</DropdownMenuLabel>
                   <div className="p-2">
                     <div className="relative">
                       <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -365,12 +382,12 @@ export default function QuestionsPage() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" disabled={availableBancas.length === 0} className="w-full justify-between font-normal truncate">
-                    <span className="truncate">{filterBanca === 'all' ? 'Todas as Bancas' : filterBanca}</span>
+                    <span className="truncate">{filterBanca === 'all' ? 'Bancas' : filterBanca}</span>
                     <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-[250px]" align="start">
-                  <DropdownMenuLabel>Bancas Disponíveis</DropdownMenuLabel>
+                  <DropdownMenuLabel>Bancas</DropdownMenuLabel>
                   <div className="p-2">
                     <div className="relative">
                       <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -403,14 +420,55 @@ export default function QuestionsPage() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" disabled={availableYears.length === 0} className="w-full justify-between font-normal truncate">
+                    <span className="truncate">{filterYear === 'all' ? 'Ano' : filterYear}</span>
+                    <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-[150px]" align="start">
+                  <DropdownMenuLabel>Ano</DropdownMenuLabel>
+                  <div className="p-2">
+                    <div className="relative">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Buscar ano..."
+                        className="pl-8 h-9 text-xs"
+                        value={searchYear}
+                        onChange={(e) => setSearchYear(e.target.value)}
+                        onKeyDown={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <ScrollArea className="h-72">
+                    <DropdownMenuItem onClick={() => setFilterYear('all')} className="cursor-pointer">
+                      <span className="flex-1">Todos os Anos</span>
+                      {filterYear === 'all' && <Check className="h-4 w-4 text-accent" />}
+                    </DropdownMenuItem>
+                    {filteredYears.length > 0 ? (
+                      filteredYears.map(y => (
+                        <DropdownMenuItem key={y} onClick={() => setFilterYear(y)} className="cursor-pointer">
+                          <span className="flex-1 truncate">{y}</span>
+                          {filterYear === y && <Check className="h-4 w-4 text-accent shrink-0 ml-2" />}
+                        </DropdownMenuItem>
+                      ))
+                    ) : (
+                      <p className="p-2 text-xs text-muted-foreground">Nenhum ano encontrado.</p>
+                    )}
+                  </ScrollArea>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as StatusFilter)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent position="popper">
-                  <SelectItem value="all">Todas as Questões</SelectItem>
-                  <SelectItem value="resolved">Apenas Resolvidas</SelectItem>
-                  <SelectItem value="unresolved">Apenas Não Resolvidas</SelectItem>
+                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="resolved">Resolvidas</SelectItem>
+                  <SelectItem value="unresolved">Não Resolvidas</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -420,7 +478,7 @@ export default function QuestionsPage() {
                 <button 
                   onClick={() => setIsAcademyMode(!isAcademyMode)}
                   className={cn(
-                    "w-full sm:min-w-[220px] transition-all duration-500 font-black tracking-tight uppercase text-[10px] h-10 rounded-lg flex items-center justify-center gap-2",
+                    "w-full sm:min-w-[165px] transition-all duration-500 font-black tracking-tight uppercase text-[10px] h-10 rounded-lg flex items-center justify-center gap-2",
                     isAcademyMode 
                       ? "bg-gradient-to-r from-blue-600 via-green-500 to-orange-500 bg-[length:200%_auto] animate-gradient-shift text-white shadow-lg shadow-blue-500/20" 
                       : "bg-white border-2 border-slate-200 text-slate-600 hover:border-blue-500/50 hover:bg-blue-50/50"
@@ -428,14 +486,14 @@ export default function QuestionsPage() {
                 >
                   {isAcademyMode ? (
                     <>
+                      Método Academy
                       <Zap className="h-3 w-3 fill-current animate-bounce" />
-                      Método Academy Ativo
                     </>
-                  ) : "Ativar Método Academy"}
+                  ) : "Método Academy"}
                 </button>
               </div>
 
-              <Button onClick={handleFilterSubmit} className="w-full sm:w-auto h-10 px-10 bg-slate-950 hover:bg-slate-900 text-white font-bold shadow-md rounded-lg text-xs uppercase tracking-widest">
+              <Button onClick={handleFilterSubmit} className="w-full sm:w-[165px] h-10 px-6 bg-slate-950 hover:bg-slate-900 text-white font-bold shadow-md rounded-lg text-xs uppercase tracking-widest">
                 Buscar Questões
               </Button>
             </div>
@@ -443,7 +501,7 @@ export default function QuestionsPage() {
         </Card>
       </div>
 
-      {activeFilters.subject || activeFilters.cargo || activeFilters.banca || activeFilters.status !== 'all' || activeFilters.method !== 'all' ? (
+      {activeFilters.subject || activeFilters.cargo || activeFilters.banca || activeFilters.year || activeFilters.status !== 'all' || activeFilters.method !== 'all' ? (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
           {isAcademyMode && (
             <div className="flex items-center gap-3 px-4">
@@ -457,6 +515,7 @@ export default function QuestionsPage() {
             topics={activeFilters.topics}
             cargo={activeFilters.cargo}
             banca={activeFilters.banca}
+            ano={activeFilters.year}
             statusFilter={activeFilters.status}
             methodFilter={activeFilters.method}
           />

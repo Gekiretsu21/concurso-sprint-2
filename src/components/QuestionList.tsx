@@ -86,11 +86,12 @@ interface QuestionListProps {
   topics?: string[];
   cargo?: string;
   banca?: string;
+  ano?: string;
   statusFilter?: StatusFilter;
   methodFilter?: MethodFilter;
 }
 
-export function QuestionList({ subject, topics, cargo, banca, statusFilter = 'all', methodFilter = 'all' }: QuestionListProps) {
+export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter = 'all', methodFilter = 'all' }: QuestionListProps) {
   const { firestore } = useFirebase();
   const { user } = useUser();
 
@@ -127,9 +128,13 @@ export function QuestionList({ subject, topics, cargo, banca, statusFilter = 'al
       constraints.push(where('Banca', '==', banca));
     }
 
+    if (ano && ano !== 'all' && ano !== '') {
+      constraints.push(where('Ano', '==', ano));
+    }
+
     const baseRef = collection(firestore, 'questoes');
     return constraints.length > 0 ? query(baseRef, and(...constraints)) : baseRef;
-  }, [firestore, user, subject, topics, cargo, banca]);
+  }, [firestore, user, subject, topics, cargo, banca, ano]);
 
   const { data: questions, isLoading: isLoadingQuestions } = useCollection<Question>(questionsQuery);
 
@@ -226,7 +231,7 @@ export function QuestionList({ subject, topics, cargo, banca, statusFilter = 'al
     setCurrentPage(1);
     setSelectedAnswers({});
     setAnsweredQuestions({});
-  }, [subject, topics, cargo, banca, statusFilter, questions]);
+  }, [subject, topics, cargo, banca, ano, statusFilter, questions]);
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
@@ -466,7 +471,7 @@ export function QuestionList({ subject, topics, cargo, banca, statusFilter = 'al
                             <Crown className="text-amber-500 h-6 w-6" />
                           </div>
                           <div className="space-y-1">
-                            <h4 className="text-lg font-black text-white tracking-wide">🎮 Ative o Método Academy!</h4>
+                            <h4 className="text-lg font-black text-white tracking-wide">Ative o Método Academy!</h4>
                             <p className="text-sm text-slate-300 max-w-sm font-medium">
                               A banca tentou te enganar, mas nós temos o código. Assine para destravar a visão tática e cirúrgica desta questão com Contexto, Casos Práticos e Resumo em Flashcard.
                             </p>
