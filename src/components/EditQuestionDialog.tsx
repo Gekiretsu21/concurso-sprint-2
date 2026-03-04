@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -19,13 +18,13 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import { Loader2, Pencil, Info, Sparkles, BookOpen, Layers } from 'lucide-react';
+import { Loader2, Pencil, Info, Sparkles, BookOpen } from 'lucide-react';
 import { type Question } from './QuestionList';
 import { useFirebase } from '@/firebase';
 import { updateQuestion } from '@/firebase/actions';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from './ui/scroll-area';
-import { Separator } from './ui/separator';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 const questionEditSchema = z.object({
@@ -41,7 +40,6 @@ const questionEditSchema = z.object({
   d: z.string().optional().nullable(),
   e: z.string().optional().nullable(),
   correctAnswer: z.string().min(1, 'É necessário definir a resposta correta.'),
-  // Academy Fields
   god_mode_context_title: z.string().optional().nullable(),
   god_mode_context_text: z.string().optional().nullable(),
   god_mode_analysis_title: z.string().optional().nullable(),
@@ -118,7 +116,7 @@ export function EditQuestionDialog({ question }: EditQuestionDialogProps) {
       await updateQuestion(firestore, question.id, data);
       toast({
         title: 'Sucesso!',
-        description: 'A questão foi atualizada com todos os campos salvos.',
+        description: 'A questão foi atualizada com sucesso.',
       });
       setIsOpen(false);
     } catch (error) {
