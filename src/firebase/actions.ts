@@ -173,9 +173,7 @@ export async function importQuestions(
     const e = parts[9]?.trim();
     const correctAnswer = parts[10]?.trim();
 
-    // Handle Banca column based on structure length
-    // Standard: Materia | ... | correctAnswer | Banca (12 columns)
-    // Academy: Materia | ... | summary_text | Banca (29 columns)
+    // Banca logic: 12th column for standard, 29th for Academy
     let Banca = '';
     if (parts.length === 12) {
       Banca = parts[11]?.trim() || '';
@@ -221,7 +219,7 @@ export async function importQuestions(
   }
   if (examDetails?.isPreviousExam) {
     batch.set(doc(collection(firestore, 'previousExams')), {
-      name: examDetails.examName, questionIds: newQuestionIds, questionCount: newQuestionIds.length, accessTier
+      name: examDetails.examName, questionIds: newQuestionIds, questionCount: newQuestionIds.length, accessTier, createdAt: serverTimestamp()
     });
   }
   await batch.commit();
@@ -309,11 +307,11 @@ export async function deleteDuplicateQuestions(firestore: Firestore) {
   const seen = new Set();
   const batch = writeBatch(firestore);
   let count = 0;
-  snap.docs.forEach(doc => {
-    const data = doc.data();
+  snap.docs.forEach(docSnap => {
+    const data = docSnap.data();
     const key = `${data.Enunciado}_${data.Materia}_${data.Ano}`;
     if (seen.has(key)) {
-      batch.delete(doc.ref);
+      batch.delete(docSnap.ref);
       count++;
     } else {
       seen.add(key);
@@ -329,11 +327,11 @@ export async function deleteDuplicateFlashcards(firestore: Firestore) {
   const seen = new Set();
   const batch = writeBatch(firestore);
   let count = 0;
-  snap.docs.forEach(doc => {
-    const data = doc.data();
+  snap.docs.forEach(docSnap => {
+    const data = docSnap.data();
     const key = `${data.front}_${data.subject}`;
     if (seen.has(key)) {
-      batch.delete(doc.ref);
+      batch.delete(docSnap.ref);
       count++;
     } else {
       seen.add(key);

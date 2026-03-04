@@ -365,7 +365,7 @@ export default function QuestionsPage() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" disabled={availableBancas.length === 0} className="w-full justify-between font-normal truncate">
-                    <span className="truncate">{filterBanca === 'all' ? 'Banca' : filterBanca}</span>
+                    <span className="truncate">{filterBanca === 'all' ? 'Todas as Bancas' : filterBanca}</span>
                     <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
                   </Button>
                 </DropdownMenuTrigger>

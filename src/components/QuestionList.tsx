@@ -119,11 +119,11 @@ export function QuestionList({ subject, topics, cargo, banca, statusFilter = 'al
       constraints.push(where('Assunto', 'in', topics));
     }
 
-    if (cargo && cargo !== 'all') {
+    if (cargo && cargo !== 'all' && cargo !== '') {
       constraints.push(where('Cargo', '==', cargo));
     }
 
-    if (banca && banca !== 'all') {
+    if (banca && banca !== 'all' && banca !== '') {
       constraints.push(where('Banca', '==', banca));
     }
 
@@ -309,10 +309,10 @@ export function QuestionList({ subject, topics, cargo, banca, statusFilter = 'al
                       )}
                     </div>
                     <div className="hidden md:flex items-center gap-2">
-                      {q.Banca && <Badge variant="outline" className="border-accent text-accent">{q.Banca}</Badge>}
-                      <Badge variant="secondary">{q.Assunto}</Badge>
-                      <Badge variant="secondary">{q.Cargo}</Badge>
-                      <Badge variant="outline">{q.Ano}</Badge>
+                      {q.Banca && <Badge variant="outline" className="border-accent text-accent font-bold uppercase tracking-widest text-[10px]">{q.Banca}</Badge>}
+                      <Badge variant="secondary" className="text-[10px] uppercase">{q.Assunto}</Badge>
+                      <Badge variant="secondary" className="text-[10px] uppercase">{q.Cargo}</Badge>
+                      <Badge variant="outline" className="text-[10px]">{q.Ano}</Badge>
                     </div>
                   </div>
                   <CardDescription className="pt-4 text-base text-foreground whitespace-pre-line">
@@ -364,7 +364,6 @@ export function QuestionList({ subject, topics, cargo, banca, statusFilter = 'al
                       const godModeStatus = q[godModeStatusKey] as string | undefined | null;
                       const godModeJus = q[godModeJusKey] as string | undefined | null;
 
-                      // Fallback visual para layout Standard que não possui justification_key (God Mode v1 / Standard null)
                       const isLegacyA = `god_mode_${alternativeKey}` as keyof Question;
                       const legacyText = q[isLegacyA] as string | undefined | null;
 
@@ -397,17 +396,16 @@ export function QuestionList({ subject, topics, cargo, banca, statusFilter = 'al
                             </div>
                           </div>
 
-                          {/* GOD MODE EXPLANATIONS - Renderizado apenas após resposta */}
                           {isAnswered && q.is_god_mode && finalGodModeText && (
                             <div className={cn(
                               "text-sm p-4 rounded-lg relative overflow-hidden mt-1 mb-4",
                               hasGodModeAccess
                                 ? isSelectedAlternative
                                   ? isThisCorrect
-                                    ? "bg-emerald-50 border border-emerald-200 text-emerald-900 shadow-sm animate-in fade-in slide-in-from-top-2 duration-500" // Correta E Selecionada
-                                    : "bg-red-50 border border-red-200 text-red-900 shadow-sm animate-in fade-in slide-in-from-top-2 duration-500" // Incorreta E Selecionada
-                                  : "bg-slate-50 border border-slate-200 text-slate-700 animate-in fade-in slide-in-from-top-2 duration-500" // Demais alternativas limpas (Clean)
-                                : "bg-slate-50 border border-slate-200 select-none pointer-events-none" // Base para o Standard (com blur)
+                                    ? "bg-emerald-50 border border-emerald-200 text-emerald-900 shadow-sm animate-in fade-in slide-in-from-top-2 duration-500"
+                                    : "bg-red-50 border border-red-200 text-red-900 shadow-sm animate-in fade-in slide-in-from-top-2 duration-500"
+                                  : "bg-slate-50 border border-slate-200 text-slate-700 animate-in fade-in slide-in-from-top-2 duration-500"
+                                : "bg-slate-50 border border-slate-200 select-none pointer-events-none"
                             )}>
                               {hasGodModeAccess ? (
                                 <div className="flex items-start gap-3">
@@ -441,7 +439,6 @@ export function QuestionList({ subject, topics, cargo, banca, statusFilter = 'al
                                   </div>
                                 </div>
                               ) : (
-                                // Blur e UI para usuários standard
                                 <div className="relative">
                                   <div className="blur-sm opacity-50 select-none pb-6">
                                     <div className="flex items-start gap-3">
@@ -461,13 +458,12 @@ export function QuestionList({ subject, topics, cargo, banca, statusFilter = 'al
                       )
                     })}
 
-                    {/* Upsell Master para Método Academy (Standard Only) */}
                     {isAnswered && q.is_god_mode && !hasGodModeAccess && (
                       <div className="mt-6 p-6 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 border-2 border-amber-500/30 shadow-2xl relative overflow-hidden group">
                         <div className="absolute inset-0 bg-amber-500/5 group-hover:bg-amber-500/10 transition-colors" />
                         <div className="relative z-10 flex flex-col items-center text-center space-y-4">
                           <div className="p-3 bg-slate-950 rounded-full border border-amber-500/30 shadow-[0_0_20px_rgba(234,179,8,0.3)] group-hover:shadow-[0_0_30px_rgba(234,179,8,0.5)] transition-shadow">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500 h-6 w-6"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                            <Crown className="text-amber-500 h-6 w-6" />
                           </div>
                           <div className="space-y-1">
                             <h4 className="text-lg font-black text-white tracking-wide">🎮 Ative o Método Academy!</h4>
@@ -482,7 +478,6 @@ export function QuestionList({ subject, topics, cargo, banca, statusFilter = 'al
                       </div>
                     )}
 
-                    {/* Blocos Pós-Respostas (Conceito Chave e Resumo Flash) */}
                     {isAnswered && q.is_god_mode && hasGodModeAccess && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                         {q.god_mode_concept_text && (
@@ -495,11 +490,10 @@ export function QuestionList({ subject, topics, cargo, banca, statusFilter = 'al
                         )}
                         {q.god_mode_summary_text && (
                           <div className="p-5 rounded-xl border border-emerald-500/30 bg-emerald-500/5 shadow-sm relative overflow-hidden group">
-                            <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(68,255,161,0.05)_50%,transparent_75%,transparent_100%)] bg-[length:250%_250%,100%_100%] animate-[shimmer_2s_linear_infinite]" />
                             <h4 className="font-bold text-emerald-700 mb-2 flex items-center gap-2 relative z-10">
                               <span className="text-lg">🎓</span> {q.god_mode_summary_title || 'Síntese de Revisão'}
                             </h4>
-                            <p className="text-sm font-mono whitespace-pre-wrap relative z-10 leading-relaxed text-slate-700 font-medium selection:bg-emerald-500/30">{q.god_mode_summary_text}</p>
+                            <p className="text-sm font-mono whitespace-pre-wrap relative z-10 leading-relaxed text-slate-700 font-medium">{q.god_mode_summary_text}</p>
                           </div>
                         )}
                       </div>
@@ -510,14 +504,10 @@ export function QuestionList({ subject, topics, cargo, banca, statusFilter = 'al
                 <CardFooter className="flex-col items-stretch gap-4 sm:flex-row sm:justify-between sm:items-center">
                   <div className="text-sm min-h-[1.25rem]">
                     {userHasCorrectlyAnswered && (
-                      <p className="text-emerald-600 font-medium">
-                        Parabéns, resposta correta.
-                      </p>
+                      <p className="text-emerald-600 font-medium">Parabéns, resposta correta.</p>
                     )}
                     {userHasIncorrectlyAnswered && (
-                      <p className="text-destructive font-medium">
-                        Você errou. Gabarito: Letra {q.correctAnswer.toUpperCase()}
-                      </p>
+                      <p className="text-destructive font-medium">Você errou. Gabarito: Letra {q.correctAnswer.toUpperCase()}</p>
                     )}
                   </div>
                   <div className="flex gap-2 self-end sm:self-auto">
@@ -531,8 +521,7 @@ export function QuestionList({ subject, topics, cargo, banca, statusFilter = 'al
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button variant="outline" disabled={isHidden}>
-                          <MessageSquare className="mr-2" />
-                          Comentários
+                          <MessageSquare className="mr-2" /> Comentários
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-3xl">
@@ -542,9 +531,7 @@ export function QuestionList({ subject, topics, cargo, banca, statusFilter = 'al
                         <QuestionComments questionId={q.id} />
                       </DialogContent>
                     </Dialog>
-                    {isAdmin && (
-                      <EditQuestionDialog question={q} />
-                    )}
+                    {isAdmin && <EditQuestionDialog question={q} />}
                   </div>
                 </CardFooter>
               </Card>
@@ -554,23 +541,9 @@ export function QuestionList({ subject, topics, cargo, banca, statusFilter = 'al
       </div>
       {totalPages > 1 && (
         <div className="flex justify-center items-center gap-4 mt-8">
-          <Button
-            onClick={() => paginate(currentPage - 1)}
-            disabled={currentPage === 1}
-            variant="outline"
-          >
-            Anterior
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            Página {currentPage} de {totalPages}
-          </span>
-          <Button
-            onClick={() => paginate(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            variant="outline"
-          >
-            Próxima
-          </Button>
+          <Button onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1} variant="outline">Anterior</Button>
+          <span className="text-sm text-muted-foreground">Página {currentPage} de {totalPages}</span>
+          <Button onClick={() => paginate(currentPage + 1)} disabled={currentPage === totalPages} variant="outline">Próxima</Button>
         </div>
       )}
     </>
