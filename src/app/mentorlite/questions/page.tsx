@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -198,7 +199,7 @@ export default function QuestionsPage() {
       banca: filterBanca === 'all' ? '' : filterBanca,
       year: filterYear === 'all' ? '' : filterYear,
       status: filterStatus,
-      method: isAcademyMode ? 'academy' : 'no_academy'
+      method: isAcademyMode ? 'academy' : 'all'
     });
   };
 
@@ -217,7 +218,7 @@ export default function QuestionsPage() {
   return (
     <div className={cn(
       "flex flex-col gap-8 max-w-5xl mx-auto pb-20 transition-all duration-1000 min-h-screen",
-      isAcademyMode ? "bg-amber-50/10 rounded-[3rem]" : ""
+      isAcademyMode ? "bg-blue-50/10 rounded-[3rem]" : ""
     )}>
       <header className="flex flex-col gap-2">
         <div className="flex items-center gap-2">

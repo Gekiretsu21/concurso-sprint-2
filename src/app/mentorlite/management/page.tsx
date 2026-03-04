@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -1073,7 +1074,7 @@ export default function ManagementPage() {
                     <DialogHeader>
                       <DialogTitle>Modelo de Importação Método Academy</DialogTitle>
                       <DialogDescription>
-                        Siga exatamente esta estrutura de 29 colunas usando | (pipe) como separador.
+                        Siga exatamente esta estrutura de 29 colunas usando | (pipe) como separador. A última coluna deve ser a Banca.
                       </DialogDescription>
                     </DialogHeader>
 
@@ -1096,7 +1097,7 @@ export default function ManagementPage() {
                         const link = document.createElement("a");
                         const url = URL.createObjectURL(blob);
                         link.setAttribute("href", url);
-                        link.setAttribute("download", "modelo_importacao_god_mode.csv");
+                        link.setAttribute("download", "modelo_importacao_academy.csv");
                         document.body.appendChild(link);
                         link.click();
                         document.body.removeChild(link);
