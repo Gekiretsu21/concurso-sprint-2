@@ -173,17 +173,15 @@ export async function importQuestions(
     const e = parts[9]?.trim();
     const correctAnswer = parts[10]?.trim();
 
-    // Banca logic: 12th column for standard, 29th for Academy
+    // Banca logic: last column
     let Banca = '';
-    if (parts.length === 12) {
-      Banca = parts[11]?.trim() || '';
-    } else if (parts.length >= 29) {
-      Banca = parts[28]?.trim() || '';
-    }
+    const isGodMode = parts.length >= 28;
 
-    const context_title = parts[11]?.trim() || null;
-    const context_text = parts[12]?.trim() || null;
-    const isGodMode = Boolean(context_text && context_text !== '');
+    if (isGodMode && parts.length >= 29) {
+      Banca = parts[28]?.trim() || '';
+    } else if (!isGodMode && parts.length >= 12) {
+      Banca = parts[11]?.trim() || '';
+    }
 
     const newQuestionDocRef = doc(collection(firestore, 'questoes'));
 
@@ -195,8 +193,8 @@ export async function importQuestions(
     };
 
     if (isGodMode) {
-      dataToSave.god_mode_context_title = context_title;
-      dataToSave.god_mode_context_text = context_text;
+      dataToSave.god_mode_context_title = parts[11]?.trim() || null;
+      dataToSave.god_mode_context_text = parts[12]?.trim() || null;
       dataToSave.god_mode_analysis_title = parts[13]?.trim() || null;
       dataToSave.god_mode_status_a = parts[14]?.trim() || null;
       dataToSave.god_mode_justification_a = parts[15]?.trim() || null;

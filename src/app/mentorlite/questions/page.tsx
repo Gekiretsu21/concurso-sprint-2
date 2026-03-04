@@ -4,13 +4,6 @@ import { useState, useMemo, useEffect } from 'react';
 import { useCollection, useFirebase, useMemoFirebase, useUser } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
   Card,
   CardHeader,
   CardTitle,
@@ -26,12 +19,20 @@ import {
   DropdownMenuTrigger,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Loader2, Sparkles, ClipboardList, Search, ChevronDown, Check } from 'lucide-react';
+import { Loader2, Sparkles, ClipboardList, Search, ChevronDown, Check, Zap } from 'lucide-react';
 import { GlowingEffect } from '@/components/ui/glowing-effect';
 import { Input } from '@/components/ui/input';
 import { QuestionList, type MethodFilter } from '@/components/QuestionList';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
 
 export type StatusFilter = 'all' | 'resolved' | 'unresolved';
 
@@ -43,7 +44,7 @@ export default function QuestionsPage() {
   const [filterCargo, setFilterCargo] = useState('all');
   const [filterBanca, setFilterBanca] = useState('all');
   const [filterStatus, setFilterStatus] = useState<StatusFilter>('all');
-  const [filterMethod, setFilterMethod] = useState<MethodFilter>('all');
+  const [isAcademyMode, setIsAcademyMode] = useState(false);
 
   const [activeFilters, setActiveFilters] = useState<{
     subject: string | string[];
@@ -181,17 +182,13 @@ export default function QuestionsPage() {
       cargo: filterCargo === 'all' ? '' : filterCargo,
       banca: filterBanca === 'all' ? '' : filterBanca,
       status: filterStatus,
-      method: filterMethod
+      method: isAcademyMode ? 'academy' : 'no_academy'
     });
   };
 
   const getTopicButtonLabel = () => {
-    if (selectedTopics.length === 0) {
-      return "Assuntos";
-    }
-    if (selectedTopics.length === 1) {
-      return selectedTopics[0];
-    }
+    if (selectedTopics.length === 0) return "Assuntos";
+    if (selectedTopics.length === 1) return selectedTopics[0];
     return `${selectedTopics.length} assuntos selecionados`;
   };
 
@@ -201,7 +198,10 @@ export default function QuestionsPage() {
   const filteredBancas = availableBancas.filter(b => b.toLowerCase().includes(searchBanca.toLowerCase()));
 
   return (
-    <div className="flex flex-col gap-8 max-w-5xl mx-auto pb-20">
+    <div className={cn(
+      "flex flex-col gap-8 max-w-5xl mx-auto pb-20 transition-all duration-1000 min-h-screen",
+      isAcademyMode ? "bg-amber-50/10 rounded-[3rem]" : ""
+    )}>
       <header className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-accent animate-pulse" />
@@ -403,7 +403,6 @@ export default function QuestionsPage() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-
               <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as StatusFilter)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Status" />
@@ -414,21 +413,30 @@ export default function QuestionsPage() {
                   <SelectItem value="unresolved">Apenas Não Resolvidas</SelectItem>
                 </SelectContent>
               </Select>
-
-              <Select value={filterMethod} onValueChange={(value) => setFilterMethod(value as MethodFilter)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Método" />
-                </SelectTrigger>
-                <SelectContent position="popper">
-                  <SelectItem value="all">Todas os Modos</SelectItem>
-                  <SelectItem value="academy">Método Academy</SelectItem>
-                  <SelectItem value="no_academy">Sem Método Academy</SelectItem>
-                </SelectContent>
-              </Select>
-
             </div>
-            <div className="mt-8 flex justify-end">
-              <Button onClick={handleFilterSubmit} className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold shadow-lg shadow-accent/20">
+
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-6 border-t pt-8">
+              <div className="w-full sm:w-auto">
+                <Button 
+                  onClick={() => setIsAcademyMode(!isAcademyMode)}
+                  variant={isAcademyMode ? "default" : "outline"}
+                  className={cn(
+                    "w-full sm:min-w-[220px] transition-all duration-500 font-black tracking-tight uppercase text-xs h-12 rounded-xl border-2",
+                    isAcademyMode 
+                      ? "bg-gradient-to-r from-amber-500 via-purple-600 to-amber-500 bg-[length:200%_auto] animate-gradient-shift text-white border-0 shadow-[0_0_25px_rgba(234,179,8,0.5)] scale-105" 
+                      : "hover:border-amber-500/50 hover:bg-amber-500/5 text-slate-600 border-slate-200"
+                  )}
+                >
+                  {isAcademyMode ? (
+                    <span className="flex items-center gap-2">
+                      <Zap className="h-4 w-4 fill-current animate-bounce" />
+                      Método Academy Ativo
+                    </span>
+                  ) : "Ativar Método Academy"}
+                </Button>
+              </div>
+
+              <Button onClick={handleFilterSubmit} className="w-full sm:w-auto h-12 px-10 bg-slate-950 hover:bg-slate-900 text-white font-bold shadow-lg rounded-xl">
                 Buscar Questões
               </Button>
             </div>
@@ -437,14 +445,23 @@ export default function QuestionsPage() {
       </div>
 
       {activeFilters.subject || activeFilters.cargo || activeFilters.banca || activeFilters.status !== 'all' || activeFilters.method !== 'all' ? (
-        <QuestionList
-          subject={activeFilters.subject}
-          topics={activeFilters.topics}
-          cargo={activeFilters.cargo}
-          banca={activeFilters.banca}
-          statusFilter={activeFilters.status}
-          methodFilter={activeFilters.method}
-        />
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          {isAcademyMode && (
+            <div className="flex items-center gap-3 px-4">
+              <div className="h-1 flex-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent opacity-20" />
+              <span className="text-[10px] font-black text-amber-600 uppercase tracking-[0.3em] italic">Zona de Inteligência Tática</span>
+              <div className="h-1 flex-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent opacity-20" />
+            </div>
+          )}
+          <QuestionList
+            subject={activeFilters.subject}
+            topics={activeFilters.topics}
+            cargo={activeFilters.cargo}
+            banca={activeFilters.banca}
+            statusFilter={activeFilters.status}
+            methodFilter={activeFilters.method}
+          />
+        </div>
       ) : (
         <Card className="flex items-center justify-center h-40 border-dashed">
           <p className="text-muted-foreground">
