@@ -47,6 +47,7 @@ export default function QuestionsPage() {
   const [filterYear, setFilterYear] = useState('all');
   const [filterStatus, setFilterStatus] = useState<StatusFilter>('all');
   const [isAcademyMode, setIsAcademyMode] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const [activeFilters, setActiveFilters] = useState<{
     subject: string | string[];
@@ -181,6 +182,7 @@ export default function QuestionsPage() {
   }, [filterSubject]);
 
   const handleFilterSubmit = () => {
+    setHasSearched(true);
     let subjectQuery: string | string[] = filterSubject;
     if (filterSubject === 'Língua Portuguesa') {
       subjectQuery = ['Língua Portuguesa', 'Lingua Portuguesa'];
@@ -502,7 +504,7 @@ export default function QuestionsPage() {
         </Card>
       </div>
 
-      {activeFilters.subject || activeFilters.cargo || activeFilters.banca || activeFilters.year || activeFilters.status !== 'all' || activeFilters.method !== 'all' ? (
+      {hasSearched ? (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
           {isAcademyMode && (
             <div className="flex items-center gap-3 px-4">
@@ -524,7 +526,7 @@ export default function QuestionsPage() {
       ) : (
         <Card className="flex items-center justify-center h-40 border-dashed">
           <p className="text-muted-foreground">
-            Selecione os filtros acima para começar.
+            Selecione os filtros acima ou clique em "Buscar" para explorar o banco.
           </p>
         </Card>
       )}

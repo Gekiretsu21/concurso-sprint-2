@@ -109,7 +109,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
 
     const constraints: QueryFieldFilterConstraint[] = [];
 
-    if (subject && subject !== 'all') {
+    if (subject && subject !== 'all' && subject !== '') {
       const subjectConstraint = Array.isArray(subject)
         ? where('Materia', 'in', subject)
         : where('Materia', '==', subject);
@@ -142,7 +142,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
     if (!firestore || !user) return null;
     const baseRef = collection(firestore, `users/${user.uid}/question_attempts`);
 
-    if (subject && subject !== 'all') {
+    if (subject && subject !== 'all' && subject !== '') {
       const subjectConstraint = Array.isArray(subject)
         ? where('subject', 'in', subject)
         : where('subject', '==', subject);
@@ -169,7 +169,8 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
   const { data: userProfile } = useDoc<any>(userDocRef);
   const userPlan = userProfile?.subscription?.plan || 'standard';
   const isPremium = userPlan === 'plus' || userPlan === 'academy';
-  const hasGodModeAccess = (isPremium || isAdmin) && methodFilter === 'academy';
+  const isAcademyActive = methodFilter === 'academy';
+  const hasGodModeAccess = (isPremium || isAdmin) && isAcademyActive;
 
   const processedQuestions = useMemo(() => {
     if (!questions) return [];
@@ -193,8 +194,6 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
 
     if (methodFilter === 'academy') {
       filtered = filtered.filter(q => q.is_god_mode);
-    } else if (methodFilter === 'no_academy') {
-      filtered = filtered.filter(q => !q.is_god_mode);
     }
 
     return filtered;
@@ -331,6 +330,12 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
   return (
     <>
       <div className="space-y-6">
+        <div className="flex items-center gap-3 px-4 mb-4">
+          <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
+          <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.25em]">
+            Total de resultados: {processedQuestions.length}
+          </span>
+        </div>
         <TooltipProvider>
           {currentQuestions.map((q, index) => {
             const isAnswered = answeredQuestions[q.id];
@@ -357,7 +362,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
                     <div className="flex items-center gap-3">
                       <CardTitle>Questão {indexOfFirstQuestion + index + 1}</CardTitle>
                       {q.is_god_mode && (
-                        <Badge className="bg-gradient-to-r from-amber-500 to-purple-600 text-white border-0 shadow-[0_0_15px_rgba(234,179,8,0.5)] animate-pulse font-black px-4 py-1.5 text-[10px] tracking-widest uppercase">
+                        <Badge variant="outline" className="border-blue-500/50 text-blue-600 bg-transparent font-black px-3 py-1 text-[9px] tracking-widest uppercase shadow-sm">
                           Método Academy
                         </Badge>
                       )}
