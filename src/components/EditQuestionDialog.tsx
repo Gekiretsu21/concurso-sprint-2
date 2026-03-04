@@ -23,7 +23,6 @@ import { type Question } from './QuestionList';
 import { useFirebase } from '@/firebase';
 import { updateQuestion } from '@/firebase/actions';
 import { useToast } from '@/hooks/use-toast';
-import { ScrollArea } from './ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
@@ -139,7 +138,7 @@ export function EditQuestionDialog({ question }: EditQuestionDialogProps) {
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-5xl max-h-[95vh] flex flex-col p-0 overflow-hidden border-none shadow-2xl rounded-2xl">
-        <DialogHeader className="p-6 pb-2 bg-slate-950 text-white">
+        <DialogHeader className="p-6 pb-2 bg-slate-950 text-white shrink-0">
           <div className="flex items-center justify-between">
             <div>
               <DialogTitle className="text-2xl font-black uppercase tracking-tight flex items-center gap-2">
@@ -150,15 +149,15 @@ export function EditQuestionDialog({ question }: EditQuestionDialogProps) {
               </DialogDescription>
             </div>
             {form.watch('is_god_mode') && (
-              <Badge className="bg-accent text-accent-foreground font-black px-4 py-1.5 rounded-full">
+              <Badge className="bg-accent text-accent-foreground font-black px-4 py-1.5 rounded-full border-none">
                 MODO ACADEMY ATIVO
               </Badge>
             )}
           </div>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 px-8 bg-slate-50/50">
-          <form id="edit-question-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-10 py-8 pb-16">
+        <div className="flex-1 overflow-y-auto px-8 bg-slate-50/50">
+          <form id="edit-question-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-10 py-8 pb-32">
             
             {/* Seção 1: Identificação Estratégica */}
             <div className="space-y-6">
@@ -223,7 +222,7 @@ export function EditQuestionDialog({ question }: EditQuestionDialogProps) {
                     type="checkbox" 
                     id="is_god_mode" 
                     {...form.register('is_god_mode')} 
-                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                   />
                   <Label htmlFor="is_god_mode" className="text-xs font-bold text-slate-600 cursor-pointer">Pertence ao Método Academy?</Label>
                 </div>
@@ -299,9 +298,9 @@ export function EditQuestionDialog({ question }: EditQuestionDialogProps) {
               </div>
             </div>
           </form>
-        </ScrollArea>
+        </div>
 
-        <DialogFooter className="p-6 border-t bg-slate-100/50">
+        <DialogFooter className="p-6 border-t bg-slate-100/50 shrink-0">
           <DialogClose asChild>
             <Button type="button" variant="outline" className="rounded-xl px-8">
               Cancelar
