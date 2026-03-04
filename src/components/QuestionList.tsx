@@ -404,14 +404,20 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
                       const getAlternativeClassName = () => {
                         const currentKeyNormalized = alternativeKey.toLowerCase();
                         const selectedNormalized = String(selected).toLowerCase();
+                        const correctNormalized = String(q.correctAnswer).toLowerCase();
 
                         if (!isAnswered) {
                           if (selectedNormalized === currentKeyNormalized) return 'bg-secondary border-primary';
                           return 'hover:bg-secondary/80 bg-white border-border';
                         }
 
+                        // Resposta Correta: Sempre Verde quando respondido
+                        if (currentKeyNormalized === correctNormalized) {
+                          return 'bg-emerald-50 border-emerald-400 text-emerald-900 font-medium';
+                        }
+
+                        // Resposta do Usuário errada: Vermelho
                         if (selectedNormalized === currentKeyNormalized) {
-                          if (isAttemptCorrect) return 'bg-emerald-50 border-emerald-400 text-emerald-900 font-medium';
                           return 'bg-red-50 border-red-400 text-red-900 font-medium';
                         }
 
@@ -442,11 +448,15 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
                           >
                             <div className={cn(
                               "flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full border text-sm font-bold z-10 transition-colors",
-                              isAnswered && String(selected).toLowerCase() === alternativeKey.toLowerCase()
-                                ? isAttemptCorrect
+                              isAnswered 
+                                ? alternativeKey.toLowerCase() === String(q.correctAnswer).toLowerCase()
                                   ? "bg-emerald-500 text-white border-emerald-500"
-                                  : "bg-red-500 text-white border-red-500"
-                                : "bg-background border-muted-foreground text-foreground"
+                                  : alternativeKey.toLowerCase() === String(selected).toLowerCase()
+                                    ? "bg-red-500 text-white border-red-500"
+                                    : "bg-background border-muted-foreground text-foreground"
+                                : String(selected).toLowerCase() === alternativeKey.toLowerCase()
+                                  ? "bg-primary text-white border-primary"
+                                  : "bg-background border-muted-foreground text-foreground"
                             )}>
                               {String.fromCharCode(65 + optIndex)}
                             </div>
