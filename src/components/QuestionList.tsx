@@ -494,7 +494,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
                                     </span>
                                   ) : (
                                     <span className={cn("font-bold mb-1.5 block uppercase text-xs tracking-wider",
-                                      isSelectedAlternative ? (isThisCorrect ? "text-emerald-800" : "text-red-800") : "text-slate-600"
+                                      isSelectedAlternative ? "text-emerald-800" : "text-red-800") : "text-slate-600"
                                     )}>
                                       Análise Tática - Alternativa {String.fromCharCode(65 + optIndex)}
                                     </span>
