@@ -41,7 +41,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { FeedPostDialog } from '@/components/FeedPostDialog';
 import { StudentPerformanceModal } from '@/components/StudentPerformanceModal';
-import { StudentFlashcardsModal } from '@/components/StudentFlashcardsModal';
 
 interface PreviousExam {
   id: string;
@@ -49,8 +48,8 @@ interface PreviousExam {
 }
 
 interface CommunitySimulado {
-    id: string;
-    name: string;
+  id: string;
+  name: string;
 }
 
 interface Flashcard {
@@ -72,15 +71,15 @@ interface Question {
 }
 
 interface UserProfile {
-    id: string;
-    name: string;
-    email: string;
-    photoURL?: string;
-    subscription?: {
-        plan: 'standard' | 'plus';
-        status: 'active' | 'inactive' | 'canceled';
-    };
-    stats?: any;
+  id: string;
+  name: string;
+  email: string;
+  photoURL?: string;
+  subscription?: {
+    plan: 'standard' | 'academy' | 'plus';
+    status: 'active' | 'inactive' | 'canceled';
+  };
+  stats?: any;
 }
 
 
@@ -90,7 +89,7 @@ function DeleteQuestionsDialog({ availableResources, allQuestions, isLoadingQues
 
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  
+
   const [filterSubject, setFilterSubject] = useState<string>('all');
   const [filterAssunto, setFilterAssunto] = useState<string>('all');
   const [filterCargo, setFilterCargo] = useState<string>('all');
@@ -104,7 +103,7 @@ function DeleteQuestionsDialog({ availableResources, allQuestions, isLoadingQues
       setSelectedQuestions([]);
     }
   }, [isOpen]);
-  
+
   const filteredQuestions = useMemo(() => {
     if (!allQuestions) return [];
     return allQuestions.filter(q => {
@@ -116,14 +115,14 @@ function DeleteQuestionsDialog({ availableResources, allQuestions, isLoadingQues
   }, [allQuestions, filterSubject, filterAssunto, filterCargo]);
 
   const handleCheckboxChange = (questionId: string) => {
-    setSelectedQuestions(prev => 
+    setSelectedQuestions(prev =>
       prev.includes(questionId) ? prev.filter(id => id !== questionId) : [...prev, questionId]
     );
   };
 
   const handleDeleteSelected = async () => {
     if (!firestore || selectedQuestions.length === 0) return;
-    
+
     setIsDeleting(true);
     try {
       await deleteQuestionsByIds(firestore, selectedQuestions);
@@ -133,7 +132,7 @@ function DeleteQuestionsDialog({ availableResources, allQuestions, isLoadingQues
       });
       setSelectedQuestions([]);
     } catch (error) {
-       toast({
+      toast({
         variant: 'destructive',
         title: 'Erro ao Excluir',
         description: 'Não foi possível excluir as questões selecionadas.',
@@ -147,20 +146,20 @@ function DeleteQuestionsDialog({ availableResources, allQuestions, isLoadingQues
     if (!firestore) return;
     setIsDeleting(true);
     try {
-        const deletedCount = await deleteDuplicateQuestions(firestore);
-        toast({
-            title: "Limpeza Concluída",
-            description: `${deletedCount} questão(ões) duplicada(s) foram excluídas.`,
-        });
-        setIsOpen(false);
+      const deletedCount = await deleteDuplicateQuestions(firestore);
+      toast({
+        title: "Limpeza Concluída",
+        description: `${deletedCount} questão(ões) duplicada(s) foram excluídas.`,
+      });
+      setIsOpen(false);
     } catch (error) {
-        toast({
-            variant: 'destructive',
-            title: 'Erro na Limpeza',
-            description: 'Ocorreu um erro ao tentar excluir questões duplicadas.',
-        });
+      toast({
+        variant: 'destructive',
+        title: 'Erro na Limpeza',
+        description: 'Ocorreu um erro ao tentar excluir questões duplicadas.',
+      });
     } finally {
-        setIsDeleting(false);
+      setIsDeleting(false);
     }
   }
 
@@ -181,55 +180,55 @@ function DeleteQuestionsDialog({ availableResources, allQuestions, isLoadingQues
         </DialogHeader>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
-            <Select value={filterSubject} onValueChange={setFilterSubject}>
-                <SelectTrigger><SelectValue placeholder="Matéria" /></SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">Todas as Matérias</SelectItem>
-                    {availableResources.questionSubjects.map((s: string) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                </SelectContent>
-            </Select>
-            <Select value={filterAssunto} onValueChange={setFilterAssunto}>
-                <SelectTrigger><SelectValue placeholder="Assunto" /></SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">Todos os Assuntos</SelectItem>
-                    {availableResources.questionAssuntos.map((y: string) => <SelectItem key={y} value={y}>{y}</SelectItem>)}
-                </SelectContent>
-            </Select>
-            <Select value={filterCargo} onValueChange={setFilterCargo}>
-                <SelectTrigger><SelectValue placeholder="Cargo" /></SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">Todos os Cargos</SelectItem>
-                    {availableResources.questionCargos.map((r: string) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                </SelectContent>
-            </Select>
+          <Select value={filterSubject} onValueChange={setFilterSubject}>
+            <SelectTrigger><SelectValue placeholder="Matéria" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as Matérias</SelectItem>
+              {availableResources.questionSubjects.map((s: string) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={filterAssunto} onValueChange={setFilterAssunto}>
+            <SelectTrigger><SelectValue placeholder="Assunto" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os Assuntos</SelectItem>
+              {availableResources.questionAssuntos.map((y: string) => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={filterCargo} onValueChange={setFilterCargo}>
+            <SelectTrigger><SelectValue placeholder="Cargo" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os Cargos</SelectItem>
+              {availableResources.questionCargos.map((r: string) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
 
         <ScrollArea className="max-h-72 my-4 border rounded-md">
-            <div className="space-y-2 p-4">
-            {isLoadingQuestions && <div className="flex items-center justify-center p-4"><Loader2 className="h-6 w-6 animate-spin"/></div>}
+          <div className="space-y-2 p-4">
+            {isLoadingQuestions && <div className="flex items-center justify-center p-4"><Loader2 className="h-6 w-6 animate-spin" /></div>}
             {!isLoadingQuestions && filteredQuestions.length > 0 ? filteredQuestions.map(question => (
-                <div key={question.id} className="flex items-center space-x-3 rounded-md border p-3 bg-muted/50">
-                    <Checkbox
-                        id={`question-${question.id}`}
-                        checked={selectedQuestions.includes(question.id)}
-                        onCheckedChange={() => handleCheckboxChange(question.id)}
-                    />
-                    <Label htmlFor={`question-${question.id}`} className="flex-1 cursor-pointer text-sm truncate">
-                        {question.Enunciado}
-                    </Label>
-                </div>
+              <div key={question.id} className="flex items-center space-x-3 rounded-md border p-3 bg-muted/50">
+                <Checkbox
+                  id={`question-${question.id}`}
+                  checked={selectedQuestions.includes(question.id)}
+                  onCheckedChange={() => handleCheckboxChange(question.id)}
+                />
+                <Label htmlFor={`question-${question.id}`} className="flex-1 cursor-pointer text-sm truncate">
+                  {question.Enunciado}
+                </Label>
+              </div>
             )) : !isLoadingQuestions && <p className="text-sm text-muted-foreground text-center py-4">Nenhuma questão corresponde aos filtros.</p>}
-            </div>
+          </div>
         </ScrollArea>
         <DialogFooter className="sm:justify-between flex-wrap gap-2">
-            <Button variant="outline" onClick={handleDeleteDuplicates} disabled={isDeleting}>
-                {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                <Sparkles className="mr-2 h-4 w-4" />
-                Excluir Duplicadas
-            </Button>
+          <Button variant="outline" onClick={handleDeleteDuplicates} disabled={isDeleting}>
+            {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Sparkles className="mr-2 h-4 w-4" />
+            Excluir Duplicadas
+          </Button>
           <div className="flex gap-2">
             <DialogClose asChild><Button variant="outline">Fechar</Button></DialogClose>
-             <Button variant="destructive" onClick={handleDeleteSelected} disabled={isDeleting || selectedQuestions.length === 0}>
+            <Button variant="destructive" onClick={handleDeleteSelected} disabled={isDeleting || selectedQuestions.length === 0}>
               {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Excluir ({selectedQuestions.length})
             </Button>
@@ -249,24 +248,24 @@ function DeletePreviousExamsDialog() {
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedExams, setSelectedExams] = useState<string[]>([]);
-  
+
   const examsQuery = useMemoFirebase(() =>
-      firestore && user
-        ? query(collection(firestore, `previousExams`))
-        : null,
+    firestore && user
+      ? query(collection(firestore, `previousExams`))
+      : null,
     [firestore, user]
   );
   const { data: exams, isLoading } = useCollection<PreviousExam>(examsQuery);
 
   const handleCheckboxChange = (examId: string) => {
-    setSelectedExams(prev => 
+    setSelectedExams(prev =>
       prev.includes(examId) ? prev.filter(id => id !== examId) : [...prev, examId]
     );
   };
 
   const handleDelete = async () => {
     if (!firestore || !user || selectedExams.length === 0) return;
-    
+
     setIsDeleting(true);
     try {
       await deletePreviousExams(firestore, user.uid, selectedExams);
@@ -277,7 +276,7 @@ function DeletePreviousExamsDialog() {
       setSelectedExams([]);
       setIsOpen(false);
     } catch (error) {
-       toast({
+      toast({
         variant: 'destructive',
         title: 'Erro ao Excluir',
         description: 'Não foi possível excluir as provas selecionadas.',
@@ -303,21 +302,21 @@ function DeletePreviousExamsDialog() {
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-72 my-4">
-            <div className="space-y-4 pr-6">
-            {isLoading && <div className="flex items-center justify-center p-4"><Loader2 className="h-6 w-6 animate-spin"/></div>}
+          <div className="space-y-4 pr-6">
+            {isLoading && <div className="flex items-center justify-center p-4"><Loader2 className="h-6 w-6 animate-spin" /></div>}
             {!isLoading && exams && exams.length > 0 ? exams.map(exam => (
-                <div key={exam.id} className="flex items-center space-x-2 rounded-md border p-3">
-                    <Checkbox
-                        id={`exam-${exam.id}`}
-                        checked={selectedExams.includes(exam.id)}
-                        onCheckedChange={() => handleCheckboxChange(exam.id)}
-                    />
-                    <Label htmlFor={`exam-${exam.id}`} className="flex-1 cursor-pointer">
-                        {exam.name}
-                    </Label>
-                </div>
+              <div key={exam.id} className="flex items-center space-x-2 rounded-md border p-3">
+                <Checkbox
+                  id={`exam-${exam.id}`}
+                  checked={selectedExams.includes(exam.id)}
+                  onCheckedChange={() => handleCheckboxChange(exam.id)}
+                />
+                <Label htmlFor={`exam-${exam.id}`} className="flex-1 cursor-pointer">
+                  {exam.name}
+                </Label>
+              </div>
             )) : !isLoading && <p className="text-sm text-muted-foreground text-center py-4">Nenhuma prova anterior encontrada.</p>}
-            </div>
+          </div>
         </ScrollArea>
         <DialogFooter>
           <DialogClose asChild><Button variant="outline">Cancelar</Button></DialogClose>
@@ -339,22 +338,22 @@ function DeleteCommunitySimuladosDialog() {
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedSimulados, setSelectedSimulados] = useState<string[]>([]);
-  
+
   const simuladosQuery = useMemoFirebase(() =>
-      firestore && user ? query(collection(firestore, `communitySimulados`)) : null,
+    firestore && user ? query(collection(firestore, `communitySimulados`)) : null,
     [firestore, user]
   );
   const { data: simulados, isLoading } = useCollection<CommunitySimulado>(simuladosQuery);
 
   const handleCheckboxChange = (simuladoId: string) => {
-    setSelectedSimulados(prev => 
+    setSelectedSimulados(prev =>
       prev.includes(simuladoId) ? prev.filter(id => id !== simuladoId) : [...prev, simuladoId]
     );
   };
 
   const handleDelete = async () => {
     if (!firestore || selectedSimulados.length === 0) return;
-    
+
     setIsDeleting(true);
     try {
       await deleteCommunitySimulados(firestore, selectedSimulados);
@@ -365,7 +364,7 @@ function DeleteCommunitySimuladosDialog() {
       setSelectedSimulados([]);
       setIsOpen(false);
     } catch (error) {
-       toast({
+      toast({
         variant: 'destructive',
         title: 'Erro ao Excluir',
         description: 'Não foi possível excluir os simulados selecionados.',
@@ -391,21 +390,21 @@ function DeleteCommunitySimuladosDialog() {
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-72 my-4">
-            <div className="space-y-4 pr-6">
-            {isLoading && <div className="flex items-center justify-center p-4"><Loader2 className="h-6 w-6 animate-spin"/></div>}
+          <div className="space-y-4 pr-6">
+            {isLoading && <div className="flex items-center justify-center p-4"><Loader2 className="h-6 w-6 animate-spin" /></div>}
             {!isLoading && simulados && simulados.length > 0 ? simulados.map(simulado => (
-                <div key={simulado.id} className="flex items-center space-x-2 rounded-md border p-3">
-                    <Checkbox
-                        id={`simulado-${simulado.id}`}
-                        checked={selectedSimulados.includes(simulado.id)}
-                        onCheckedChange={() => handleCheckboxChange(simulado.id)}
-                    />
-                    <Label htmlFor={`simulado-${simulado.id}`} className="flex-1 cursor-pointer">
-                        {simulado.name}
-                    </Label>
-                </div>
+              <div key={simulado.id} className="flex items-center space-x-2 rounded-md border p-3">
+                <Checkbox
+                  id={`simulado-${simulado.id}`}
+                  checked={selectedSimulados.includes(simulado.id)}
+                  onCheckedChange={() => handleCheckboxChange(simulado.id)}
+                />
+                <Label htmlFor={`simulado-${simulado.id}`} className="flex-1 cursor-pointer">
+                  {simulado.name}
+                </Label>
+              </div>
             )) : !isLoading && <p className="text-sm text-muted-foreground text-center py-4">Nenhum simulado da comunidade encontrado.</p>}
-            </div>
+          </div>
         </ScrollArea>
         <DialogFooter>
           <DialogClose asChild><Button variant="outline">Cancelar</Button></DialogClose>
@@ -425,7 +424,7 @@ function DeleteFlashcardsDialog({ availableResources, allFlashcards, isLoadingFl
 
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  
+
   const [filterSubject, setFilterSubject] = useState<string>('all');
   const [filterTopic, setFilterTopic] = useState<string>('all');
   const [filterCargo, setFilterCargo] = useState<string>('all');
@@ -436,7 +435,7 @@ function DeleteFlashcardsDialog({ availableResources, allFlashcards, isLoadingFl
     setFilterCargo('all');
     setSelectedFlashcards([]);
   }, [filterSubject]);
-  
+
   useEffect(() => setSelectedFlashcards([]), [filterTopic, filterCargo]);
 
 
@@ -451,14 +450,14 @@ function DeleteFlashcardsDialog({ availableResources, allFlashcards, isLoadingFl
   }, [allFlashcards, filterSubject, filterTopic, filterCargo]);
 
   const handleCheckboxChange = (flashcardId: string) => {
-    setSelectedFlashcards(prev => 
+    setSelectedFlashcards(prev =>
       prev.includes(flashcardId) ? prev.filter(id => id !== flashcardId) : [...prev, flashcardId]
     );
   };
 
   const handleDeleteSelected = async () => {
     if (!firestore || selectedFlashcards.length === 0) return;
-    
+
     setIsDeleting(true);
     try {
       await deleteFlashcardsByIds(firestore, selectedFlashcards);
@@ -468,7 +467,7 @@ function DeleteFlashcardsDialog({ availableResources, allFlashcards, isLoadingFl
       });
       setSelectedFlashcards([]);
     } catch (error) {
-       toast({
+      toast({
         variant: 'destructive',
         title: 'Erro ao Excluir',
         description: 'Não foi possível excluir os flashcards selecionados.',
@@ -490,7 +489,7 @@ function DeleteFlashcardsDialog({ availableResources, allFlashcards, isLoadingFl
       });
       setIsOpen(false);
     } catch (error) {
-       toast({
+      toast({
         variant: 'destructive',
         title: 'Erro ao Excluir Tudo',
         description: 'Não foi possível excluir todos os flashcards.',
@@ -504,20 +503,20 @@ function DeleteFlashcardsDialog({ availableResources, allFlashcards, isLoadingFl
     if (!firestore) return;
     setIsDeleting(true);
     try {
-        const deletedCount = await deleteDuplicateFlashcards(firestore);
-        toast({
-            title: "Limpeza Concluída",
-            description: `${deletedCount} flashcard(s) duplicado(s) foram excluídos.`,
-        });
-        setIsOpen(false);
+      const deletedCount = await deleteDuplicateFlashcards(firestore);
+      toast({
+        title: "Limpeza Concluída",
+        description: `${deletedCount} flashcard(s) duplicado(s) foram excluídos.`,
+      });
+      setIsOpen(false);
     } catch (error) {
-        toast({
-            variant: 'destructive',
-            title: 'Erro na Limpeza',
-            description: 'Ocorreu um erro ao tentar excluir flashcards duplicados.',
-        });
+      toast({
+        variant: 'destructive',
+        title: 'Erro na Limpeza',
+        description: 'Ocorreu um erro ao tentar excluir flashcards duplicados.',
+      });
     } finally {
-        setIsDeleting(false);
+      setIsDeleting(false);
     }
   }
 
@@ -538,79 +537,79 @@ function DeleteFlashcardsDialog({ availableResources, allFlashcards, isLoadingFl
         </DialogHeader>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
-            <Select value={filterSubject} onValueChange={setFilterSubject}>
-                <SelectTrigger><SelectValue placeholder="Matéria" /></SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">Todas as Matérias</SelectItem>
-                    {availableResources.flashcardSubjects.map((s: string) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                </SelectContent>
-            </Select>
-            <Select value={filterTopic} onValueChange={setFilterTopic} disabled={filterSubject === 'all'}>
-                <SelectTrigger><SelectValue placeholder="Assunto" /></SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">Todos os Assuntos</SelectItem>
-                    {(availableResources.topicsByFlashcardSubject[filterSubject] || []).map((t: string) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                </SelectContent>
-            </Select>
-            <Select value={filterCargo} onValueChange={setFilterCargo}>
-                <SelectTrigger><SelectValue placeholder="Cargo" /></SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">Todos os Cargos</SelectItem>
-                    {availableResources.flashcardCargos.map((r: string) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                </SelectContent>
-            </Select>
+          <Select value={filterSubject} onValueChange={setFilterSubject}>
+            <SelectTrigger><SelectValue placeholder="Matéria" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as Matérias</SelectItem>
+              {availableResources.flashcardSubjects.map((s: string) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={filterTopic} onValueChange={setFilterTopic} disabled={filterSubject === 'all'}>
+            <SelectTrigger><SelectValue placeholder="Assunto" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os Assuntos</SelectItem>
+              {(availableResources.topicsByFlashcardSubject[filterSubject] || []).map((t: string) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={filterCargo} onValueChange={setFilterCargo}>
+            <SelectTrigger><SelectValue placeholder="Cargo" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os Cargos</SelectItem>
+              {availableResources.flashcardCargos.map((r: string) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
 
         <ScrollArea className="max-h-72 my-4 border rounded-md">
-            <div className="space-y-2 p-4">
-            {isLoadingFlashcards && <div className="flex items-center justify-center p-4"><Loader2 className="h-6 w-6 animate-spin"/></div>}
+          <div className="space-y-2 p-4">
+            {isLoadingFlashcards && <div className="flex items-center justify-center p-4"><Loader2 className="h-6 w-6 animate-spin" /></div>}
             {!isLoadingFlashcards && filteredFlashcards.length > 0 ? filteredFlashcards.map(flashcard => (
-                <div key={flashcard.id} className="flex items-center space-x-3 rounded-md border p-3 bg-muted/50">
-                    <Checkbox
-                        id={`flashcard-${flashcard.id}`}
-                        checked={selectedFlashcards.includes(flashcard.id)}
-                        onCheckedChange={() => handleCheckboxChange(flashcard.id)}
-                    />
-                    <Label htmlFor={`flashcard-${flashcard.id}`} className="flex-1 cursor-pointer text-sm truncate">
-                        {flashcard.front}
-                    </Label>
-                </div>
+              <div key={flashcard.id} className="flex items-center space-x-3 rounded-md border p-3 bg-muted/50">
+                <Checkbox
+                  id={`flashcard-${flashcard.id}`}
+                  checked={selectedFlashcards.includes(flashcard.id)}
+                  onCheckedChange={() => handleCheckboxChange(flashcard.id)}
+                />
+                <Label htmlFor={`flashcard-${flashcard.id}`} className="flex-1 cursor-pointer text-sm truncate">
+                  {flashcard.front}
+                </Label>
+              </div>
             )) : !isLoadingFlashcards && <p className="text-sm text-muted-foreground text-center py-4">Nenhum flashcard corresponde aos filtros.</p>}
-            </div>
+          </div>
         </ScrollArea>
         <DialogFooter className="sm:justify-between flex-wrap gap-2">
-            <div>
-                 <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                    <Button variant="destructive" disabled={isDeleting || isLoadingFlashcards || !allFlashcards || allFlashcards.length === 0}>
-                        Excluir Todos
-                    </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Tem certeza absoluta?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                        Esta ação é irreversível e apagará todos os flashcards da plataforma.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDeleteAll} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
-                        {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Sim, excluir tudo
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-                <Button variant="outline" onClick={handleDeleteDuplicates} disabled={isDeleting} className="ml-2">
-                    {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Excluir Duplicadas
+          <div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" disabled={isDeleting || isLoadingFlashcards || !allFlashcards || allFlashcards.length === 0}>
+                  Excluir Todos
                 </Button>
-            </div>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Tem certeza absoluta?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esta ação é irreversível e apagará todos os flashcards da plataforma.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDeleteAll} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+                    {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Sim, excluir tudo
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            <Button variant="outline" onClick={handleDeleteDuplicates} disabled={isDeleting} className="ml-2">
+              {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Sparkles className="mr-2 h-4 w-4" />
+              Excluir Duplicadas
+            </Button>
+          </div>
           <div className="flex gap-2">
             <DialogClose asChild><Button variant="outline">Fechar</Button></DialogClose>
-             <Button variant="destructive" onClick={handleDeleteSelected} disabled={isDeleting || selectedFlashcards.length === 0}>
+            <Button variant="destructive" onClick={handleDeleteSelected} disabled={isDeleting || selectedFlashcards.length === 0}>
               {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Excluir ({selectedFlashcards.length})
             </Button>
@@ -638,12 +637,10 @@ export default function ManagementPage() {
   const [isSeeding, setIsSeeding] = useState(false);
   const [isDeletingFakes, setIsDeletingFakes] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
-  
+
   const [selectedUserForPerf, setSelectedUserForPerf] = useState<UserProfile | null>(null);
   const [isPerfModalOpen, setIsPerfModalOpen] = useState(false);
-
-  const [selectedUserForFlashcards, setSelectedUserForFlashcards] = useState<UserProfile | null>(null);
-  const [isFlashcardsModalOpen, setIsFlashcardsModalOpen] = useState(false);
+  const [perfInitialView, setPerfInitialView] = useState<'questions' | 'flashcards'>('questions');
 
 
   useEffect(() => {
@@ -655,26 +652,26 @@ export default function ManagementPage() {
     [firestore, user]
   );
   const { data: allQuestions, isLoading: isLoadingQuestions } = useCollection<Question>(questionsQuery);
-  
+
   const flashcardsQuery = useMemoFirebase(
     () => (firestore && user ? collection(firestore, 'flashcards') : null),
     [firestore, user]
   );
   const { data: allFlashcards, isLoading: isLoadingFlashcards } = useCollection<Flashcard>(flashcardsQuery);
-  
+
   const usersQuery = useMemoFirebase(
     () => (firestore && user ? query(collection(firestore, 'users')) : null),
     [firestore, user]
   );
   const { data: allUsers, isLoading: isLoadingUsers } = useCollection<UserProfile>(usersQuery);
-  
+
   const filteredUsers = useMemo(() => {
     if (!allUsers) return [];
     if (!userSearchQuery) return allUsers;
-    
+
     const lowercasedQuery = userSearchQuery.toLowerCase();
-    return allUsers.filter(u => 
-      u.name?.toLowerCase().includes(lowercasedQuery) || 
+    return allUsers.filter(u =>
+      u.name?.toLowerCase().includes(lowercasedQuery) ||
       u.email?.toLowerCase().includes(lowercasedQuery)
     );
   }, [allUsers, userSearchQuery]);
@@ -692,56 +689,56 @@ export default function ManagementPage() {
 
   const availableFlashcardResources = useMemo(() => {
     if (!allFlashcards) return { flashcardSubjects: [], topicsByFlashcardSubject: {}, flashcardCargos: [] };
-    
+
     const subjects = new Set<string>();
     const topicsBySubject: Record<string, Set<string>> = {};
     const cargos = new Set<string>();
 
     for (const fc of allFlashcards) {
-        if(fc.subject) {
-            subjects.add(fc.subject);
-            if (!topicsBySubject[fc.subject]) {
-                topicsBySubject[fc.subject] = new Set();
-            }
-            if(fc.topic) {
-                topicsBySubject[fc.subject].add(fc.topic);
-            }
+      if (fc.subject) {
+        subjects.add(fc.subject);
+        if (!topicsBySubject[fc.subject]) {
+          topicsBySubject[fc.subject] = new Set();
         }
-        if(fc.targetRole) {
-            cargos.add(fc.targetRole);
+        if (fc.topic) {
+          topicsBySubject[fc.subject].add(fc.topic);
         }
+      }
+      if (fc.targetRole) {
+        cargos.add(fc.targetRole);
+      }
     }
 
     return {
-        flashcardSubjects: Array.from(subjects).sort(),
-        topicsByFlashcardSubject: Object.entries(topicsBySubject).reduce((acc, [subject, topicsSet]) => {
-            acc[subject] = Array.from(topicsSet).sort();
-            return acc;
-        }, {} as Record<string, string[]>),
-        flashcardCargos: Array.from(cargos).sort(),
+      flashcardSubjects: Array.from(subjects).sort(),
+      topicsByFlashcardSubject: Object.entries(topicsBySubject).reduce((acc, [subject, topicsSet]) => {
+        acc[subject] = Array.from(topicsSet).sort();
+        return acc;
+      }, {} as Record<string, string[]>),
+      flashcardCargos: Array.from(cargos).sort(),
     };
-}, [allFlashcards]);
+  }, [allFlashcards]);
 
   const availableQuestionResources = useMemo(() => {
     if (!allQuestions) return { questionSubjects: [], questionAnos: [], questionCargos: [], questionAssuntos: [] };
-    
+
     const subjects = new Set<string>();
     const anos = new Set<string>();
     const cargos = new Set<string>();
     const assuntos = new Set<string>();
 
     for (const q of allQuestions) {
-        if(q.Materia) subjects.add(q.Materia);
-        if(q.Ano) anos.add(q.Ano);
-        if(q.Cargo) cargos.add(q.Cargo);
-        if(q.Assunto) assuntos.add(q.Assunto);
+      if (q.Materia) subjects.add(q.Materia);
+      if (q.Ano) anos.add(q.Ano);
+      if (q.Cargo) cargos.add(q.Cargo);
+      if (q.Assunto) assuntos.add(q.Assunto);
     }
 
     return {
-        questionSubjects: Array.from(subjects).sort(),
-        questionAnos: Array.from(anos).sort((a,b) => b.localeCompare(a)), 
-        questionCargos: Array.from(cargos).sort(),
-        questionAssuntos: Array.from(assuntos).sort(),
+      questionSubjects: Array.from(subjects).sort(),
+      questionAnos: Array.from(anos).sort((a, b) => b.localeCompare(a)),
+      questionCargos: Array.from(cargos).sort(),
+      questionAssuntos: Array.from(assuntos).sort(),
     };
   }, [allQuestions]);
 
@@ -755,15 +752,15 @@ export default function ManagementPage() {
       return;
     }
     setIsImportingQuestions(true);
-    
+
     const examDetails = isPreviousExam ? { isPreviousExam, examName } : undefined;
     const accessTier = isVipContent ? 'plus' : 'standard';
 
     importQuestions(firestore, questionText, user.uid, accessTier, examDetails)
       .then(() => {
         toast({
-            title: 'Importação Iniciada',
-            description: 'As questões estão sendo importadas em segundo plano.',
+          title: 'Importação Iniciada',
+          description: 'As questões estão sendo importadas em segundo plano.',
         });
         setQuestionText('');
         setExamName('');
@@ -804,7 +801,7 @@ export default function ManagementPage() {
         description: 'Os flashcards foram importados com sucesso!',
       });
       setFlashcardText('');
-       setIsVipContent(false);
+      setIsVipContent(false);
     } catch (error) {
       let message = 'Ocorreu um erro ao importar os flashcards.';
       if (error instanceof Error) {
@@ -820,21 +817,20 @@ export default function ManagementPage() {
     }
   };
 
-  const handlePlanChange = async (userId: string, currentPlan: 'standard' | 'plus') => {
+  const handlePlanChange = async (userId: string, newPlan: 'standard' | 'academy' | 'plus') => {
     if (!firestore) return;
-    const newPlan = currentPlan === 'plus' ? 'standard' : 'plus';
     try {
-        await updateUserPlan(firestore, userId, newPlan);
-        toast({
-            title: 'Sucesso!',
-            description: `Plano do usuário atualizado para ${newPlan}.`
-        });
+      await updateUserPlan(firestore, userId, newPlan);
+      toast({
+        title: 'Sucesso!',
+        description: `Plano do usuário atualizado para ${newPlan}.`
+      });
     } catch (error) {
-        toast({
-            variant: 'destructive',
-            title: 'Erro ao Atualizar Plano',
-            description: 'Não foi possível alterar o plano do usuário.'
-        });
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao Atualizar Plano',
+        description: 'Não foi possível alterar o plano do usuário.'
+      });
     }
   };
 
@@ -905,12 +901,14 @@ export default function ManagementPage() {
 
   const handleViewPerformance = (student: UserProfile) => {
     setSelectedUserForPerf(student);
+    setPerfInitialView('questions');
     setIsPerfModalOpen(true);
   };
 
   const handleViewFlashcards = (student: UserProfile) => {
-    setSelectedUserForFlashcards(student);
-    setIsFlashcardsModalOpen(true);
+    setSelectedUserForPerf(student);
+    setPerfInitialView('flashcards');
+    setIsPerfModalOpen(true);
   };
 
   const isButtonDisabled = !user || isUserLoading;
@@ -925,558 +923,636 @@ export default function ManagementPage() {
           </p>
         </div>
         <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 border text-sm font-medium">
-                <Users className="h-4 w-4 text-slate-500" />
-                <span>Total de Alunos: {isLoadingUsers ? '...' : allUsers?.length || 0}</span>
-            </div>
-            <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={handleRunSeed} disabled={isSeeding}>
-                    {isSeeding ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Database className="h-4 w-4 mr-2" />}
-                    Popular Ranking (Dev)
-                </Button>
-                <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleDeleteFakes} 
-                    disabled={isDeletingFakes}
-                    className="text-destructive hover:bg-destructive/10 border-destructive/30"
-                >
-                    {isDeletingFakes ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserMinus className="h-4 w-4 mr-2" />}
-                    Remover Fakes
-                </Button>
-            </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 border text-sm font-medium">
+            <Users className="h-4 w-4 text-slate-500" />
+            <span>Total de Alunos: {isLoadingUsers ? '...' : allUsers?.length || 0}</span>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={handleRunSeed} disabled={isSeeding}>
+              {isSeeding ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Database className="h-4 w-4 mr-2" />}
+              Popular Ranking (Dev)
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDeleteFakes}
+              disabled={isDeletingFakes}
+              className="text-destructive hover:bg-destructive/10 border-destructive/30"
+            >
+              {isDeletingFakes ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserMinus className="h-4 w-4 mr-2" />}
+              Remover Fakes
+            </Button>
+          </div>
         </div>
       </header>
 
       <div className="grid grid-cols-1 gap-6">
         <Card>
-            <CardHeader>
-                <CardTitle>Ações Rápidas</CardTitle>
-                <CardDescription>Principais ferramentas para gerenciamento de conteúdo.</CardDescription>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                
-                <div className="flex flex-col p-4 rounded-lg border min-h-[160px]">
-                    <div className="flex-grow">
-                         <div className="flex justify-between items-start">
-                            <div>
-                                <h4 className="font-semibold">Importar Questões</h4>
-                                <p className="text-sm text-muted-foreground mt-1">Importe questões em massa.</p>
-                            </div>
-                            <Dialog>
-                                <DialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6">
-                                        <HelpCircle className="h-4 w-4" />
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent className="sm:max-w-[22rem]">
-                                    <DialogHeader>
-                                        <DialogTitle>Modelo de Importação</DialogTitle>
-                                        <DialogDescription>
-                                        Use o formato abaixo, separando cada campo com um pipe (`|`). Cada questão deve estar em uma nova linha.
-                                        </DialogDescription>
-                                    </DialogHeader>
-                                    <div className="rounded-md bg-muted p-4 text-sm font-mono mt-4 break-words">
-                                        Materia | Ano | Assunto | Cargo | Enunciado | a | b | c | d | e | correctAnswer
-                                    </div>
-                                </DialogContent>
-                            </Dialog>
-                        </div>
-                    </div>
-                    <div className="flex justify-end">
-                        <Dialog>
-                            {isClient ? (
-                                <DialogTrigger asChild>
-                                <Button size="icon" disabled={isButtonDisabled}>
-                                    {isUserLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardPaste />}
-                                    <span className="sr-only">Importar Questões</span>
-                                </Button>
-                                </DialogTrigger>
-                            ) : (
-                                <Button size="icon" disabled={true}><ClipboardPaste /><span className="sr-only">Importar Questões</span></Button>
-                            )}
-                            <DialogContent className="sm:max-w-4xl">
-                                <DialogHeader>
-                                <DialogTitle>Importar Questões por Texto</DialogTitle>
-                                <DialogDescription>
-                                    Cole o conteúdo no campo abaixo. Certifique-se de que o formato esteja correto.
-                                </DialogDescription>
-                                </DialogHeader>
-                                <div className="grid gap-4 py-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="question-text">Conteúdo</Label>
-                                    <Textarea
-                                    id="question-text"
-                                    className="min-h-[350px]"
-                                    placeholder="Cole seu texto aqui..."
-                                    value={questionText}
-                                    onChange={e => setQuestionText(e.target.value)}
-                                    />
-                                </div>
-                                <div className="space-y-4">
-                                    <div className="flex items-center space-x-2">
-                                        <Checkbox id="is-previous-exam" checked={isPreviousExam} onCheckedChange={(checked) => setIsPreviousExam(checked as boolean)} />
-                                        <Label htmlFor="is-previous-exam">É uma Prova Anterior?</Label>
-                                    </div>
-                                    <div className={cn("transition-all duration-300 ease-in-out", isPreviousExam ? "max-h-40 opacity-100" : "max-h-0 opacity-0 overflow-hidden")}>
-                                        {isPreviousExam && (
-                                            <div className="space-y-2">
-                                            <Label htmlFor="exam-name">Nome da Prova</Label>
-                                            <Input id="exam-name" value={examName} onChange={(e) => setExamName(e.target.value)} placeholder="Ex: PMMG Soldado 2023"/>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <Checkbox id="is-vip-content-q" checked={isVipContent} onCheckedChange={(checked) => setIsVipContent(checked as boolean)} />
-                                        <Label htmlFor="is-vip-content-q" className="flex items-center gap-1 font-bold text-amber-600">
-                                            <Crown className="h-4 w-4" /> Conteúdo Exclusivo MentorIA+ (VIP)?
-                                        </Label>
-                                    </div>
-                                </div>
-                                </div>
-                                <DialogFooter>
-                                <DialogClose asChild><Button variant="outline">Cancelar</Button></DialogClose>
-                                <Button
-                                    onClick={handleImportQuestions}
-                                    disabled={isImportingQuestions || !questionText || (isPreviousExam && !examName.trim())}
-                                >
-                                    {isImportingQuestions ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                    Importar Questões
-                                </Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
-                    </div>
-                </div>
-                
-                <div className="flex flex-col p-4 rounded-lg border min-h-[160px]">
-                    <div className="flex-grow">
-                        <h4 className="font-semibold">Gerador de Simulados</h4>
-                        <p className="text-sm text-muted-foreground mt-1">Crie simulados para a comunidade.</p>
-                    </div>
-                    <div className="flex justify-end">
-                        {isClient ? (
-                            <SimulatedExamDialog />
-                        ) : (
-                            <Button size="icon" disabled><FileText /><span className="sr-only">Gerar Simulado</span></Button>
-                        )}
-                    </div>
-                </div>
+          <CardHeader>
+            <CardTitle>Ações Rápidas</CardTitle>
+            <CardDescription>Principais ferramentas para gerenciamento de conteúdo.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
 
-                <div className="flex flex-col p-4 rounded-lg border min-h-[160px]">
-                     <div className="flex-grow">
-                        <div className="flex justify-between items-start">
-                            <div>
-                                <h4 className="font-semibold">Importar Flashcards</h4>
-                                <p className="text-sm text-muted-foreground mt-1">Importe flashcards em massa.</p>
-                            </div>
-                            <Dialog>
-                                <DialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6">
-                                        <HelpCircle className="h-4 w-4" />
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent className="sm:max-w-2xl">
-                                    <DialogHeader>
-                                        <DialogTitle>Modelo de Importação de Flashcards</DialogTitle>
-                                        <DialogDescription>
-                                            Use o formato abaixo, separando cada campo com um pipe (`|`). Cada flashcard deve estar em uma nova linha.
-                                        </DialogDescription>
-                                    </DialogHeader>
-                                    <div className="rounded-md bg-muted p-4 text-sm font-mono mt-4 space-y-2 break-words">
-                                        <p className='font-bold'>Formato:</p>
-                                        <p>Matéria | Assunto | Cargo | Pergunta | Resposta</p>
-                                        <p className='font-bold pt-4'>Exemplos:</p>
-                                        <p>Direito Administrativo | Atos Administrativos | Geral | Quais são os atributos do ato administrativo? | Presunção de legitimidade, autoexecutoriedade, tipicidade e imperatividade (mnemônico: PATI).</p>
-                                        <p>Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativa antes de nomes próprios femininos? | A crase é facultativa, pois o artigo 'a' antes do nome é opcional.</p>
-                                    </div>
-                                </DialogContent>
-                            </Dialog>
+            <div className="flex flex-col p-4 rounded-lg border min-h-[160px]">
+              <div className="flex-grow">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="font-semibold">Importar Questões</h4>
+                    <p className="text-sm text-muted-foreground mt-1">Importe questões em massa.</p>
+                  </div>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-6 w-6">
+                        <HelpCircle className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[22rem]">
+                      <DialogHeader>
+                        <DialogTitle>Modelo de Importação</DialogTitle>
+                        <DialogDescription>
+                          Use o formato abaixo, separando cada campo com um pipe (`|`). Cada questão deve estar em uma nova linha.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="rounded-md bg-muted p-4 text-sm font-mono mt-4 break-words">
+                        Materia | Ano | Assunto | Cargo | Enunciado | a | b | c | d | e | correctAnswer
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <Dialog>
+                  {isClient ? (
+                    <DialogTrigger asChild>
+                      <Button size="icon" disabled={isButtonDisabled}>
+                        {isUserLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardPaste />}
+                        <span className="sr-only">Importar Questões</span>
+                      </Button>
+                    </DialogTrigger>
+                  ) : (
+                    <Button size="icon" disabled={true}><ClipboardPaste /><span className="sr-only">Importar Questões</span></Button>
+                  )}
+                  <DialogContent className="sm:max-w-4xl">
+                    <DialogHeader>
+                      <DialogTitle>Importar Questões por Texto</DialogTitle>
+                      <DialogDescription>
+                        Cole o conteúdo no campo abaixo. Certifique-se de que o formato esteja correto.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="question-text">Conteúdo</Label>
+                        <Textarea
+                          id="question-text"
+                          className="min-h-[350px]"
+                          placeholder="Cole seu texto aqui..."
+                          value={questionText}
+                          onChange={e => setQuestionText(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-4">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox id="is-previous-exam" checked={isPreviousExam} onCheckedChange={(checked) => setIsPreviousExam(checked as boolean)} />
+                          <Label htmlFor="is-previous-exam">É uma Prova Anterior?</Label>
                         </div>
+                        <div className={cn("transition-all duration-300 ease-in-out", isPreviousExam ? "max-h-40 opacity-100" : "max-h-0 opacity-0 overflow-hidden")}>
+                          {isPreviousExam && (
+                            <div className="space-y-2">
+                              <Label htmlFor="exam-name">Nome da Prova</Label>
+                              <Input id="exam-name" value={examName} onChange={(e) => setExamName(e.target.value)} placeholder="Ex: PMMG Soldado 2023" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox id="is-vip-content-q" checked={isVipContent} onCheckedChange={(checked) => setIsVipContent(checked as boolean)} />
+                          <Label htmlFor="is-vip-content-q" className="flex items-center gap-1 font-bold text-amber-600">
+                            <Crown className="h-4 w-4" /> Conteúdo Exclusivo MentorIA+ (VIP)?
+                          </Label>
+                        </div>
+                      </div>
                     </div>
-                     <div className="flex justify-end">
-                        <Dialog>
-                            {isClient ? (
-                                <DialogTrigger asChild>
-                                <Button size="icon" disabled={isButtonDisabled}>
-                                    {isUserLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Layers />}
-                                    <span className="sr-only">Importar Flashcards</span>
-                                </Button>
-                                </DialogTrigger>
-                            ) : (
-                                <Button size="icon" disabled={true}><Layers /><span className="sr-only">Importar Flashcards</span></Button>
-                            )}
-                            <DialogContent className="sm:max-w-4xl">
-                                <DialogHeader>
-                                <DialogTitle>Importar Flashcards por Texto</DialogTitle>
-                                <DialogDescription>
-                                    Cole o conteúdo no campo abaixo, usando "|" como separador: Matéria | Assunto | Cargo | Pergunta | Resposta
-                                </DialogDescription>
-                                </DialogHeader>
-                                <div className="grid gap-4 py-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="flashcard-text">Conteúdo</Label>
-                                    <Textarea
-                                    id="flashcard-text"
-                                    className="min-h-[350px]"
-                                    placeholder="Direito Administrativo | Atos Administrativos | Geral | Quais são os atributos do ato administrativo? | Presunção de legitimidade, autoexecutoriedade, tipicidade e imperatividade (mnemônico: PATI).
+                    <DialogFooter>
+                      <DialogClose asChild><Button variant="outline">Cancelar</Button></DialogClose>
+                      <Button
+                        onClick={handleImportQuestions}
+                        disabled={isImportingQuestions || !questionText || (isPreviousExam && !examName.trim())}
+                      >
+                        {isImportingQuestions ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                        Importar Questões
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+
+            <div className="flex flex-col p-4 rounded-lg border border-amber-500/30 bg-amber-500/5 min-h-[160px]">
+              <div className="flex-grow">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="font-semibold text-amber-900">Modelo Método Academy</h4>
+                    <p className="text-sm text-amber-700/80 mt-1 pb-2">Baixe a planilha modelo ou copie os cabeçalhos para criar questões premium.</p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-start gap-2 h-max">
+                <Dialog>
+                  {isClient ? (
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="border-amber-500/50 text-amber-700 hover:bg-amber-500/10">
+                        <ClipboardPaste className="h-4 w-4 mr-2" />
+                        Ver Estrutura
+                      </Button>
+                    </DialogTrigger>
+                  ) : (
+                    <Button variant="outline" size="sm" disabled={true}><ClipboardPaste className="h-4 w-4 mr-2" />Ver Estrutura</Button>
+                  )}
+                  <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto w-full">
+                    <DialogHeader>
+                      <DialogTitle>Modelo de Importação Método Academy</DialogTitle>
+                      <DialogDescription>
+                        Siga exatamente esta estrutura de 28 colunas usando | (pipe) como separador.
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4 py-4 w-full">
+                      <div className="w-full">
+                        <h4 className="font-bold mb-2">Copie e cole a estrutura:</h4>
+                        <div className="bg-slate-950 p-4 rounded-md overflow-x-auto w-full max-w-3xl">
+                          <code className="text-amber-400 text-sm whitespace-pre-wrap break-words leading-relaxed block overflow-hidden">
+                            Matéria | Ano | Assunto | Cargo | Enunciado | a | b | c | d | e | correctAnswer | Contextualização (título) | Contextualização (texto) | Análise das alternativas (título) | Alternativa A - status | Justificativa (texto) | Alternativa B - status | Justificativa (texto) | Alternativa C - status | Justificativa (texto) | Alternativa D - status | Justificativa (texto) | Alternativa E - status | Justificativa (texto) | Conceito-Chave (título) | Conceito-Chave (texto) | Síntese de Revisão (título) | Síntese de revisão (texto)
+                          </code>
+                        </div>
+                      </div>
+                    </div>
+
+                    <DialogFooter>
+                      <DialogClose asChild><Button variant="outline">Fechar</Button></DialogClose>
+                      <Button onClick={() => {
+                        const headers = "Matéria | Ano | Assunto | Cargo | Enunciado | a | b | c | d | e | correctAnswer | Contextualização (título) | Contextualização (texto) | Análise das alternativas (título) | Alternativa A - status | Justificativa (texto) | Alternativa B - status | Justificativa (texto) | Alternativa C - status | Justificativa (texto) | Alternativa D - status | Justificativa (texto) | Alternativa E - status | Justificativa (texto) | Conceito-Chave (título) | Conceito-Chave (texto) | Síntese de Revisão (título) | Síntese de revisão (texto)\n";
+                        const blob = new Blob(["\uFEFF" + headers], { type: 'text/csv;charset=utf-8;' });
+                        const link = document.createElement("a");
+                        const url = URL.createObjectURL(blob);
+                        link.setAttribute("href", url);
+                        link.setAttribute("download", "modelo_importacao_god_mode.csv");
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      }} className="bg-amber-600 hover:bg-amber-700 text-white font-bold">
+                        Baixar Planilha Modelo (CSV)
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+
+
+            <div className="flex flex-col p-4 rounded-lg border min-h-[160px]">
+              <div className="flex-grow">
+                <h4 className="font-semibold">Gerador de Simulados</h4>
+                <p className="text-sm text-muted-foreground mt-1">Crie simulados para a comunidade.</p>
+              </div>
+              <div className="flex justify-end">
+                {isClient ? (
+                  <SimulatedExamDialog />
+                ) : (
+                  <Button size="icon" disabled><FileText /><span className="sr-only">Gerar Simulado</span></Button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex flex-col p-4 rounded-lg border min-h-[160px]">
+              <div className="flex-grow">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="font-semibold">Importar Flashcards</h4>
+                    <p className="text-sm text-muted-foreground mt-1">Importe flashcards em massa.</p>
+                  </div>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-6 w-6">
+                        <HelpCircle className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-2xl">
+                      <DialogHeader>
+                        <DialogTitle>Modelo de Importação de Flashcards</DialogTitle>
+                        <DialogDescription>
+                          Use o formato abaixo, separando cada campo com um pipe (`|`). Cada flashcard deve estar em uma nova linha.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="rounded-md bg-muted p-4 text-sm font-mono mt-4 space-y-2 break-words">
+                        <p className='font-bold'>Formato:</p>
+                        <p>Matéria | Assunto | Cargo | Pergunta | Resposta</p>
+                        <p className='font-bold pt-4'>Exemplos:</p>
+                        <p>Direito Administrativo | Atos Administrativos | Geral | Quais são os atributos do ato administrativo? | Presunção de legitimidade, autoexecutoriedade, tipicidade e imperatividade (mnemônico: PATI).</p>
+                        <p>Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativa antes de nomes próprios femininos? | A crase é facultativa, pois o artigo 'a' antes do nome é opcional.</p>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <Dialog>
+                  {isClient ? (
+                    <DialogTrigger asChild>
+                      <Button size="icon" disabled={isButtonDisabled}>
+                        {isUserLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Layers />}
+                        <span className="sr-only">Importar Flashcards</span>
+                      </Button>
+                    </DialogTrigger>
+                  ) : (
+                    <Button size="icon" disabled={true}><Layers /><span className="sr-only">Importar Flashcards</span></Button>
+                  )}
+                  <DialogContent className="sm:max-w-4xl">
+                    <DialogHeader>
+                      <DialogTitle>Importar Flashcards por Texto</DialogTitle>
+                      <DialogDescription>
+                        Cole o conteúdo no campo abaixo, usando "|" como separador: Matéria | Assunto | Cargo | Pergunta | Resposta
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="flashcard-text">Conteúdo</Label>
+                        <Textarea
+                          id="flashcard-text"
+                          className="min-h-[350px]"
+                          placeholder="Direito Administrativo | Atos Administrativos | Geral | Quais são os atributos do ato administrativo? | Presunção de legitimidade, autoexecutoriedade, tipicidade e imperatividade (mnemônico: PATI).
 Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativa antes de nomes próprios femininos? | A crase é facultativa, pois o artigo 'a' antes do nome é opcional."
-                                    value={flashcardText}
-                                    onChange={e => setFlashcardText(e.target.value)}
-                                    />
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <Checkbox id="is-vip-content-fc" checked={isVipContent} onCheckedChange={(checked) => setIsVipContent(checked as boolean)} />
-                                    <Label htmlFor="is-vip-content-fc" className="flex items-center gap-1 font-bold text-amber-600">
-                                        <Crown className="h-4 w-4" /> Conteúdo Exclusivo MentorIA+ (VIP)?
-                                    </Label>
-                                </div>
-                                </div>
-                                <DialogFooter>
-                                <DialogClose asChild><Button variant="outline">Cancelar</Button></DialogClose>
-                                <Button
-                                    onClick={handleImportFlashcards}
-                                    disabled={isImportingFlashcards || !flashcardText}
-                                >
-                                    {isImportingFlashcards ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                    Importar Flashcards
-                                </Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
+                          value={flashcardText}
+                          onChange={e => setFlashcardText(e.target.value)}
+                        />
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="is-vip-content-fc" checked={isVipContent} onCheckedChange={(checked) => setIsVipContent(checked as boolean)} />
+                        <Label htmlFor="is-vip-content-fc" className="flex items-center gap-1 font-bold text-amber-600">
+                          <Crown className="h-4 w-4" /> Conteúdo Exclusivo MentorIA+ (VIP)?
+                        </Label>
+                      </div>
                     </div>
-                </div>
-                
-                <div className="flex flex-col p-4 rounded-lg border min-h-[160px]">
-                    <div className="flex-grow">
-                        <div className="flex justify-between items-start">
-                             <div>
-                                <h4 className="font-semibold">Gerenciar Feed</h4>
-                                <p className="text-sm text-muted-foreground mt-1">Crie e edite posts do feed.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="flex justify-end gap-2">
-                       <FeedPostDialog />
-                        <Button variant="outline" size="icon" asChild>
-                            <Link href="/mentorlite/management/feed">
-                                <List />
-                                <span className="sr-only">Listar Posts</span>
-                            </Link>
-                        </Button>
-                    </div>
-                </div>
+                    <DialogFooter>
+                      <DialogClose asChild><Button variant="outline">Cancelar</Button></DialogClose>
+                      <Button
+                        onClick={handleImportFlashcards}
+                        disabled={isImportingFlashcards || !flashcardText}
+                      >
+                        {isImportingFlashcards ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                        Importar Flashcards
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
 
-            </CardContent>
+            <div className="flex flex-col p-4 rounded-lg border min-h-[160px]">
+              <div className="flex-grow">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="font-semibold">Gerenciar Feed</h4>
+                    <p className="text-sm text-muted-foreground mt-1">Crie e edite posts do feed.</p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <FeedPostDialog />
+                <Button variant="outline" size="icon" asChild>
+                  <Link href="/mentorlite/management/feed">
+                    <List />
+                    <span className="sr-only">Listar Posts</span>
+                  </Link>
+                </Button>
+              </div>
+            </div>
+
+          </CardContent>
         </Card>
 
         <Card>
-            <CardHeader>
-                <CardTitle>Ferramentas de Manutenção</CardTitle>
-                <CardDescription>Ações para organizar e limpar seus dados.</CardDescription>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="flex flex-col p-4 rounded-lg border min-h-[160px]">
-                    <div className="flex-grow">
-                        <h4 className="font-semibold">Excluir Questões</h4>
-                        <p className="text-sm text-muted-foreground mt-1">Filtre e apague questões.</p>
-                    </div>
-                     <div className="flex justify-end">
-                        <DeleteQuestionsDialog
-                        availableResources={availableQuestionResources}
-                        allQuestions={allQuestions}
-                        isLoadingQuestions={isLoadingQuestions}
-                        />
-                    </div>
-                </div>
-                <div className="flex flex-col p-4 rounded-lg border min-h-[160px]">
-                     <div className="flex-grow">
-                        <h4 className="font-semibold">Excluir Provas</h4>
-                        <p className="text-sm text-muted-foreground mt-1">Gerencie as provas importadas.</p>
-                    </div>
-                    <div className="flex justify-end">
-                        <DeletePreviousExamsDialog />
-                    </div>
-                </div>
-                 <div className="flex flex-col p-4 rounded-lg border min-h-[160px]">
-                    <div className="flex-grow">
-                        <h4 className="font-semibold">Excluir Simulados</h4>
-                        <p className="text-sm text-muted-foreground mt-1">Gerencie os simulados criados.</p>
-                    </div>
-                    <div className="flex justify-end">
-                        <DeleteCommunitySimuladosDialog />
-                    </div>
-                </div>
-                <div className="flex flex-col p-4 rounded-lg border min-h-[160px]">
-                    <div className="flex-grow">
-                        <h4 className="font-semibold">Excluir Flashcards</h4>
-                        <p className="text-sm text-muted-foreground mt-1">Gerencie os flashcards importados.</p>
-                    </div>
-                    <div className="flex justify-end">
-                        <DeleteFlashcardsDialog 
-                        availableResources={availableFlashcardResources} 
-                        allFlashcards={allFlashcards}
-                        isLoadingFlashcards={isLoadingFlashcards}
-                        />
-                    </div>
-                </div>
-            </CardContent>
+          <CardHeader>
+            <CardTitle>Ferramentas de Manutenção</CardTitle>
+            <CardDescription>Ações para organizar e limpar seus dados.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="flex flex-col p-4 rounded-lg border min-h-[160px]">
+              <div className="flex-grow">
+                <h4 className="font-semibold">Excluir Questões</h4>
+                <p className="text-sm text-muted-foreground mt-1">Filtre e apague questões.</p>
+              </div>
+              <div className="flex justify-end">
+                <DeleteQuestionsDialog
+                  availableResources={availableQuestionResources}
+                  allQuestions={allQuestions}
+                  isLoadingQuestions={isLoadingQuestions}
+                />
+              </div>
+            </div>
+            <div className="flex flex-col p-4 rounded-lg border min-h-[160px]">
+              <div className="flex-grow">
+                <h4 className="font-semibold">Excluir Provas</h4>
+                <p className="text-sm text-muted-foreground mt-1">Gerencie as provas importadas.</p>
+              </div>
+              <div className="flex justify-end">
+                <DeletePreviousExamsDialog />
+              </div>
+            </div>
+            <div className="flex flex-col p-4 rounded-lg border min-h-[160px]">
+              <div className="flex-grow">
+                <h4 className="font-semibold">Excluir Simulados</h4>
+                <p className="text-sm text-muted-foreground mt-1">Gerencie os simulados criados.</p>
+              </div>
+              <div className="flex justify-end">
+                <DeleteCommunitySimuladosDialog />
+              </div>
+            </div>
+            <div className="flex flex-col p-4 rounded-lg border min-h-[160px]">
+              <div className="flex-grow">
+                <h4 className="font-semibold">Excluir Flashcards</h4>
+                <p className="text-sm text-muted-foreground mt-1">Gerencie os flashcards importados.</p>
+              </div>
+              <div className="flex justify-end">
+                <DeleteFlashcardsDialog
+                  availableResources={availableFlashcardResources}
+                  allFlashcards={allFlashcards}
+                  isLoadingFlashcards={isLoadingFlashcards}
+                />
+              </div>
+            </div>
+          </CardContent>
         </Card>
 
         {/* Zona de Perigo - Reset de Dados */}
         <Card className="border-destructive/20 shadow-destructive/5 bg-destructive/5">
-            <CardHeader>
-                <CardTitle className="text-destructive flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5" /> Zona de Perigo
-                </CardTitle>
-                <CardDescription className="text-destructive/80">Ações irreversíveis de gerenciamento de dados.</CardDescription>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-4 rounded-lg border border-destructive/20 bg-white space-y-4">
-                    <div>
-                        <h4 className="font-bold text-slate-900">Zerar Meu Progresso</h4>
-                        <p className="text-xs text-muted-foreground">Apaga todas as suas estatísticas, nível e histórico de matérias.</p>
-                    </div>
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button variant="outline" className="w-full border-destructive text-destructive hover:bg-destructive hover:text-white" disabled={isResetting}>
-                                {isResetting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
-                                Resetar Meus Dados
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    Esta ação zerará seu nível, strike, tempo de estudo e todas as estatísticas por matéria. Não é possível desfazer.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleResetSelf} className="bg-destructive hover:bg-destructive/90">
-                                    Sim, Resetar Agora
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                </div>
+          <CardHeader>
+            <CardTitle className="text-destructive flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" /> Zona de Perigo
+            </CardTitle>
+            <CardDescription className="text-destructive/80">Ações irreversíveis de gerenciamento de dados.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-4 rounded-lg border border-destructive/20 bg-white space-y-4">
+              <div>
+                <h4 className="font-bold text-slate-900">Zerar Meu Progresso</h4>
+                <p className="text-xs text-muted-foreground">Apaga todas as suas estatísticas, nível e histórico de matérias.</p>
+              </div>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" className="w-full border-destructive text-destructive hover:bg-destructive hover:text-white" disabled={isResetting}>
+                    {isResetting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+                    Resetar Meus Dados
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Esta ação zerará seu nível, strike, tempo de estudo e todas as estatísticas por matéria. Não é possível desfazer.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleResetSelf} className="bg-destructive hover:bg-destructive/90">
+                      Sim, Resetar Agora
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
 
-                <div className="p-4 rounded-lg border border-destructive/20 bg-white space-y-4">
-                    <div>
-                        <h4 className="font-bold text-destructive">RESET GLOBAL DA BASE</h4>
-                        <p className="text-xs text-muted-foreground text-destructive/70 font-medium">⚠️ Ação de administrador. Zera o progresso de TODOS os alunos (fakes e reais).</p>
-                    </div>
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button variant="destructive" className="w-full font-black shadow-lg" disabled={isResetting}>
-                                {isResetting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <AlertTriangle className="h-4 w-4 mr-2" />}
-                                ZERAR TODOS OS ALUNOS
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent className="border-4 border-destructive">
-                            <AlertDialogHeader>
-                                <AlertDialogTitle className="text-destructive font-black text-2xl">AVISO CRÍTICO!</AlertDialogTitle>
-                                <AlertDialogDescription className="text-slate-900 font-bold">
-                                    Você está prestes a apagar o progresso de TODOS os usuários da plataforma MentorIA Academy.
-                                    <br/><br/>
-                                    Isso removerá rankings, níveis e estatísticas de cada documento na base de dados.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel className="font-bold">ABORTAR</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleResetAll} className="bg-destructive text-white font-black animate-pulse">
-                                    EU COMPREENDO, ZERAR TUDO
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                </div>
-            </CardContent>
+            <div className="p-4 rounded-lg border border-destructive/20 bg-white space-y-4">
+              <div>
+                <h4 className="font-bold text-destructive">RESET GLOBAL DA BASE</h4>
+                <p className="text-xs text-muted-foreground text-destructive/70 font-medium">⚠️ Ação de administrador. Zera o progresso de TODOS os alunos (fakes e reais).</p>
+              </div>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" className="w-full font-black shadow-lg" disabled={isResetting}>
+                    {isResetting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <AlertTriangle className="h-4 w-4 mr-2" />}
+                    ZERAR TODOS OS ALUNOS
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="border-4 border-destructive">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-destructive font-black text-2xl">AVISO CRÍTICO!</AlertDialogTitle>
+                    <AlertDialogDescription className="text-slate-900 font-bold">
+                      Você está prestes a apagar o progresso de TODOS os usuários da plataforma MentorIA Academy.
+                      <br /><br />
+                      Isso removerá rankings, níveis e estatísticas de cada documento na base de dados.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="font-bold">ABORTAR</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleResetAll} className="bg-destructive text-white font-black animate-pulse">
+                      EU COMPREENDO, ZERAR TUDO
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </CardContent>
         </Card>
       </div>
 
       <Card>
         <CardHeader>
-            <CardTitle>Gerenciamento de Usuários</CardTitle>
-            <CardDescription>Visualize estatísticas e gerencie as contas dos alunos.</CardDescription>
+          <CardTitle>Gerenciamento de Usuários</CardTitle>
+          <CardDescription>Visualize estatísticas e gerencie as contas dos alunos.</CardDescription>
         </CardHeader>
         <CardContent>
-             <div className="relative mb-4">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                    placeholder="Pesquisar por nome ou e-mail..."
-                    value={userSearchQuery}
-                    onChange={(e) => setUserSearchQuery(e.target.value)}
-                    className="pl-10"
-                />
-            </div>
-             <ScrollArea className="h-96">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Usuário</TableHead>
-                            <TableHead>Plano</TableHead>
-                            <TableHead className="text-right">Ações</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {isLoadingUsers ? (
-                            Array.from({ length: 5 }).map((_, i) => (
-                                <TableRow key={i}>
-                                    <TableCell><Skeleton className="h-8 w-48" /></TableCell>
-                                    <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                                    <TableCell className="text-right"><Skeleton className="h-8 w-24" /></TableCell>
-                                </TableRow>
-                            ))
-                        ) : filteredUsers && filteredUsers.length > 0 ? (
-                            filteredUsers.map(u => {
-                                const plan = u.subscription?.plan || 'standard';
-                                const isPlus = plan === 'plus';
-                                return (
-                                    <TableRow key={u.id}>
-                                        <TableCell>
-                                            <div className="flex items-center gap-3">
-                                                <Avatar>
-                                                    <AvatarImage src={u.photoURL || ''} />
-                                                    <AvatarFallback>{u.name?.charAt(0) || 'U'}</AvatarFallback>
-                                                </Avatar>
-                                                <div>
-                                                    <p className="font-medium">{u.name || 'Usuário sem nome'}</p>
-                                                    <p className="text-sm text-muted-foreground">{u.email || 'E-mail não disponível'}</p>
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant={isPlus ? 'default' : 'secondary'} className={cn(isPlus && 'bg-accent text-accent-foreground')}>
-                                                {isPlus && <Crown className="mr-1 h-3 w-3" />}
-                                                {plan === 'plus' ? 'MentorIA+' : 'Standard'}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex justify-end gap-2">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="text-slate-500 hover:text-amber-600 hover:bg-amber-50"
-                                                    title="Ver Flashcards"
-                                                    onClick={() => handleViewFlashcards(u)}
-                                                >
-                                                    <Layers className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="text-slate-500 hover:text-accent hover:bg-accent/10"
-                                                    title="Ver Desempenho"
-                                                    onClick={() => handleViewPerformance(u)}
-                                                >
-                                                    <BarChart2 className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => handlePlanChange(u.id, plan)}
-                                                >
-                                                    {isPlus ? 'Rebaixar para Standard' : 'Promover para Plus'}
-                                                </Button>
-                                                <AlertDialog>
-                                                    <AlertDialogTrigger asChild>
-                                                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10" title="Resetar Histórico">
-                                                            <RefreshCw className="h-4 w-4" />
-                                                        </Button>
-                                                    </AlertDialogTrigger>
-                                                    <AlertDialogContent>
-                                                        <AlertDialogHeader>
-                                                            <AlertDialogTitle>Zerar progresso de {u.name}?</AlertDialogTitle>
-                                                            <AlertDialogDescription>
-                                                                Esta ação apagará nível, strike e todas as estatísticas de questões deste aluno. Não é possível desfazer.
-                                                            </AlertDialogDescription>
-                                                        </AlertDialogHeader>
-                                                        <AlertDialogFooter>
-                                                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                                            <AlertDialogAction onClick={() => handleResetOther(u.id, u.name || 'aluno')} className="bg-destructive hover:bg-destructive/90">
-                                                                Sim, Resetar Aluno
-                                                            </AlertDialogAction>
-                                                        </AlertDialogFooter>
-                                                    </AlertDialogContent>
-                                                </AlertDialog>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                )
-                            })
-                        ) : (
-                           <TableRow>
-                                <TableCell colSpan={3} className="text-center h-24">
-                                  {userSearchQuery ? 'Nenhum usuário encontrado para sua busca.' : 'Nenhum usuário encontrado.'}
-                                </TableCell>
-                           </TableRow> 
-                        )}
-                    </TableBody>
-                </Table>
-            </ScrollArea>
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Pesquisar por nome ou e-mail..."
+              value={userSearchQuery}
+              onChange={(e) => setUserSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <ScrollArea className="h-96">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Usuário</TableHead>
+                  <TableHead>Plano</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoadingUsers ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell><Skeleton className="h-8 w-48" /></TableCell>
+                      <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                      <TableCell className="text-right"><Skeleton className="h-8 w-24" /></TableCell>
+                    </TableRow>
+                  ))
+                ) : filteredUsers && filteredUsers.length > 0 ? (
+                  filteredUsers.map(u => {
+                    const plan = u.subscription?.plan || 'standard';
+                    const isPremium = plan === 'plus' || plan === 'academy';
+
+                    let badgeVariant = 'secondary';
+                    let badgeLabel = 'Standard';
+                    let badgeColors = '';
+
+                    if (plan === 'plus') {
+                      badgeVariant = 'default';
+                      badgeLabel = 'MentorIA+';
+                      badgeColors = 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-[0_0_10px_rgba(16,185,129,0.5)]';
+                    } else if (plan === 'academy') {
+                      badgeVariant = 'default';
+                      badgeLabel = 'Academy';
+                      badgeColors = 'bg-indigo-600 hover:bg-indigo-700 text-yellow-300 shadow-[0_0_10px_rgba(79,70,229,0.4)]';
+                    }
+
+                    return (
+                      <TableRow key={u.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <Avatar>
+                              <AvatarImage src={u.photoURL || ''} />
+                              <AvatarFallback>{u.name?.charAt(0) || 'U'}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium">{u.name || 'Usuário sem nome'}</p>
+                              <p className="text-sm text-muted-foreground">{u.email || 'E-mail não disponível'}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={badgeVariant as any} className={cn(badgeColors)}>
+                            {isPremium && <Crown className="mr-1 h-3 w-3" />}
+                            {badgeLabel}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-slate-500 hover:text-amber-600 hover:bg-amber-50"
+                              title="Ver Flashcards"
+                              onClick={() => handleViewFlashcards(u)}
+                            >
+                              <Layers className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-slate-500 hover:text-accent hover:bg-accent/10"
+                              title="Ver Desempenho"
+                              onClick={() => handleViewPerformance(u)}
+                            >
+                              <BarChart2 className="h-4 w-4" />
+                            </Button>
+                            <Select
+                              value={plan}
+                              onValueChange={(val: any) => handlePlanChange(u.id, val)}
+                            >
+                              <SelectTrigger className="w-[140px] h-8 text-xs">
+                                <SelectValue placeholder="Plano" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="standard">Standard</SelectItem>
+                                <SelectItem value="academy">MentorIA Academy</SelectItem>
+                                <SelectItem value="plus">MentorIA+</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10" title="Resetar Histórico">
+                                  <RefreshCw className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Zerar progresso de {u.name}?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Esta ação apagará nível, strike e todas as estatísticas de questões deste aluno. Não é possível desfazer.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleResetOther(u.id, u.name || 'aluno')} className="bg-destructive hover:bg-destructive/90">
+                                    Sim, Resetar Aluno
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center h-24">
+                      {userSearchQuery ? 'Nenhum usuário encontrado para sua busca.' : 'Nenhum usuário encontrado.'}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </ScrollArea>
         </CardContent>
       </Card>
 
 
       <div className="space-y-6">
         <h3 className="text-2xl font-bold tracking-tight">Banco de Conteúdo</h3>
-          <div className="space-y-6">
-              <Card className="hover:bg-muted/50 transition-colors">
-                  <Link href="/mentorlite/management/questions" className="block p-6">
-                      <div className="flex items-center justify-between">
-                          <div>
-                              <CardTitle className="flex items-center gap-2"><FileText /> Banco de Questões</CardTitle>
-                              <CardDescription className="mt-1">
-                                  Gerencie todas as matérias e questões cadastradas na plataforma.
-                              </CardDescription>
-                          </div>
-                          <div className="flex items-center gap-4">
-                              {isLoadingQuestions ? <Skeleton className="h-8 w-20" /> : (
-                                  <div className="text-right">
-                                      <p className="text-2xl font-bold">{totalQuestionsCount}</p>
-                                      <p className="text-xs text-muted-foreground">Questões</p>
-                                  </div>
-                              )}
-                              <ExternalLink className="h-5 w-5 text-muted-foreground" />
-                          </div>
-                      </div>
-                  </Link>
-              </Card>
-              <Card className="hover:bg-muted/50 transition-colors">
-                  <Link href="/mentorlite/management/flashcards" className="block p-6">
-                      <div className="flex items-center justify-between">
-                          <div>
-                              <CardTitle className="flex items-center gap-2"><Layers /> Banco de Flashcards</CardTitle>
-                              <CardDescription className="mt-1">
-                                  Visualize e gerencie todos os flashcards por matéria.
-                              </CardDescription>
-                          </div>
-                           <div className="flex items-center gap-4">
-                              {isLoadingFlashcards ? <Skeleton className="h-8 w-20" /> : (
-                                  <div className="text-right">
-                                      <p className="text-2xl font-bold">{totalFlashcardsCount}</p>
-                                      <p className="text-xs text-muted-foreground">Flashcards</p>
-                                  </div>
-                              )}
-                              <ExternalLink className="h-5 w-5 text-muted-foreground" />
-                          </div>
-                      </div>
-                  </Link>
-              </Card>
-          </div>
+        <div className="space-y-6">
+          <Card className="hover:bg-muted/50 transition-colors">
+            <Link href="/mentorlite/management/questions" className="block p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2"><FileText /> Banco de Questões</CardTitle>
+                  <CardDescription className="mt-1">
+                    Gerencie todas as matérias e questões cadastradas na plataforma.
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-4">
+                  {isLoadingQuestions ? <Skeleton className="h-8 w-20" /> : (
+                    <div className="text-right">
+                      <p className="text-2xl font-bold">{totalQuestionsCount}</p>
+                      <p className="text-xs text-muted-foreground">Questões</p>
+                    </div>
+                  )}
+                  <ExternalLink className="h-5 w-5 text-muted-foreground" />
+                </div>
+              </div>
+            </Link>
+          </Card>
+          <Card className="hover:bg-muted/50 transition-colors">
+            <Link href="/mentorlite/management/flashcards" className="block p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2"><Layers /> Banco de Flashcards</CardTitle>
+                  <CardDescription className="mt-1">
+                    Visualize e gerencie todos os flashcards por matéria.
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-4">
+                  {isLoadingFlashcards ? <Skeleton className="h-8 w-20" /> : (
+                    <div className="text-right">
+                      <p className="text-2xl font-bold">{totalFlashcardsCount}</p>
+                      <p className="text-xs text-muted-foreground">Flashcards</p>
+                    </div>
+                  )}
+                  <ExternalLink className="h-5 w-5 text-muted-foreground" />
+                </div>
+              </div>
+            </Link>
+          </Card>
+        </div>
       </div>
 
-      <StudentPerformanceModal 
+      <StudentPerformanceModal
         user={selectedUserForPerf}
         isOpen={isPerfModalOpen}
         onOpenChange={setIsPerfModalOpen}
-      />
-
-      <StudentFlashcardsModal
-        user={selectedUserForFlashcards}
-        isOpen={isFlashcardsModalOpen}
-        onOpenChange={setIsFlashcardsModalOpen}
+        initialView={perfInitialView}
       />
     </div>
   );

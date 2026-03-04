@@ -1,8 +1,8 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { useCollection, useFirebase, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, where, QueryConstraint, and } from 'firebase/firestore';
+import { useCollection, useFirebase, useMemoFirebase, useUser, useDoc } from '@/firebase';
+import { collection, query, where, QueryFieldFilterConstraint, and, doc } from 'firebase/firestore';
 import { saveQuestionAttempt } from '@/firebase/actions';
 import {
   Card,
@@ -44,15 +44,33 @@ export interface Question {
   c?: string;
   d?: string;
   e?: string;
+  god_mode_context_title?: string | null;
+  god_mode_context_text?: string | null;
+  god_mode_analysis_title?: string | null;
+  god_mode_concept_title?: string | null;
+  god_mode_concept_text?: string | null;
+  god_mode_summary_title?: string | null;
+  god_mode_summary_text?: string | null;
+  god_mode_status_a?: string | null;
+  god_mode_justification_a?: string | null;
+  god_mode_status_b?: string | null;
+  god_mode_justification_b?: string | null;
+  god_mode_status_c?: string | null;
+  god_mode_justification_c?: string | null;
+  god_mode_status_d?: string | null;
+  god_mode_justification_d?: string | null;
+  god_mode_status_e?: string | null;
+  god_mode_justification_e?: string | null;
+  is_god_mode?: boolean;
   correctAnswer: string;
   status?: 'active' | 'hidden';
   lastAttemptStatus?: AttemptStatus;
 }
 
 interface QuestionAttempt {
-    id: string;
-    isCorrect: boolean;
-    subject: string;
+  id: string;
+  isCorrect: boolean;
+  subject: string;
 }
 
 function formatEnunciado(text: string) {
@@ -60,14 +78,17 @@ function formatEnunciado(text: string) {
   return text.replace(/\b(I|II|III|IV|V|VI|VII|VIII|IX|X)[\s-]/g, '\n$&');
 }
 
+export type MethodFilter = 'all' | 'academy' | 'no_academy';
+
 interface QuestionListProps {
   subject?: string | string[];
   topics?: string[];
   cargo?: string;
   statusFilter?: StatusFilter;
+  methodFilter?: MethodFilter;
 }
 
-export function QuestionList({ subject, topics, cargo, statusFilter = 'all' }: QuestionListProps) {
+export function QuestionList({ subject, topics, cargo, statusFilter = 'all', methodFilter = 'all' }: QuestionListProps) {
   const { firestore } = useFirebase();
   const { user } = useUser();
 
@@ -75,29 +96,29 @@ export function QuestionList({ subject, topics, cargo, statusFilter = 'all' }: Q
   const [answeredQuestions, setAnsweredQuestions] = useState<Record<string, boolean>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const questionsPerPage = 10;
-  
+
   const [userAttempts, setUserAttempts] = useState<Map<string, QuestionAttempt>>(new Map());
   const isAdmin = user?.email === 'amentoriaacademy@gmail.com';
 
   // 1. Fetch base questions based on filters
   const questionsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    
-    const constraints: QueryConstraint[] = [];
-    
+
+    const constraints: QueryFieldFilterConstraint[] = [];
+
     if (subject && subject !== 'all') {
-        const subjectConstraint = Array.isArray(subject) 
-          ? where('Materia', 'in', subject) 
-          : where('Materia', '==', subject);
-        constraints.push(subjectConstraint);
+      const subjectConstraint = Array.isArray(subject)
+        ? where('Materia', 'in', subject)
+        : where('Materia', '==', subject);
+      constraints.push(subjectConstraint);
     }
-      
+
     if (topics && topics.length > 0) {
       constraints.push(where('Assunto', 'in', topics));
     }
-    
+
     if (cargo && cargo !== 'all') {
-        constraints.push(where('Cargo', '==', cargo));
+      constraints.push(where('Cargo', '==', cargo));
     }
 
     const baseRef = collection(firestore, 'questoes');
@@ -105,24 +126,24 @@ export function QuestionList({ subject, topics, cargo, statusFilter = 'all' }: Q
   }, [firestore, user, subject, topics, cargo]);
 
   const { data: questions, isLoading: isLoadingQuestions } = useCollection<Question>(questionsQuery);
-  
+
   // 2. Fetch user's attempts
   const attemptsQuery = useMemoFirebase(() => {
-      if(!firestore || !user) return null;
-      const baseRef = collection(firestore, `users/${user.uid}/question_attempts`);
-      
-      if (subject && subject !== 'all') {
-          const subjectConstraint = Array.isArray(subject)
-            ? where('subject', 'in', subject)
-            : where('subject', '==', subject);
-          return query(baseRef, subjectConstraint);
-      }
-      
-      return baseRef;
+    if (!firestore || !user) return null;
+    const baseRef = collection(firestore, `users/${user.uid}/question_attempts`);
+
+    if (subject && subject !== 'all') {
+      const subjectConstraint = Array.isArray(subject)
+        ? where('subject', 'in', subject)
+        : where('subject', '==', subject);
+      return query(baseRef, subjectConstraint);
+    }
+
+    return baseRef;
   }, [firestore, user, subject]);
 
   const { data: attempts, isLoading: isLoadingAttempts } = useCollection<QuestionAttempt>(attemptsQuery);
-  
+
   useEffect(() => {
     if (attempts) {
       const attemptsMap = new Map(attempts.map(att => [att.id, att]));
@@ -131,24 +152,64 @@ export function QuestionList({ subject, topics, cargo, statusFilter = 'all' }: Q
   }, [attempts]);
 
 
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+
+  const { data: userProfile } = useDoc<any>(userDocRef);
+  const userPlan = userProfile?.subscription?.plan || 'standard';
+  const hasGodModeAccess = userPlan === 'plus' || userPlan === 'academy';
+
   const processedQuestions = useMemo(() => {
     if (!questions) return [];
-    
-    const questionsWithStatus = questions.map(q => ({
-      ...q,
-      lastAttemptStatus: userAttempts.has(q.id)
-        ? userAttempts.get(q.id)!.isCorrect ? 'correct' : 'incorrect'
-        : null,
-    })).filter(q => q.status !== 'hidden');
-    
+
+    const questionsWithStatus = questions.map(q => {
+      const sanitizedQ = { ...q };
+      if (!hasGodModeAccess && !isAdmin) {
+        sanitizedQ.god_mode_context_title = null;
+        sanitizedQ.god_mode_context_text = null;
+        sanitizedQ.god_mode_analysis_title = null;
+        sanitizedQ.god_mode_concept_title = null;
+        sanitizedQ.god_mode_concept_text = null;
+        sanitizedQ.god_mode_summary_title = null;
+        sanitizedQ.god_mode_summary_text = null;
+        sanitizedQ.god_mode_status_a = null;
+        sanitizedQ.god_mode_justification_a = null;
+        sanitizedQ.god_mode_status_b = null;
+        sanitizedQ.god_mode_justification_b = null;
+        sanitizedQ.god_mode_status_c = null;
+        sanitizedQ.god_mode_justification_c = null;
+        sanitizedQ.god_mode_status_d = null;
+        sanitizedQ.god_mode_justification_d = null;
+        sanitizedQ.god_mode_status_e = null;
+        sanitizedQ.god_mode_justification_e = null;
+      }
+
+      return {
+        ...sanitizedQ,
+        lastAttemptStatus: userAttempts.has(q.id)
+          ? (userAttempts.get(q.id)!.isCorrect ? 'correct' : 'incorrect') as AttemptStatus
+          : null,
+      };
+    }).filter(q => q.status !== 'hidden');
+
+    let filtered = questionsWithStatus;
+
     if (statusFilter === 'resolved') {
-      return questionsWithStatus.filter(q => q.lastAttemptStatus !== null);
+      filtered = filtered.filter(q => q.lastAttemptStatus !== null);
+    } else if (statusFilter === 'unresolved') {
+      filtered = filtered.filter(q => q.lastAttemptStatus === null);
     }
-    if (statusFilter === 'unresolved') {
-      return questionsWithStatus.filter(q => q.lastAttemptStatus === null);
+
+    if (methodFilter === 'academy') {
+      filtered = filtered.filter(q => q.is_god_mode);
+    } else if (methodFilter === 'no_academy') {
+      filtered = filtered.filter(q => !q.is_god_mode);
     }
-    return questionsWithStatus;
-  }, [questions, userAttempts, statusFilter]);
+
+    return filtered;
+  }, [questions, userAttempts, statusFilter, methodFilter, isAdmin, hasGodModeAccess]);
 
   const indexOfLastQuestion = currentPage * questionsPerPage;
   const indexOfFirstQuestion = indexOfLastQuestion - questionsPerPage;
@@ -180,7 +241,7 @@ export function QuestionList({ subject, topics, cargo, statusFilter = 'all' }: Q
     if (!selectedOption) return;
 
     const isCorrect = selectedOption.toLowerCase() === question.correctAnswer.toLowerCase();
-    
+
     setAnsweredQuestions(prev => ({ ...prev, [question.id]: true }));
     saveQuestionAttempt(firestore, user.uid, question.id, isCorrect, selectedOption, question.Materia);
   };
@@ -224,16 +285,23 @@ export function QuestionList({ subject, topics, cargo, statusFilter = 'all' }: Q
             return (
               <Card key={q.id} className={cn("relative overflow-hidden", isHidden && 'opacity-50 bg-secondary')}>
                 {q.lastAttemptStatus && (
-                   <Badge className={cn(
-                       "absolute top-2 left-2 text-xs",
-                       q.lastAttemptStatus === 'correct' ? 'bg-green-100 text-green-800 border-green-300' : 'bg-red-100 text-red-800 border-red-300'
-                   )}>
-                       {q.lastAttemptStatus === 'correct' ? 'Você acertou anteriormente' : 'Você errou anteriormente'}
-                   </Badge>
+                  <Badge className={cn(
+                    "absolute top-2 left-2 text-xs",
+                    q.lastAttemptStatus === 'correct' ? 'bg-green-100 text-green-800 border-green-300' : 'bg-red-100 text-red-800 border-red-300'
+                  )}>
+                    {q.lastAttemptStatus === 'correct' ? 'Você acertou anteriormente' : 'Você errou anteriormente'}
+                  </Badge>
                 )}
                 <CardHeader className="pt-10">
                   <div className="flex items-center justify-between">
-                    <CardTitle>Questão {indexOfFirstQuestion + index + 1}</CardTitle>
+                    <div className="flex items-center gap-3">
+                      <CardTitle>Questão {indexOfFirstQuestion + index + 1}</CardTitle>
+                      {q.is_god_mode && (
+                        <Badge className="bg-gradient-to-r from-amber-500 to-purple-600 text-white border-0 shadow-[0_0_15px_rgba(234,179,8,0.5)] animate-pulse font-black px-4 py-1.5 text-sm tracking-widest">
+                          🎮 MÉTODO ACADEMY
+                        </Badge>
+                      )}
+                    </div>
                     <div className="hidden md:flex items-center gap-4">
                       <Badge variant="secondary">{q.Assunto}</Badge>
                       <Badge variant="secondary">{q.Cargo}</Badge>
@@ -245,6 +313,21 @@ export function QuestionList({ subject, topics, cargo, statusFilter = 'all' }: Q
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {isAnswered && q.is_god_mode && hasGodModeAccess && q.god_mode_context_text && (
+                    <div className="mb-6 p-5 rounded-xl bg-amber-500/5 border-l-4 border-l-amber-500 border-y border-r border-amber-500/20 shadow-sm transition-all">
+                      <h4 className="font-black text-amber-700 mb-3 text-lg flex items-center gap-2">
+                        <span className="text-xl">⚖️</span> {q.god_mode_context_title || 'CONTEXTO E CONCEITOS PRINCIPAIS'}
+                      </h4>
+                      <p className="text-sm whitespace-pre-wrap leading-relaxed text-slate-700 font-medium">{q.god_mode_context_text}</p>
+                    </div>
+                  )}
+
+                  {isAnswered && q.is_god_mode && hasGodModeAccess && q.god_mode_analysis_title && (
+                    <div className="mb-4 mt-2">
+                      <h4 className="font-bold text-slate-700 text-sm uppercase tracking-widest pl-1">{q.god_mode_analysis_title}</h4>
+                    </div>
+                  )}
+
                   <div className="space-y-3">
                     {alternativesKeys.map((key, optIndex) => {
                       const alternativeText = q[key];
@@ -254,48 +337,167 @@ export function QuestionList({ subject, topics, cargo, statusFilter = 'all' }: Q
 
                       const getAlternativeClassName = () => {
                         const currentKeyNormalized = alternativeKey.toLowerCase();
-                        const correctAnswerNormalized = String(q.correctAnswer).toLowerCase();
                         const selectedNormalized = String(selected).toLowerCase();
 
                         if (!isAnswered) {
                           if (selectedNormalized === currentKeyNormalized) return 'bg-secondary border-primary';
-                          return 'hover:bg-secondary/80';
+                          return 'hover:bg-secondary/80 bg-white border-border dark:bg-transparent';
                         }
 
-                        if (isAttemptCorrect) {
-                          if (selectedNormalized === currentKeyNormalized) return 'bg-emerald-100 border-emerald-400 text-emerald-900 font-medium';
-                          return 'opacity-60';
+                        if (selectedNormalized === currentKeyNormalized) {
+                          if (isAttemptCorrect) return 'bg-emerald-50 border-emerald-400 text-emerald-900 font-medium dark:bg-emerald-950/30 dark:text-emerald-300';
+                          return 'bg-red-50 border-red-400 text-red-900 font-medium dark:bg-red-950/30 dark:text-red-300';
                         }
 
-                        if (!isAttemptCorrect) {
-                          if (currentKeyNormalized === correctAnswerNormalized) return 'bg-emerald-100 border-emerald-400 text-emerald-900 font-medium';
-                          if (selectedNormalized === currentKeyNormalized) return 'bg-destructive/10 border-destructive/40 text-destructive';
-                          return 'opacity-50';
-                        }
+                        return 'bg-white opacity-60 border-border pointer-events-none dark:bg-transparent';
                       };
 
+                      const godModeStatusKey = `god_mode_status_${alternativeKey}` as keyof Question;
+                      const godModeJusKey = `god_mode_justification_${alternativeKey}` as keyof Question;
+                      const godModeStatus = q[godModeStatusKey] as string | undefined | null;
+                      const godModeJus = q[godModeJusKey] as string | undefined | null;
+
+                      // Fallback visual para layout Standard que não possui justification_key (God Mode v1 / Standard null)
+                      const isLegacyA = `god_mode_${alternativeKey}` as keyof Question;
+                      const legacyText = q[isLegacyA] as string | undefined | null;
+
+                      const finalGodModeText = godModeJus || legacyText;
+                      const isThisCorrect = alternativeKey.toLowerCase() === String(q.correctAnswer).toLowerCase();
+                      const isSelectedAlternative = isAnswered && String(selected).toLowerCase() === alternativeKey.toLowerCase();
+
                       return (
-                        <div
-                          key={optIndex}
-                          onClick={() => handleSelectAnswer(q.id, alternativeKey)}
-                          className={cn(
-                            'flex items-start space-x-3 p-3 rounded-lg border transition-all duration-300',
-                            isAnswered || isHidden ? 'cursor-not-allowed' : 'cursor-pointer',
-                            getAlternativeClassName()
+                        <div key={optIndex} className="space-y-2">
+                          <div
+                            onClick={() => handleSelectAnswer(q.id, alternativeKey)}
+                            className={cn(
+                              'flex items-start space-x-3 p-3 rounded-lg border transition-all duration-300 relative',
+                              isAnswered || isHidden ? 'cursor-not-allowed' : 'cursor-pointer',
+                              getAlternativeClassName()
+                            )}
+                          >
+                            <div className={cn(
+                              "flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full border text-sm font-bold z-10 transition-colors",
+                              isAnswered && String(selected).toLowerCase() === alternativeKey.toLowerCase()
+                                ? isAttemptCorrect
+                                  ? "bg-emerald-500 text-white border-emerald-500"
+                                  : "bg-red-500 text-white border-red-500"
+                                : "bg-background border-muted-foreground text-foreground"
+                            )}>
+                              {String.fromCharCode(65 + optIndex)}
+                            </div>
+                            <div className="flex-1 pt-0.5 z-10">
+                              {alternativeText}
+                            </div>
+                          </div>
+
+                          {/* GOD MODE EXPLANATIONS - Renderizado apenas após resposta */}
+                          {isAnswered && q.is_god_mode && finalGodModeText && (
+                            <div className={cn(
+                              "text-sm p-4 rounded-lg relative overflow-hidden mt-1 mb-4",
+                              hasGodModeAccess
+                                ? isSelectedAlternative
+                                  ? isThisCorrect
+                                    ? "bg-emerald-50 border border-emerald-200 text-emerald-900 shadow-sm animate-in fade-in slide-in-from-top-2 duration-500" // Correta E Selecionada
+                                    : "bg-red-50 border border-red-200 text-red-900 shadow-sm animate-in fade-in slide-in-from-top-2 duration-500" // Incorreta E Selecionada
+                                  : "bg-slate-50 border border-slate-200 text-slate-700 animate-in fade-in slide-in-from-top-2 duration-500" // Demais alternativas limpas (Clean)
+                                : "bg-slate-50 border border-slate-200 select-none pointer-events-none" // Base para o Standard (com blur)
+                            )}>
+                              {hasGodModeAccess ? (
+                                <div className="flex items-start gap-3">
+                                  <div className="mt-1 flex-shrink-0">
+                                    <span className={cn(
+                                      "flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold",
+                                      isSelectedAlternative
+                                        ? isThisCorrect
+                                          ? "bg-emerald-100 text-emerald-700 border border-emerald-300"
+                                          : "bg-red-100 text-red-700 border border-red-300"
+                                        : "bg-slate-200 text-slate-600 border border-slate-300"
+                                    )}>⚡</span>
+                                  </div>
+                                  <div className="flex-1 leading-relaxed">
+                                    {godModeStatus ? (
+                                      <span className={cn("font-bold mb-1.5 block pb-1 border-b uppercase text-xs tracking-wider",
+                                        isSelectedAlternative
+                                          ? (isThisCorrect ? 'border-emerald-200 text-emerald-800' : 'border-red-200 text-red-800')
+                                          : 'border-slate-200 text-slate-600'
+                                      )}>
+                                        {godModeStatus}
+                                      </span>
+                                    ) : (
+                                      <span className={cn("font-bold mb-1.5 block uppercase text-xs tracking-wider",
+                                        isSelectedAlternative ? (isThisCorrect ? "text-emerald-800" : "text-red-800") : "text-slate-600"
+                                      )}>
+                                        Análise Tática - Alternativa {String.fromCharCode(65 + optIndex)}
+                                      </span>
+                                    )}
+                                    <span className="font-medium leading-relaxed">{finalGodModeText}</span>
+                                  </div>
+                                </div>
+                              ) : (
+                                // Blur e UI para usuários standard
+                                <div className="relative">
+                                  <div className="blur-sm opacity-50 select-none pb-6">
+                                    <div className="flex items-start gap-3">
+                                      <div className="mt-1 h-6 w-6 rounded-full bg-slate-300 flex-shrink-0" />
+                                      <div className="flex-1 space-y-2">
+                                        <div className="h-4 bg-slate-200 rounded w-1/3" />
+                                        <div className="h-4 bg-slate-200 rounded w-full" />
+                                        <div className="h-4 bg-slate-200 rounded w-5/6" />
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           )}
-                        >
-                          <div className={cn(
-                            "flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full border bg-background text-sm font-bold",
-                            isAnswered && (isAttemptCorrect || !isAttemptCorrect) && alternativeKey.toLowerCase() === String(q.correctAnswer).toLowerCase() ? "bg-primary text-primary-foreground border-primary" : "border-muted-foreground"
-                          )}>
-                            {String.fromCharCode(65 + optIndex)}
-                          </div>
-                          <div className="flex-1 pt-0.5">
-                            {alternativeText}
-                          </div>
                         </div>
                       )
                     })}
+
+                    {/* Upsell Master para Método Academy (Standard Only) */}
+                    {isAnswered && q.is_god_mode && !hasGodModeAccess && (
+                      <div className="mt-6 p-6 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 border-2 border-amber-500/30 shadow-2xl relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-amber-500/5 group-hover:bg-amber-500/10 transition-colors" />
+                        <div className="relative z-10 flex flex-col items-center text-center space-y-4">
+                          <div className="p-3 bg-slate-950 rounded-full border border-amber-500/30 shadow-[0_0_20px_rgba(234,179,8,0.3)] group-hover:shadow-[0_0_30px_rgba(234,179,8,0.5)] transition-shadow">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500 h-6 w-6"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                          </div>
+                          <div className="space-y-1">
+                            <h4 className="text-lg font-black text-white tracking-wide">🎮 Ative o Método Academy!</h4>
+                            <p className="text-sm text-slate-300 max-w-sm font-medium">
+                              A banca tentou te enganar, mas nós temos o código. Assine para destravar a visão tática e cirúrgica desta questão com Contexto, Casos Práticos e Resumo em Flashcard.
+                            </p>
+                          </div>
+                          <Button className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-amber-950 font-black px-8">
+                            Desbloquear Acesso Premium
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Blocos Pós-Respostas (Conceito Chave e Resumo Flash) */}
+                    {isAnswered && q.is_god_mode && hasGodModeAccess && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                        {q.god_mode_concept_text && (
+                          <div className="p-5 rounded-xl border border-indigo-500/30 bg-indigo-500/5 shadow-sm">
+                            <h4 className="font-bold text-indigo-700 mb-2 flex items-center gap-2">
+                              <span className="text-lg">🧠</span> {q.god_mode_concept_title || 'Conceito-Chave'}
+                            </h4>
+                            <p className="text-sm leading-relaxed text-slate-700 font-medium">{q.god_mode_concept_text}</p>
+                          </div>
+                        )}
+                        {q.god_mode_summary_text && (
+                          <div className="p-5 rounded-xl border border-emerald-500/30 bg-emerald-500/5 shadow-sm relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(68,255,161,0.05)_50%,transparent_75%,transparent_100%)] bg-[length:250%_250%,100%_100%] animate-[shimmer_2s_linear_infinite]" />
+                            <h4 className="font-bold text-emerald-700 mb-2 flex items-center gap-2 relative z-10">
+                              <span className="text-lg">🎓</span> {q.god_mode_summary_title || 'Síntese de Revisão'}
+                            </h4>
+                            <p className="text-sm font-mono whitespace-pre-wrap relative z-10 leading-relaxed text-slate-700 font-medium selection:bg-emerald-500/30">{q.god_mode_summary_text}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                   </div>
                 </CardContent>
                 <CardFooter className="flex-col items-stretch gap-4 sm:flex-row sm:justify-between sm:items-center">
@@ -319,11 +521,11 @@ export function QuestionList({ subject, topics, cargo, statusFilter = 'all' }: Q
                     >
                       {isAnswered ? "Respondido" : "Responder"}
                     </Button>
-                     <Dialog>
+                    <Dialog>
                       <DialogTrigger asChild>
                         <Button variant="outline" disabled={isHidden}>
-                            <MessageSquare className="mr-2"/>
-                            Comentários
+                          <MessageSquare className="mr-2" />
+                          Comentários
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-3xl">
@@ -334,7 +536,7 @@ export function QuestionList({ subject, topics, cargo, statusFilter = 'all' }: Q
                       </DialogContent>
                     </Dialog>
                     {isAdmin && (
-                        <EditQuestionDialog question={q} />
+                      <EditQuestionDialog question={q} />
                     )}
                   </div>
                 </CardFooter>

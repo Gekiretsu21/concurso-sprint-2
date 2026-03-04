@@ -30,7 +30,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Sparkles, ClipboardList, Search, ChevronDown, Check } from 'lucide-react';
 import { GlowingEffect } from '@/components/ui/glowing-effect';
 import { Input } from '@/components/ui/input';
-import { QuestionList } from '@/components/QuestionList';
+import { QuestionList, type MethodFilter } from '@/components/QuestionList';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export type StatusFilter = 'all' | 'resolved' | 'unresolved';
@@ -42,17 +42,20 @@ export default function QuestionsPage() {
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [filterCargo, setFilterCargo] = useState('all');
   const [filterStatus, setFilterStatus] = useState<StatusFilter>('all');
+  const [filterMethod, setFilterMethod] = useState<MethodFilter>('all');
 
   const [activeFilters, setActiveFilters] = useState<{
     subject: string | string[];
     topics: string[];
     cargo: string;
     status: StatusFilter;
+    method: MethodFilter;
   }>({
     subject: '',
     topics: [],
     cargo: '',
     status: 'all',
+    method: 'all'
   });
 
   const subjectsQuery = useMemoFirebase(
@@ -156,7 +159,8 @@ export default function QuestionsPage() {
       subject: subjectQuery,
       topics: selectedTopics,
       cargo: filterCargo === 'all' ? '' : filterCargo,
-      status: filterStatus
+      status: filterStatus,
+      method: filterMethod
     });
   };
 
@@ -348,6 +352,17 @@ export default function QuestionsPage() {
                 </SelectContent>
               </Select>
 
+              <Select value={filterMethod} onValueChange={(value) => setFilterMethod(value as MethodFilter)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Método" />
+                </SelectTrigger>
+                <SelectContent position="popper">
+                  <SelectItem value="all">Todas os Modos</SelectItem>
+                  <SelectItem value="academy">Método Academy</SelectItem>
+                  <SelectItem value="no_academy">Sem Método Academy</SelectItem>
+                </SelectContent>
+              </Select>
+
             </div>
             <div className="mt-8 flex justify-end">
               <Button onClick={handleFilterSubmit} className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold shadow-lg shadow-accent/20">
@@ -358,12 +373,13 @@ export default function QuestionsPage() {
         </Card>
       </div>
 
-      {activeFilters.subject || activeFilters.cargo || activeFilters.status !== 'all' ? (
+      {activeFilters.subject || activeFilters.cargo || activeFilters.status !== 'all' || activeFilters.method !== 'all' ? (
         <QuestionList
           subject={activeFilters.subject}
           topics={activeFilters.topics}
           cargo={activeFilters.cargo}
           statusFilter={activeFilters.status}
+          methodFilter={activeFilters.method}
         />
       ) : (
         <Card className="flex items-center justify-center h-40 border-dashed">

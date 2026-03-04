@@ -151,14 +151,14 @@ export async function batchUpdateQuestions(
 // --- FEED ACTIONS ---
 
 export async function createFeedPost(firestore: Firestore, postData: Omit<FeedPost, 'id' | 'createdAt'>): Promise<void> {
-    const postCollectionRef = collection(firestore, 'feed_posts');
-    const dataToSave = { ...postData, createdAt: serverTimestamp() };
-    await addDoc(postCollectionRef, dataToSave);
+  const postCollectionRef = collection(firestore, 'feed_posts');
+  const dataToSave = { ...postData, createdAt: serverTimestamp() };
+  await addDoc(postCollectionRef, dataToSave);
 }
 
 export async function deleteFeedPost(firestore: Firestore, postId: string): Promise<void> {
-    const postRef = doc(firestore, 'feed_posts', postId);
-    await deleteDoc(postRef);
+  const postRef = doc(firestore, 'feed_posts', postId);
+  await deleteDoc(postRef);
 }
 
 // --- IMPORT ACTIONS ---
@@ -177,19 +177,63 @@ export async function importQuestions(
   for (const qStr of questionsStr) {
     const parts = qStr.split('|');
     if (parts.length < 11) continue;
-    const [Materia, Ano, Assunto, Cargo, Enunciado, a, b, c, d, e, correctAnswer] = parts;
+
+    // Colunas base
+    const Materia = parts[0]?.trim();
+    const Ano = parts[1]?.trim();
+    const Assunto = parts[2]?.trim();
+    const Cargo = parts[3]?.trim();
+    const Enunciado = parts[4]?.trim();
+    const a = parts[5]?.trim();
+    const b = parts[6]?.trim();
+    const c = parts[7]?.trim();
+    const d = parts[8]?.trim();
+    const e = parts[9]?.trim();
+    const correctAnswer = parts[10]?.trim();
+
+    // Novas Colunas God Mode
+    const context_title = parts[11]?.trim() || null;
+    const context_text = parts[12]?.trim() || null;
+
+    // Regra de Retrocompatibilidade: checar Contextualização (texto)
+    const isGodMode = Boolean(context_text && context_text !== '');
+
     const newQuestionDocRef = doc(collection(firestore, 'questoes'));
-    batch.set(newQuestionDocRef, {
-      Materia: Materia.trim(), Ano: Ano.trim(), Assunto: Assunto.trim(), Cargo: Cargo.trim(),
-      Enunciado: Enunciado.trim(), a: a.trim(), b: b.trim(), c: c.trim(), d: d.trim(), e: e.trim(),
-      correctAnswer: correctAnswer.trim(), status: 'active', accessTier: accessTier,
-    });
+
+    const dataToSave: any = {
+      Materia, Ano, Assunto, Cargo, Enunciado, a, b, c, d, e, correctAnswer,
+      status: 'active',
+      accessTier: accessTier,
+      is_god_mode: isGodMode
+    };
+
+    if (isGodMode) {
+      dataToSave.god_mode_context_title = context_title;
+      dataToSave.god_mode_context_text = context_text;
+      dataToSave.god_mode_analysis_title = parts[13]?.trim() || null;
+      dataToSave.god_mode_status_a = parts[14]?.trim() || null;
+      dataToSave.god_mode_justification_a = parts[15]?.trim() || null;
+      dataToSave.god_mode_status_b = parts[16]?.trim() || null;
+      dataToSave.god_mode_justification_b = parts[17]?.trim() || null;
+      dataToSave.god_mode_status_c = parts[18]?.trim() || null;
+      dataToSave.god_mode_justification_c = parts[19]?.trim() || null;
+      dataToSave.god_mode_status_d = parts[20]?.trim() || null;
+      dataToSave.god_mode_justification_d = parts[21]?.trim() || null;
+      dataToSave.god_mode_status_e = parts[22]?.trim() || null;
+      dataToSave.god_mode_justification_e = parts[23]?.trim() || null;
+      dataToSave.god_mode_concept_title = parts[24]?.trim() || null;
+      dataToSave.god_mode_concept_text = parts[25]?.trim() || null;
+      dataToSave.god_mode_summary_title = parts[26]?.trim() || null;
+      dataToSave.god_mode_summary_text = parts[27]?.trim() || null;
+    }
+
+    batch.set(newQuestionDocRef, dataToSave);
     newQuestionIds.push(newQuestionDocRef.id);
   }
   if (examDetails?.isPreviousExam) {
-      batch.set(doc(collection(firestore, 'previousExams')), {
-        name: examDetails.examName, questionIds: newQuestionIds, questionCount: newQuestionIds.length, accessTier
-      });
+    batch.set(doc(collection(firestore, 'previousExams')), {
+      name: examDetails.examName, questionIds: newQuestionIds, questionCount: newQuestionIds.length, accessTier
+    });
   }
   await batch.commit();
 }
@@ -211,7 +255,29 @@ export async function importFlashcards(firestore: Firestore, text: string, acces
 
 export async function handleFlashcardResponse(firestore: Firestore, userId: string, flashcard: any, result: 'correct' | 'incorrect') {
   const progressRef = doc(firestore, `users/${userId}/flashcard_progress/${flashcard.id}`);
-  await setDoc(progressRef, { userId, flashcardId: flashcard.id, lastResult: result, lastReviewedAt: serverTimestamp(), subject: flashcard.subject }, { merge: true });
+  const userRef = doc(firestore, 'users', userId);
+  const isCorrect = result === 'correct';
+  const subject = flashcard.subject || 'Geral';
+
+  const batch = writeBatch(firestore);
+
+  batch.set(progressRef, {
+    userId,
+    flashcardId: flashcard.id,
+    lastResult: result,
+    lastReviewedAt: serverTimestamp(),
+    subject: subject
+  }, { merge: true });
+
+  batch.update(userRef, {
+    'stats.performance.flashcards.totalReviewed': increment(1),
+    'stats.performance.flashcards.totalCorrect': increment(isCorrect ? 1 : 0),
+    [`stats.performance.flashcards.bySubject.${subject}.reviewed`]: increment(1),
+    [`stats.performance.flashcards.bySubject.${subject}.correct`]: increment(isCorrect ? 1 : 0),
+    'stats.lastActivityAt': serverTimestamp(),
+  });
+
+  return batch.commit();
 }
 
 // --- SIMULADO ACTIONS ---
@@ -298,7 +364,7 @@ export async function deleteDuplicateFlashcards(firestore: Firestore) {
 
 // --- USER / ADMIN ACTIONS ---
 
-export async function updateUserPlan(firestore: Firestore, userId: string, plan: 'standard' | 'plus') {
+export async function updateUserPlan(firestore: Firestore, userId: string, plan: 'standard' | 'academy' | 'plus') {
   const userRef = doc(firestore, 'users', userId);
   return updateDoc(userRef, {
     'subscription.plan': plan,
@@ -310,7 +376,7 @@ export async function updateUserPlan(firestore: Firestore, userId: string, plan:
 export async function seedUsers(firestore: Firestore) {
   const names = ["João Silva", "Maria Santos", "Pedro Oliveira", "Ana Costa", "Lucas Pereira", "Beatriz Lima", "Guilherme Souza", "Camila Rocha", "Rafael Ferreira", "Juliana Meireles"];
   const batchSize = 50;
-  
+
   for (let i = 0; i < 101; i += batchSize) {
     const batch = writeBatch(firestore);
     const limit = Math.min(i + batchSize, 101);
@@ -329,7 +395,7 @@ export async function seedUsers(firestore: Firestore) {
               totalAnswered,
               totalCorrect,
               bySubject: {
-                "Português": { answered: Math.floor(totalAnswered/2), correct: Math.floor(totalCorrect/2) }
+                "Português": { answered: Math.floor(totalAnswered / 2), correct: Math.floor(totalCorrect / 2) }
               }
             }
           },
@@ -354,7 +420,7 @@ export async function deleteFakeUsers(firestore: Firestore) {
 
 export async function resetUserProgress(firestore: Firestore, userId: string) {
   const userRef = doc(firestore, 'users', userId);
-  
+
   await updateDoc(userRef, {
     stats: {
       dailyStreak: 0,
@@ -381,9 +447,9 @@ export async function resetUserProgress(firestore: Firestore, userId: string) {
   const deleteBatch = writeBatch(firestore);
   attemptsSnap.docs.forEach(d => deleteBatch.delete(d.ref));
   flashSnap.docs.forEach(d => deleteBatch.delete(d.ref));
-  
+
   if (attemptsSnap.size > 0 || flashSnap.size > 0) {
-      await deleteBatch.commit();
+    await deleteBatch.commit();
   }
 }
 
