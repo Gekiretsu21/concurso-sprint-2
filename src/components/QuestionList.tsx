@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -170,7 +169,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
   const userPlan = userProfile?.subscription?.plan || 'standard';
   const isPremium = userPlan === 'plus' || userPlan === 'academy';
   const isAcademyActive = methodFilter === 'academy';
-  const hasGodModeAccess = (isPremium || isAdmin) && isAcademyActive;
+  const hasGodModeAccess = (isPremium || isAdmin);
 
   const processedQuestions = useMemo(() => {
     if (!questions) return [];
@@ -330,9 +329,8 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
   return (
     <>
       <div className="space-y-6">
-        <div className="flex items-center gap-3 px-4 mb-4">
-          <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
-          <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.25em]">
+        <div className="flex justify-end px-4 mb-4">
+          <span className="text-[12px] font-bold text-black uppercase tracking-[0.25em]">
             Total de resultados: {processedQuestions.length}
           </span>
         </div>
@@ -379,7 +377,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {isAnswered && q.is_god_mode && hasGodModeAccess && q.god_mode_context_text && (
+                  {isAnswered && q.is_god_mode && isAcademyActive && hasGodModeAccess && q.god_mode_context_text && (
                     <div className="mb-6 p-5 rounded-xl bg-amber-500/5 border-l-4 border-l-amber-500 border-y border-r border-amber-500/20 shadow-sm transition-all">
                       <h4 className="font-black text-amber-700 mb-3 text-lg flex items-center gap-2">
                         <span className="text-xl">⚖️</span> {q.god_mode_context_title || 'CONTEXTO E CONCEITOS PRINCIPAIS'}
@@ -388,7 +386,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
                     </div>
                   )}
 
-                  {isAnswered && q.is_god_mode && hasGodModeAccess && q.god_mode_analysis_title && (
+                  {isAnswered && q.is_god_mode && isAcademyActive && hasGodModeAccess && q.god_mode_analysis_title && (
                     <div className="mb-4 mt-2">
                       <h4 className="font-bold text-slate-700 text-sm uppercase tracking-widest pl-1">{q.god_mode_analysis_title}</h4>
                     </div>
@@ -465,7 +463,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
                             </div>
                           </div>
 
-                          {isAnswered && q.is_god_mode && finalGodModeText && hasGodModeAccess && (
+                          {isAnswered && q.is_god_mode && isAcademyActive && finalGodModeText && hasGodModeAccess && (
                             <div className={cn(
                               "text-sm p-4 rounded-lg relative overflow-hidden mt-1 mb-4",
                               isSelectedAlternative
@@ -510,7 +508,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
                       )
                     })}
 
-                    {isAnswered && q.is_god_mode && !hasGodModeAccess && (
+                    {isAnswered && q.is_god_mode && (!isAcademyActive || !hasGodModeAccess) && (
                       <div className="mt-6 p-6 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 border-2 border-amber-500/30 shadow-2xl relative overflow-hidden group">
                         <div className="absolute inset-0 bg-amber-500/5 group-hover:bg-amber-500/10 transition-colors" />
                         <div className="relative z-10 flex flex-col items-center text-center space-y-4">
@@ -530,7 +528,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
                       </div>
                     )}
 
-                    {isAnswered && q.is_god_mode && hasGodModeAccess && (
+                    {isAnswered && q.is_god_mode && isAcademyActive && hasGodModeAccess && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                         {q.god_mode_concept_text && (
                           <div className="p-5 rounded-xl border border-indigo-500/30 bg-indigo-500/5 shadow-sm">
