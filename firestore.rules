@@ -14,7 +14,7 @@ function getUserData() {
 
 function isPlusSubscriber() {
   let userData = getUserData();
-  return isSignedIn() && (userData.subscription.plan == 'plus' || userData.subscription.plan == 'mentoria_plus_plus');
+  return isSignedIn() && (userData.subscription.plan == 'plus' || userData.subscription.plan == 'mentoria_plus_plus' || userData.subscription.plan == 'academy');
 }
 
 function isAdmin() {
@@ -75,6 +75,11 @@ service cloud.firestore {
     }
 
     match /previousExams/{examId} {
+      allow read, list: if isSignedIn();
+      allow write: if isAdmin();
+    }
+    
+    match /studyTemplates/{templateId} {
       allow read, list: if isSignedIn();
       allow write: if isAdmin();
     }

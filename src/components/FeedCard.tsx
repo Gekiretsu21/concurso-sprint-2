@@ -3,10 +3,9 @@
 import { FeedPost } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { cn } from '@/lib/utils';
-import { Link as LinkIcon, Youtube, Crown, Calendar, Pin } from 'lucide-react';
+import { Link as LinkIcon, Youtube, Crown, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import { GlowingEffect } from './ui/glowing-effect';
-import { Badge } from './ui/badge';
 
 function extractYouTubeVideoId(url: string): string | null {
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
@@ -30,8 +29,9 @@ export function FeedCard({ post }: { post: FeedPost }) {
         borderWidth={3}
       />
       <Card className={cn(
-        "relative z-10 h-full border-2 overflow-hidden rounded-[2.3rem] transition-all duration-500 bg-white",
-        post.isPinned ? "border-accent/40 shadow-[0_20px_50px_rgba(197,148,40,0.1)]" : "border-slate-100 shadow-xl shadow-black/5 hover:shadow-2xl hover:border-slate-200"
+        "relative z-10 h-full border-none overflow-hidden rounded-[2.3rem] transition-all duration-500 shadow-xl",
+        "bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 animate-gradient-shift",
+        post.isPinned ? "ring-2 ring-accent/50" : "ring-1 ring-white/10"
       )}>
         {post.isPinned && (
             <div className="absolute top-0 right-0 z-20">
@@ -42,14 +42,14 @@ export function FeedCard({ post }: { post: FeedPost }) {
             </div>
         )}
 
-        <CardHeader className="p-8 pb-4 space-y-4">
+        <CardHeader className="p-10 pb-4 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                     <div className={cn(
-                        "p-2.5 rounded-xl shadow-sm",
-                        isYoutube ? "bg-red-50 text-red-600" : isLink ? "bg-blue-50 text-blue-600" : "bg-slate-50 text-slate-600"
+                        "p-2.5 rounded-xl shadow-lg border border-white/10",
+                        isYoutube ? "bg-red-500/20 text-red-400" : isLink ? "bg-blue-500/20 text-blue-400" : "bg-slate-500/20 text-slate-400"
                     )}>
-                        {isYoutube ? <Youtube className="h-5 w-5" /> : isLink ? <LinkIcon className="h-5 w-5" /> : <Newspaper className="h-5 w-5" />}
+                        {isYoutube ? <Youtube className="h-5 w-5" /> : isLink ? <LinkIcon className="h-5 w-5" /> : <NewspaperIcon className="h-5 w-5" />}
                     </div>
                     <div className="flex flex-col">
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
@@ -65,18 +65,18 @@ export function FeedCard({ post }: { post: FeedPost }) {
                 </div>
             </div>
             
-            <CardTitle className="text-2xl sm:text-3xl font-black text-slate-950 uppercase tracking-tight italic leading-tight group-hover:text-accent transition-colors">
+            <CardTitle className="text-3xl sm:text-4xl font-black text-white uppercase tracking-tight italic leading-tight group-hover:text-accent transition-colors">
                 {post.title}
             </CardTitle>
         </CardHeader>
 
-        <CardContent className="p-8 pt-0 space-y-6">
-            <p className="text-slate-700 font-medium leading-relaxed whitespace-pre-wrap">
+        <CardContent className="p-10 pt-0 space-y-8">
+            <p className="text-slate-200 text-lg font-medium leading-relaxed whitespace-pre-wrap">
                 {post.content}
             </p>
 
             {isYoutube && videoId ? (
-                <div className="relative aspect-video rounded-[2rem] overflow-hidden shadow-2xl border-4 border-slate-100 group/media">
+                <div className="relative aspect-video rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white/5 group/media">
                     <iframe
                         className="w-full h-full"
                         src={`https://www.youtube.com/embed/${videoId}`}
@@ -85,12 +85,11 @@ export function FeedCard({ post }: { post: FeedPost }) {
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
                     ></iframe>
-                    <div className="absolute inset-0 pointer-events-none border border-white/20 rounded-[2rem]" />
                 </div>
             ) : isLink && post.imageUrl ? (
-                <div className="relative aspect-video rounded-[2rem] overflow-hidden shadow-2xl border-4 border-slate-100 group/media">
+                <div className="relative aspect-video rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white/5 group/media">
                     <img src={post.imageUrl} alt={post.title} className="w-full h-full object-cover transition-transform duration-700 group-hover/media:scale-105" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                 </div>
             ) : null}
 
@@ -100,7 +99,7 @@ export function FeedCard({ post }: { post: FeedPost }) {
                         href={post.url} 
                         target="_blank" 
                         rel="noopener noreferrer" 
-                        className="inline-flex items-center gap-3 px-8 py-4 bg-slate-950 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-accent hover:text-accent-foreground transition-all shadow-xl group/btn"
+                        className="inline-flex items-center gap-3 px-10 py-5 bg-white text-slate-950 rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-accent hover:text-white transition-all shadow-2xl group/btn"
                     >
                         Acessar Conteúdo 
                         <LinkIcon className="h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
@@ -113,7 +112,7 @@ export function FeedCard({ post }: { post: FeedPost }) {
   );
 }
 
-function Newspaper({ className }: { className?: string }) {
+function NewspaperIcon({ className }: { className?: string }) {
     return (
         <svg 
             xmlns="http://www.w3.org/2000/svg" 

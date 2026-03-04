@@ -62,7 +62,7 @@ export default function FeedPage() {
         </div>
         <div>
             <h1 className="text-4xl font-black tracking-tight text-slate-950 italic uppercase">
-                Feed de <span className="text-accent">Inteligência</span>
+                Feed de <span className="text-accent">Notícias</span>
             </h1>
             <p className="text-slate-600 font-medium mt-2">
                 Acompanhe atualizações de edital, novos materiais e avisos da mentoria em tempo real.

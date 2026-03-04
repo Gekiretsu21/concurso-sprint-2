@@ -89,23 +89,6 @@ export async function saveQuestionAttempt(
   return batch.commit();
 }
 
-export async function registerQuestionAnswer(
-  firestore: Firestore,
-  userId: string,
-  subject: string,
-  isCorrect: boolean
-) {
-  const userRef = doc(firestore, 'users', userId);
-  const correctIncrement = isCorrect ? 1 : 0;
-  await updateDoc(userRef, {
-    'stats.performance.questions.totalAnswered': increment(1),
-    'stats.performance.questions.totalCorrect': increment(correctIncrement),
-    [`stats.performance.questions.bySubject.${subject}.answered`]: increment(1),
-    [`stats.performance.questions.bySubject.${subject}.correct`]: increment(correctIncrement),
-    'stats.lastActivityAt': serverTimestamp(),
-  });
-}
-
 export async function batchUpdateQuestions(
   firestore: Firestore,
   userId: string,
@@ -178,7 +161,6 @@ export async function importQuestions(
     const parts = qStr.split('|');
     if (parts.length < 11) continue;
 
-    // Colunas base
     const Materia = parts[0]?.trim();
     const Ano = parts[1]?.trim();
     const Assunto = parts[2]?.trim();
@@ -191,11 +173,8 @@ export async function importQuestions(
     const e = parts[9]?.trim();
     const correctAnswer = parts[10]?.trim();
 
-    // Novas Colunas God Mode
     const context_title = parts[11]?.trim() || null;
     const context_text = parts[12]?.trim() || null;
-
-    // Regra de Retrocompatibilidade: checar Contextualização (texto)
     const isGodMode = Boolean(context_text && context_text !== '');
 
     const newQuestionDocRef = doc(collection(firestore, 'questoes'));
@@ -280,15 +259,7 @@ export async function handleFlashcardResponse(firestore: Firestore, userId: stri
   return batch.commit();
 }
 
-// --- SIMULADO ACTIONS ---
-
-export async function createSimulatedExam(firestore: Firestore, userId: string, dto: any): Promise<string> {
-  const ref = doc(collection(firestore, 'communitySimulados'));
-  await setDoc(ref, { id: ref.id, name: dto.name, userId, createdAt: serverTimestamp(), questionIds: [], questionCount: 0, accessTier: dto.accessTier });
-  return ref.id;
-}
-
-// --- DELETE / MAINTENANCE ACTIONS ---
+// --- MAINTENANCE ACTIONS ---
 
 export async function deleteQuestionsByIds(firestore: Firestore, ids: string[]) {
   const b = writeBatch(firestore);
@@ -362,95 +333,25 @@ export async function deleteDuplicateFlashcards(firestore: Firestore) {
   return count;
 }
 
-// --- USER / ADMIN ACTIONS ---
-
-export async function updateUserPlan(firestore: Firestore, userId: string, plan: 'standard' | 'academy' | 'plus') {
-  const userRef = doc(firestore, 'users', userId);
-  return updateDoc(userRef, {
-    'subscription.plan': plan,
-    'subscription.status': 'active',
-    'subscription.updatedAt': serverTimestamp()
-  });
-}
-
-export async function seedUsers(firestore: Firestore) {
-  const names = ["João Silva", "Maria Santos", "Pedro Oliveira", "Ana Costa", "Lucas Pereira", "Beatriz Lima", "Guilherme Souza", "Camila Rocha", "Rafael Ferreira", "Juliana Meireles"];
-  const batchSize = 50;
-
-  for (let i = 0; i < 101; i += batchSize) {
-    const batch = writeBatch(firestore);
-    const limit = Math.min(i + batchSize, 101);
-    for (let j = i; j < limit; j++) {
-      const userRef = doc(collection(firestore, 'users'));
-      const totalAnswered = Math.floor(Math.random() * 500) + 50;
-      const totalCorrect = Math.floor(totalAnswered * (0.5 + Math.random() * 0.4));
-      batch.set(userRef, {
-        id: userRef.id,
-        name: names[j % names.length] + " " + (j + 1),
-        email: `aluno${j}@mentoria.com`,
-        subscription: { plan: j % 5 === 0 ? 'plus' : 'standard', status: 'active' },
-        stats: {
-          performance: {
-            questions: {
-              totalAnswered,
-              totalCorrect,
-              bySubject: {
-                "Português": { answered: Math.floor(totalAnswered / 2), correct: Math.floor(totalCorrect / 2) }
-              }
-            }
-          },
-          dailyStreak: Math.floor(Math.random() * 20),
-          totalStudyTime: Math.floor(Math.random() * 50000)
-        },
-        createdAt: serverTimestamp(),
-        isFake: true
-      });
-    }
-    await batch.commit();
-  }
-}
-
-export async function deleteFakeUsers(firestore: Firestore) {
-  const q = query(collection(firestore, 'users'), where('isFake', '==', true));
-  const snap = await getDocs(q);
-  const batch = writeBatch(firestore);
-  snap.docs.forEach(d => batch.delete(d.ref));
-  return batch.commit();
-}
-
 export async function resetUserProgress(firestore: Firestore, userId: string) {
   const userRef = doc(firestore, 'users', userId);
-
   await updateDoc(userRef, {
     stats: {
       dailyStreak: 0,
       totalStudyTime: 0,
       level: 1,
       performance: {
-        questions: {
-          totalAnswered: 0,
-          totalCorrect: 0,
-          bySubject: {}
-        },
-        flashcards: {
-          totalReviewed: 0,
-          totalCorrect: 0,
-          bySubject: {}
-        }
+        questions: { totalAnswered: 0, totalCorrect: 0, bySubject: {} },
+        flashcards: { totalReviewed: 0, totalCorrect: 0, bySubject: {} }
       }
     }
   });
-
   const attemptsSnap = await getDocs(collection(firestore, `users/${userId}/question_attempts`));
   const flashSnap = await getDocs(collection(firestore, `users/${userId}/flashcard_progress`));
-
   const deleteBatch = writeBatch(firestore);
   attemptsSnap.docs.forEach(d => deleteBatch.delete(d.ref));
   flashSnap.docs.forEach(d => deleteBatch.delete(d.ref));
-
-  if (attemptsSnap.size > 0 || flashSnap.size > 0) {
-    await deleteBatch.commit();
-  }
+  if (attemptsSnap.size > 0 || flashSnap.size > 0) await deleteBatch.commit();
 }
 
 export async function resetAllUsersProgress(firestore: Firestore) {
@@ -458,6 +359,36 @@ export async function resetAllUsersProgress(firestore: Firestore) {
   for (const userDoc of usersSnap.docs) {
     await resetUserProgress(firestore, userDoc.id);
   }
+}
+
+// --- ADMIN / UTILS ---
+
+export async function updateUserPlan(firestore: Firestore, userId: string, plan: string) {
+  const userRef = doc(firestore, 'users', userId);
+  return updateDoc(userRef, { 'subscription.plan': plan, 'subscription.status': 'active', 'subscription.updatedAt': serverTimestamp() });
+}
+
+export async function seedUsers(firestore: Firestore) {
+  const batch = writeBatch(firestore);
+  for (let i = 0; i < 50; i++) {
+    const userRef = doc(collection(firestore, 'users'));
+    batch.set(userRef, { id: userRef.id, name: `Aluno ${i}`, email: `aluno${i}@test.com`, isFake: true, stats: { dailyStreak: 5, performance: { questions: { totalAnswered: 100, totalCorrect: 80 } } } });
+  }
+  return batch.commit();
+}
+
+export async function deleteFakeUsers(firestore: Firestore) {
+  const q = query(collection(firestore, 'users'), where('isFake', '==', true));
+  const snap = await getDocs(q);
+  const b = writeBatch(firestore);
+  snap.docs.forEach(d => b.delete(d.ref));
+  return b.commit();
+}
+
+export async function createSimulatedExam(firestore: Firestore, userId: string, dto: any): Promise<string> {
+  const ref = doc(collection(firestore, 'communitySimulados'));
+  await setDoc(ref, { id: ref.id, name: dto.name, userId, createdAt: serverTimestamp(), questionIds: [], questionCount: 0, accessTier: dto.accessTier });
+  return ref.id;
 }
 
 export async function savePreviousExamResult(firestore: Firestore, p: any) {
