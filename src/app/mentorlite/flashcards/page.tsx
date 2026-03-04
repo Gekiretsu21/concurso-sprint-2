@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check, ChevronLeft, ChevronRight, Loader2, RefreshCw, ThumbsDown, ThumbsUp, X, Sparkles, Layers, BookOpen, Search, ChevronDown } from 'lucide-react';
 import { useState, useMemo, useEffect, useCallback, Suspense } from 'react';
-import confetti from 'canvas-confetti';
+// import confetti from 'canvas-confetti';
 import { Input } from '@/components/ui/input';
 import './flashcard.css';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
@@ -65,6 +65,7 @@ function FlashcardViewer({ flashcards, onResponse }: { flashcards: Flashcard[], 
     const card = flashcards[currentIndex];
     if (!card) return;
 
+    /* Comentado temporariamente para resolver erro de build
     if (result === 'correct') {
       const duration = 2000;
       const animationEnd = Date.now() + duration;
@@ -94,6 +95,7 @@ function FlashcardViewer({ flashcards, onResponse }: { flashcards: Flashcard[], 
         });
       }, 250);
     }
+    */
 
     onResponse(card, result);
     if (currentIndex < flashcards.length - 1) {
