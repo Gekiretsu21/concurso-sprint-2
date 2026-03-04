@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -266,7 +265,7 @@ function DeletePreviousExamsDialog() {
   };
 
   const handleDelete = async () => {
-    if (!firestore || !user || selectedExams.length === 0) return;
+    if (!firestore || !user || totalExams.length === 0) return;
 
     setIsDeleting(true);
     try {
