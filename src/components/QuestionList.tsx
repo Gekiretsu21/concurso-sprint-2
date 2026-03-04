@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -12,7 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Loader2, MessageSquare, Crown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { Loader2, MessageSquare, Crown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -530,7 +531,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
                     {isAnswered && q.is_god_mode && isAcademyActive && hasGodModeAccess && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                         {q.god_mode_concept_text && (
-                          <div className="p-5 rounded-xl border border-indigo-500/30 bg-indigo-500/5 shadow-sm">
+                          <div className="p-5 rounded-xl border border-indigo-500/30 bg-indigo-50/10 shadow-sm">
                             <h4 className="font-bold text-indigo-700 mb-2 flex items-center gap-2">
                               <span className="text-lg">🧠</span> {q.god_mode_concept_title || 'Conceito-Chave'}
                             </h4>
@@ -538,7 +539,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
                           </div>
                         )}
                         {q.god_mode_summary_text && (
-                          <div className="p-5 rounded-xl border border-emerald-500/30 bg-emerald-500/5 shadow-sm relative overflow-hidden group">
+                          <div className="p-5 rounded-xl border border-emerald-500/30 bg-emerald-50/10 shadow-sm relative overflow-hidden group">
                             <h4 className="font-bold text-emerald-700 mb-2 flex items-center gap-2 relative z-10">
                               <span className="text-lg">🎓</span> {q.god_mode_summary_title || 'Síntese de Revisão'}
                             </h4>

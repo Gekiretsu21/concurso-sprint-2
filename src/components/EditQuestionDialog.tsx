@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -18,8 +19,8 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import { Loader2, Pencil, Info, Sparkles, BookOpen } from 'lucide-react';
-import { Question } from './QuestionList';
+import { Loader2, Pencil, Info, Sparkles, BookOpen, Layers } from 'lucide-react';
+import { type Question } from './QuestionList';
 import { useFirebase } from '@/firebase';
 import { updateQuestion } from '@/firebase/actions';
 import { useToast } from '@/hooks/use-toast';
@@ -58,6 +59,7 @@ const questionEditSchema = z.object({
   god_mode_concept_text: z.string().optional().nullable(),
   god_mode_summary_title: z.string().optional().nullable(),
   god_mode_summary_text: z.string().optional().nullable(),
+  is_god_mode: z.boolean().default(false),
 });
 
 type QuestionEditForm = z.infer<typeof questionEditSchema>;
@@ -75,18 +77,18 @@ export function EditQuestionDialog({ question }: EditQuestionDialogProps) {
   const form = useForm<QuestionEditForm>({
     resolver: zodResolver(questionEditSchema),
     defaultValues: {
-      Materia: question.Materia,
-      Ano: question.Ano,
-      Assunto: question.Assunto,
-      Cargo: question.Cargo,
+      Materia: question.Materia || '',
+      Ano: question.Ano || '',
+      Assunto: question.Assunto || '',
+      Cargo: question.Cargo || '',
       Banca: question.Banca || '',
-      Enunciado: question.Enunciado,
+      Enunciado: question.Enunciado || '',
       a: question.a || '',
       b: question.b || '',
       c: question.c || '',
       d: question.d || '',
       e: question.e || '',
-      correctAnswer: question.correctAnswer,
+      correctAnswer: question.correctAnswer || '',
       god_mode_context_title: question.god_mode_context_title || '',
       god_mode_context_text: question.god_mode_context_text || '',
       god_mode_analysis_title: question.god_mode_analysis_title || '',
@@ -104,6 +106,7 @@ export function EditQuestionDialog({ question }: EditQuestionDialogProps) {
       god_mode_concept_text: question.god_mode_concept_text || '',
       god_mode_summary_title: question.god_mode_summary_title || '',
       god_mode_summary_text: question.god_mode_summary_text || '',
+      is_god_mode: question.is_god_mode || false,
     },
   });
 
@@ -115,7 +118,7 @@ export function EditQuestionDialog({ question }: EditQuestionDialogProps) {
       await updateQuestion(firestore, question.id, data);
       toast({
         title: 'Sucesso!',
-        description: 'A questão foi atualizada no banco de dados.',
+        description: 'A questão foi atualizada com todos os campos salvos.',
       });
       setIsOpen(false);
     } catch (error) {
@@ -129,156 +132,186 @@ export function EditQuestionDialog({ question }: EditQuestionDialogProps) {
     }
   };
 
-  const isAcademy = question.is_god_mode;
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon">
+        <Button variant="outline" size="icon" className="hover:bg-accent/10">
           <Pencil className="h-4 w-4" />
           <span className="sr-only">Editar Questão</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0">
-        <DialogHeader className="p-6 pb-2">
-          <DialogTitle className="text-2xl flex items-center gap-2">
-            <Pencil className="h-5 w-5 text-primary" /> Editar Registro de Questão
-          </DialogTitle>
-          <DialogDescription>
-            Altere qualquer campo da questão. As mudanças serão refletidas imediatamente para os alunos.
-          </DialogDescription>
+      <DialogContent className="sm:max-w-5xl max-h-[95vh] flex flex-col p-0 overflow-hidden border-none shadow-2xl rounded-2xl">
+        <DialogHeader className="p-6 pb-2 bg-slate-950 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle className="text-2xl font-black uppercase tracking-tight flex items-center gap-2">
+                <Pencil className="h-5 w-5 text-accent" /> Editor de Comando Tático
+              </DialogTitle>
+              <DialogDescription className="text-slate-400 font-medium">
+                Gestão total de conteúdo e inteligência do Método Academy.
+              </DialogDescription>
+            </div>
+            {form.watch('is_god_mode') && (
+              <Badge className="bg-accent text-accent-foreground font-black px-4 py-1.5 rounded-full">
+                MODO ACADEMY ATIVO
+              </Badge>
+            )}
+          </div>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 px-6">
-          <form id="edit-question-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 py-4 pb-10">
+        <ScrollArea className="flex-1 px-8 bg-slate-50/50">
+          <form id="edit-question-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-10 py-8 pb-16">
             
-            {/* Seção 1: Metadados */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 text-primary font-bold text-sm uppercase tracking-wider">
-                <Info className="h-4 w-4" /> Classificação e Identificação
+            {/* Seção 1: Identificação Estratégica */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 text-slate-900 font-black text-sm uppercase tracking-[0.2em] border-b pb-2 border-slate-200">
+                <Info className="h-4 w-4 text-accent" /> 01. Identificação Estratégica
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="Materia">Matéria</Label>
-                  <Input id="Materia" {...form.register('Materia')} />
+                  <Label className="text-[10px] font-bold uppercase text-slate-500">Matéria</Label>
+                  <Input {...form.register('Materia')} className="bg-white" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="Assunto">Assunto</Label>
-                  <Input id="Assunto" {...form.register('Assunto')} />
+                  <Label className="text-[10px] font-bold uppercase text-slate-500">Assunto</Label>
+                  <Input {...form.register('Assunto')} className="bg-white" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="Ano">Ano</Label>
-                  <Input id="Ano" {...form.register('Ano')} />
+                  <Label className="text-[10px] font-bold uppercase text-slate-500">Banca Organizadora</Label>
+                  <Input {...form.register('Banca')} className="bg-white" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="Banca">Banca</Label>
-                  <Input id="Banca" {...form.register('Banca')} />
+                  <Label className="text-[10px] font-bold uppercase text-slate-500">Ano</Label>
+                  <Input {...form.register('Ano')} className="bg-white" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="Cargo">Cargo</Label>
-                  <Input id="Cargo" {...form.register('Cargo')} />
+                  <Label className="text-[10px] font-bold uppercase text-slate-500">Cargo Alvo</Label>
+                  <Input {...form.register('Cargo')} className="bg-white" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="correctAnswer">Resposta Correta (Letra)</Label>
-                  <Input id="correctAnswer" placeholder="Ex: a" {...form.register('correctAnswer')} />
+                  <Label className="text-[10px] font-bold uppercase text-slate-500">Gabarito (Letra)</Label>
+                  <Input {...form.register('correctAnswer')} placeholder="Ex: a" className="bg-white border-accent/30 focus:border-accent" />
                 </div>
               </div>
             </div>
 
-            <Separator />
-
-            {/* Seção 2: Enunciado e Alternativas */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 text-primary font-bold text-sm uppercase tracking-wider">
-                <BookOpen className="h-4 w-4" /> Conteúdo da Questão
+            {/* Seção 2: Conteúdo Base */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 text-slate-900 font-black text-sm uppercase tracking-[0.2em] border-b pb-2 border-slate-200">
+                <BookOpen className="h-4 w-4 text-accent" /> 02. Enunciado e Alternativas
               </div>
               <div className="space-y-2">
-                <Label htmlFor="Enunciado">Enunciado</Label>
-                <Textarea id="Enunciado" rows={6} {...form.register('Enunciado')} className="font-medium" />
+                <Label className="text-[10px] font-bold uppercase text-slate-500">Enunciado da Questão</Label>
+                <Textarea rows={8} {...form.register('Enunciado')} className="bg-white font-medium leading-relaxed" />
               </div>
               <div className="grid grid-cols-1 gap-4">
                 {(['a', 'b', 'c', 'd', 'e'] as const).map(alt => (
                   <div key={alt} className="space-y-2">
-                    <Label htmlFor={`alt-${alt}`}>Alternativa {alt.toUpperCase()}</Label>
-                    <Input id={`alt-${alt}`} {...form.register(alt)} />
+                    <Label className="text-[10px] font-bold uppercase text-slate-500">Alternativa {alt.toUpperCase()}</Label>
+                    <Input {...form.register(alt)} className="bg-white" />
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Seção 3: Método Academy (Opcional) */}
-            {isAcademy && (
-              <>
-                <Separator className="bg-blue-100" />
-                <div className="space-y-6 p-6 rounded-2xl bg-blue-50/50 border border-blue-100">
-                  <div className="flex items-center gap-2 text-blue-700 font-black text-sm uppercase tracking-widest">
-                    <Sparkles className="h-4 w-4 fill-current" /> Inteligência Método Academy
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Seção 3: Inteligência Método Academy */}
+            <div className="space-y-8 p-8 rounded-[2.5rem] bg-white border-2 border-slate-100 shadow-xl shadow-slate-200/20">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 text-blue-700 font-black text-sm uppercase tracking-[0.2em]">
+                  <Sparkles className="h-5 w-5 fill-current" /> 03. Inteligência Método Academy
+                </div>
+                <div className="flex items-center gap-2">
+                  <input 
+                    type="checkbox" 
+                    id="is_god_mode" 
+                    {...form.register('is_god_mode')} 
+                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <Label htmlFor="is_god_mode" className="text-xs font-bold text-slate-600 cursor-pointer">Pertence ao Método Academy?</Label>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-8">
+                {/* Contextualização */}
+                <div className="space-y-4 p-6 rounded-2xl bg-blue-50/30 border border-blue-100">
+                  <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label>Título da Contextualização</Label>
-                      <Input {...form.register('god_mode_context_title')} placeholder="Ex: CONTEXTO HISTÓRICO" />
+                      <Label className="text-[10px] font-black uppercase text-blue-600 tracking-wider">Título da Contextualização</Label>
+                      <Input {...form.register('god_mode_context_title')} placeholder="Ex: CONTEXTO E CONCEITOS PRINCIPAIS" className="bg-white border-blue-200" />
                     </div>
                     <div className="space-y-2">
-                      <Label>Texto da Contextualização</Label>
-                      <Textarea {...form.register('god_mode_context_text')} rows={4} />
+                      <Label className="text-[10px] font-black uppercase text-blue-600 tracking-wider">Texto de Apoio Tático</Label>
+                      <Textarea {...form.register('god_mode_context_text')} rows={5} className="bg-white border-blue-200" />
                     </div>
                   </div>
+                </div>
 
-                  <div className="space-y-4 pt-4">
-                    <Label className="text-blue-800 font-bold">Análise Tática das Alternativas</Label>
+                {/* Análise das Alternativas */}
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-blue-600 tracking-wider">Título do Bloco de Análise</Label>
+                    <Input {...form.register('god_mode_analysis_title')} placeholder="Ex: ANÁLISE TÁTICA DAS ALTERNATIVAS" className="bg-white" />
+                  </div>
+                  <div className="grid grid-cols-1 gap-4">
                     {(['a', 'b', 'c', 'd', 'e'] as const).map(alt => (
-                      <div key={`academy-${alt}`} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start p-4 rounded-xl bg-white border border-blue-100">
+                      <div key={`academy-${alt}`} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-start p-5 rounded-2xl bg-white border border-slate-100 shadow-sm">
                         <div className="space-y-2">
-                          <Label className="text-[10px] uppercase font-black">Status Alt {alt.toUpperCase()}</Label>
-                          <Input {...form.register(`god_mode_status_${alt}` as any)} placeholder="Ex: INCORRETA" />
+                          <Label className="text-[9px] uppercase font-black text-slate-400">Status Alt {alt.toUpperCase()}</Label>
+                          <Input 
+                            {...form.register(`god_mode_status_${alt}` as any)} 
+                            placeholder="CORRETA / INCORRETA" 
+                            className={cn(
+                              "h-9 font-bold text-xs",
+                              form.watch('correctAnswer').toLowerCase() === alt ? "border-emerald-500 text-emerald-600" : "border-red-200 text-red-600"
+                            )} 
+                          />
                         </div>
-                        <div className="md:col-span-2 space-y-2">
-                          <Label className="text-[10px] uppercase font-black">Justificativa Alt {alt.toUpperCase()}</Label>
-                          <Textarea {...form.register(`god_mode_justification_${alt}` as any)} rows={2} />
+                        <div className="md:col-span-3 space-y-2">
+                          <Label className="text-[9px] uppercase font-black text-slate-400">Justificativa Técnica</Label>
+                          <Textarea {...form.register(`god_mode_justification_${alt}` as any)} rows={2} className="text-sm bg-slate-50/50" />
                         </div>
                       </div>
                     ))}
                   </div>
+                </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>Título Conceito-Chave</Label>
-                        <Input {...form.register('god_mode_concept_title')} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Texto Conceito-Chave</Label>
-                        <Textarea {...form.register('god_mode_concept_text')} rows={3} />
-                      </div>
+                {/* Conceito-Chave e Síntese */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4 p-6 rounded-2xl bg-indigo-50/30 border border-indigo-100">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-indigo-600">Título Conceito-Chave</Label>
+                      <Input {...form.register('god_mode_concept_title')} className="bg-white border-indigo-200" />
                     </div>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>Título Síntese</Label>
-                        <Input {...form.register('god_mode_summary_title')} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Texto Síntese</Label>
-                        <Textarea {...form.register('god_mode_summary_text')} rows={3} className="font-mono text-xs" />
-                      </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-indigo-600">Conteúdo do Conceito</Label>
+                      <Textarea {...form.register('god_mode_concept_text')} rows={4} className="bg-white border-indigo-200" />
+                    </div>
+                  </div>
+                  <div className="space-y-4 p-6 rounded-2xl bg-emerald-50/30 border border-emerald-100">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-emerald-600">Título Síntese de Revisão</Label>
+                      <Input {...form.register('god_mode_summary_title')} className="bg-white border-emerald-200" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-emerald-600">Conteúdo da Síntese</Label>
+                      <Textarea {...form.register('god_mode_summary_text')} rows={4} className="bg-white border-emerald-200 font-mono text-xs" />
                     </div>
                   </div>
                 </div>
-              </>
-            )}
+              </div>
+            </div>
           </form>
         </ScrollArea>
 
-        <DialogFooter className="p-6 border-t bg-slate-50">
+        <DialogFooter className="p-6 border-t bg-slate-100/50">
           <DialogClose asChild>
-            <Button type="button" variant="outline">
+            <Button type="button" variant="outline" className="rounded-xl px-8">
               Cancelar
             </Button>
           </DialogClose>
-          <Button form="edit-question-form" type="submit" disabled={isSubmitting} className="font-bold">
+          <Button form="edit-question-form" type="submit" disabled={isSubmitting} className="font-black uppercase tracking-widest text-xs px-10 h-12 rounded-xl shadow-xl shadow-slate-900/10">
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Salvar Alterações
+            Confirmar Alterações
           </Button>
         </DialogFooter>
       </DialogContent>
