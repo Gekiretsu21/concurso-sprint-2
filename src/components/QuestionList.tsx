@@ -38,6 +38,7 @@ export interface Question {
   Ano: string;
   Assunto: string;
   Cargo: string;
+  Banca?: string;
   Enunciado: string;
   a?: string;
   b?: string;
@@ -84,11 +85,12 @@ interface QuestionListProps {
   subject?: string | string[];
   topics?: string[];
   cargo?: string;
+  banca?: string;
   statusFilter?: StatusFilter;
   methodFilter?: MethodFilter;
 }
 
-export function QuestionList({ subject, topics, cargo, statusFilter = 'all', methodFilter = 'all' }: QuestionListProps) {
+export function QuestionList({ subject, topics, cargo, banca, statusFilter = 'all', methodFilter = 'all' }: QuestionListProps) {
   const { firestore } = useFirebase();
   const { user } = useUser();
 
@@ -121,9 +123,13 @@ export function QuestionList({ subject, topics, cargo, statusFilter = 'all', met
       constraints.push(where('Cargo', '==', cargo));
     }
 
+    if (banca && banca !== 'all') {
+      constraints.push(where('Banca', '==', banca));
+    }
+
     const baseRef = collection(firestore, 'questoes');
     return constraints.length > 0 ? query(baseRef, and(...constraints)) : baseRef;
-  }, [firestore, user, subject, topics, cargo]);
+  }, [firestore, user, subject, topics, cargo, banca]);
 
   const { data: questions, isLoading: isLoadingQuestions } = useCollection<Question>(questionsQuery);
 
@@ -220,7 +226,7 @@ export function QuestionList({ subject, topics, cargo, statusFilter = 'all', met
     setCurrentPage(1);
     setSelectedAnswers({});
     setAnsweredQuestions({});
-  }, [subject, topics, cargo, statusFilter, questions]);
+  }, [subject, topics, cargo, banca, statusFilter, questions]);
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
@@ -302,7 +308,8 @@ export function QuestionList({ subject, topics, cargo, statusFilter = 'all', met
                         </Badge>
                       )}
                     </div>
-                    <div className="hidden md:flex items-center gap-4">
+                    <div className="hidden md:flex items-center gap-2">
+                      {q.Banca && <Badge variant="outline" className="border-accent text-accent">{q.Banca}</Badge>}
                       <Badge variant="secondary">{q.Assunto}</Badge>
                       <Badge variant="secondary">{q.Cargo}</Badge>
                       <Badge variant="outline">{q.Ano}</Badge>

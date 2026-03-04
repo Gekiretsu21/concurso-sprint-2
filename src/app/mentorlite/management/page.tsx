@@ -66,6 +66,7 @@ interface Question {
   Materia: string;
   Ano: string;
   Cargo: string;
+  Banca: string;
   Assunto: string;
   status?: 'active' | 'hidden';
 }
@@ -975,7 +976,7 @@ export default function ManagementPage() {
                         </DialogDescription>
                       </DialogHeader>
                       <div className="rounded-md bg-muted p-4 text-sm font-mono mt-4 break-words">
-                        Materia | Ano | Assunto | Cargo | Enunciado | a | b | c | d | e | correctAnswer
+                        Materia | Ano | Assunto | Cargo | Enunciado | a | b | c | d | e | correctAnswer | Banca
                       </div>
                     </DialogContent>
                   </Dialog>
@@ -1072,7 +1073,7 @@ export default function ManagementPage() {
                     <DialogHeader>
                       <DialogTitle>Modelo de Importação Método Academy</DialogTitle>
                       <DialogDescription>
-                        Siga exatamente esta estrutura de 28 colunas usando | (pipe) como separador.
+                        Siga exatamente esta estrutura de 29 colunas usando | (pipe) como separador.
                       </DialogDescription>
                     </DialogHeader>
 
@@ -1081,7 +1082,7 @@ export default function ManagementPage() {
                         <h4 className="font-bold mb-2">Copie e cole a estrutura:</h4>
                         <div className="bg-slate-950 p-4 rounded-md overflow-x-auto w-full max-w-3xl">
                           <code className="text-amber-400 text-sm whitespace-pre-wrap break-words leading-relaxed block overflow-hidden">
-                            Matéria | Ano | Assunto | Cargo | Enunciado | a | b | c | d | e | correctAnswer | Contextualização (título) | Contextualização (texto) | Análise das alternativas (título) | Alternativa A - status | Justificativa (texto) | Alternativa B - status | Justificativa (texto) | Alternativa C - status | Justificativa (texto) | Alternativa D - status | Justificativa (texto) | Alternativa E - status | Justificativa (texto) | Conceito-Chave (título) | Conceito-Chave (texto) | Síntese de Revisão (título) | Síntese de revisão (texto)
+                            Matéria | Ano | Assunto | Cargo | Enunciado | a | b | c | d | e | correctAnswer | Contextualização (título) | Contextualização (texto) | Análise das alternativas (título) | Alternativa A - status | Justificativa (texto) | Alternativa B - status | Justificativa (texto) | Alternativa C - status | Justificativa (texto) | Alternativa D - status | Justificativa (texto) | Alternativa E - status | Justificativa (texto) | Conceito-Chave (título) | Conceito-Chave (texto) | Síntese de Revisão (título) | Síntese de revisão (texto) | Banca
                           </code>
                         </div>
                       </div>
@@ -1090,7 +1091,7 @@ export default function ManagementPage() {
                     <DialogFooter>
                       <DialogClose asChild><Button variant="outline">Fechar</Button></DialogClose>
                       <Button onClick={() => {
-                        const headers = "Matéria | Ano | Assunto | Cargo | Enunciado | a | b | c | d | e | correctAnswer | Contextualização (título) | Contextualização (texto) | Análise das alternativas (título) | Alternativa A - status | Justificativa (texto) | Alternativa B - status | Justificativa (texto) | Alternativa C - status | Justificativa (texto) | Alternativa D - status | Justificativa (texto) | Alternativa E - status | Justificativa (texto) | Conceito-Chave (título) | Conceito-Chave (texto) | Síntese de Revisão (título) | Síntese de revisão (texto)\n";
+                        const headers = "Matéria | Ano | Assunto | Cargo | Enunciado | a | b | c | d | e | correctAnswer | Contextualização (título) | Contextualização (texto) | Análise das alternativas (título) | Alternativa A - status | Justificativa (texto) | Alternativa B - status | Justificativa (texto) | Alternativa C - status | Justificativa (texto) | Alternativa D - status | Justificativa (texto) | Alternativa E - status | Justificativa (texto) | Conceito-Chave (título) | Conceito-Chave (texto) | Síntese de Revisão (título) | Síntese de revisão (texto) | Banca\n";
                         const blob = new Blob(["\uFEFF" + headers], { type: 'text/csv;charset=utf-8;' });
                         const link = document.createElement("a");
                         const url = URL.createObjectURL(blob);

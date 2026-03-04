@@ -173,6 +173,16 @@ export async function importQuestions(
     const e = parts[9]?.trim();
     const correctAnswer = parts[10]?.trim();
 
+    // Handle Banca column based on structure length
+    // Standard: Materia | ... | correctAnswer | Banca (12 columns)
+    // Academy: Materia | ... | summary_text | Banca (29 columns)
+    let Banca = '';
+    if (parts.length === 12) {
+      Banca = parts[11]?.trim() || '';
+    } else if (parts.length >= 29) {
+      Banca = parts[28]?.trim() || '';
+    }
+
     const context_title = parts[11]?.trim() || null;
     const context_text = parts[12]?.trim() || null;
     const isGodMode = Boolean(context_text && context_text !== '');
@@ -180,7 +190,7 @@ export async function importQuestions(
     const newQuestionDocRef = doc(collection(firestore, 'questoes'));
 
     const dataToSave: any = {
-      Materia, Ano, Assunto, Cargo, Enunciado, a, b, c, d, e, correctAnswer,
+      Materia, Ano, Assunto, Cargo, Banca, Enunciado, a, b, c, d, e, correctAnswer,
       status: 'active',
       accessTier: accessTier,
       is_god_mode: isGodMode

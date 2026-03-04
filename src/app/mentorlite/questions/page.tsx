@@ -41,6 +41,7 @@ export default function QuestionsPage() {
   const [filterSubject, setFilterSubject] = useState('all');
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [filterCargo, setFilterCargo] = useState('all');
+  const [filterBanca, setFilterBanca] = useState('all');
   const [filterStatus, setFilterStatus] = useState<StatusFilter>('all');
   const [filterMethod, setFilterMethod] = useState<MethodFilter>('all');
 
@@ -48,12 +49,14 @@ export default function QuestionsPage() {
     subject: string | string[];
     topics: string[];
     cargo: string;
+    banca: string;
     status: StatusFilter;
     method: MethodFilter;
   }>({
     subject: '',
     topics: [],
     cargo: '',
+    banca: '',
     status: 'all',
     method: 'all'
   });
@@ -132,15 +135,32 @@ export default function QuestionsPage() {
     return Array.from(cargoSet).filter(Boolean).sort();
   }, [allQuestions, filterSubject]);
 
+  const availableBancas = useMemo(() => {
+    if (!allQuestions) return [];
+    const subjectFilteredQuestions = filterSubject !== 'all'
+      ? allQuestions.filter(q => q.Materia === filterSubject)
+      : allQuestions;
+
+    const bancaSet = new Set<string>();
+    subjectFilteredQuestions
+      .filter(q => q.status !== 'hidden' && q.Banca && q.Banca.trim())
+      .forEach(q => bancaSet.add(q.Banca.trim()));
+
+    return Array.from(bancaSet).filter(Boolean).sort();
+  }, [allQuestions, filterSubject]);
+
   const [searchTopic, setSearchTopic] = useState('');
   const [searchSubject, setSearchSubject] = useState('');
   const [searchCargo, setSearchCargo] = useState('');
+  const [searchBanca, setSearchBanca] = useState('');
 
   useEffect(() => {
     setSelectedTopics([]);
     setFilterCargo('all');
+    setFilterBanca('all');
     setSearchTopic('');
     setSearchCargo('');
+    setSearchBanca('');
   }, [filterSubject]);
 
   const handleFilterSubmit = () => {
@@ -159,6 +179,7 @@ export default function QuestionsPage() {
       subject: subjectQuery,
       topics: selectedTopics,
       cargo: filterCargo === 'all' ? '' : filterCargo,
+      banca: filterBanca === 'all' ? '' : filterBanca,
       status: filterStatus,
       method: filterMethod
     });
@@ -177,6 +198,7 @@ export default function QuestionsPage() {
   const filteredTopics = availableTopics.filter(t => t.toLowerCase().includes(searchTopic.toLowerCase()));
   const filteredSubjects = availableSubjects.filter(s => s.toLowerCase().includes(searchSubject.toLowerCase()));
   const filteredCargos = availableCargos.filter(c => c.toLowerCase().includes(searchCargo.toLowerCase()));
+  const filteredBancas = availableBancas.filter(b => b.toLowerCase().includes(searchBanca.toLowerCase()));
 
   return (
     <div className="flex flex-col gap-8 max-w-5xl mx-auto pb-20">
@@ -210,7 +232,7 @@ export default function QuestionsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="w-full justify-between font-normal truncate">
@@ -340,6 +362,47 @@ export default function QuestionsPage() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" disabled={availableBancas.length === 0} className="w-full justify-between font-normal truncate">
+                    <span className="truncate">{filterBanca === 'all' ? 'Banca' : filterBanca}</span>
+                    <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-[250px]" align="start">
+                  <DropdownMenuLabel>Bancas Disponíveis</DropdownMenuLabel>
+                  <div className="p-2">
+                    <div className="relative">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Buscar banca..."
+                        className="pl-8 h-9 text-xs"
+                        value={searchBanca}
+                        onChange={(e) => setSearchBanca(e.target.value)}
+                        onKeyDown={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <ScrollArea className="h-72">
+                    <DropdownMenuItem onClick={() => setFilterBanca('all')} className="cursor-pointer">
+                      <span className="flex-1">Todas as Bancas</span>
+                      {filterBanca === 'all' && <Check className="h-4 w-4 text-accent" />}
+                    </DropdownMenuItem>
+                    {filteredBancas.length > 0 ? (
+                      filteredBancas.map(b => (
+                        <DropdownMenuItem key={b} onClick={() => setFilterBanca(b)} className="cursor-pointer">
+                          <span className="flex-1 truncate">{b}</span>
+                          {filterBanca === b && <Check className="h-4 w-4 text-accent shrink-0 ml-2" />}
+                        </DropdownMenuItem>
+                      ))
+                    ) : (
+                      <p className="p-2 text-xs text-muted-foreground">Nenhuma banca encontrada.</p>
+                    )}
+                  </ScrollArea>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
 
               <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as StatusFilter)}>
                 <SelectTrigger>
@@ -373,11 +436,12 @@ export default function QuestionsPage() {
         </Card>
       </div>
 
-      {activeFilters.subject || activeFilters.cargo || activeFilters.status !== 'all' || activeFilters.method !== 'all' ? (
+      {activeFilters.subject || activeFilters.cargo || activeFilters.banca || activeFilters.status !== 'all' || activeFilters.method !== 'all' ? (
         <QuestionList
           subject={activeFilters.subject}
           topics={activeFilters.topics}
           cargo={activeFilters.cargo}
+          banca={activeFilters.banca}
           statusFilter={activeFilters.status}
           methodFilter={activeFilters.method}
         />
