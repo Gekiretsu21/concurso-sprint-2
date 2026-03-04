@@ -320,7 +320,7 @@ export default function QuestionsPage() {
                   </div>
                   <DropdownMenuSeparator />
                   <ScrollArea className="h-72">
-                    {filteredTopics.length > 0 ? filteredTopics.map(topic => (
+                    {filteredTopics.length > 0 ? filteredTopics.length > 0 ? filteredTopics.map(topic => (
                       <DropdownMenuCheckboxItem
                         key={topic}
                         checked={selectedTopics.includes(topic)}
@@ -335,7 +335,7 @@ export default function QuestionsPage() {
                       >
                         {topic}
                       </DropdownMenuCheckboxItem>
-                    )) : <p className="p-2 text-xs text-muted-foreground">{availableTopics.length === 0 ? "Selecione uma matéria primeiro." : "Nenhum assunto encontrado."}</p>}
+                    )) : <p className="p-2 text-xs text-muted-foreground">Nenhum assunto encontrado.</p> : <p className="p-2 text-xs text-muted-foreground">{availableTopics.length === 0 ? "Selecione uma matéria primeiro." : "Nenhum assunto encontrado."}</p>}
                   </ScrollArea>
                 </DropdownMenuContent>
               </DropdownMenu>
