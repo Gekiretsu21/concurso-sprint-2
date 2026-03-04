@@ -156,7 +156,7 @@ export function EditQuestionDialog({ question }: EditQuestionDialogProps) {
           </div>
         </DialogHeader>
         
-        <div className="flex-1 overflow-y-auto px-8 bg-slate-50/50">
+        <div className="flex-1 overflow-y-auto px-8 bg-slate-50/50" style={{ maxHeight: 'calc(95vh - 140px)' }}>
           <form id="edit-question-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-10 py-8 pb-32">
             
             {/* Seção 1: Identificação Estratégica */}

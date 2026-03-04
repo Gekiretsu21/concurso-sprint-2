@@ -265,7 +265,7 @@ function DeletePreviousExamsDialog() {
   };
 
   const handleDelete = async () => {
-    if (!firestore || !user || totalExams.length === 0) return;
+    if (!firestore || !user || selectedExams.length === 0) return;
 
     setIsDeleting(true);
     try {
@@ -630,7 +630,7 @@ export default function ManagementPage() {
   const [flashcardText, setFlashcardText] = useState('');
   const [isImportingQuestions, setIsImportingQuestions] = useState(false);
   const [isImportingFlashcards, setIsImportingFlashcards] = useState(false);
-  const [isClient, setIsClient] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [isPreviousExam, setIsPreviousExam] = useState(false);
   const [isVipContent, setIsVipContent] = useState(false);
   const [examName, setExamName] = useState('');
@@ -645,7 +645,7 @@ export default function ManagementPage() {
 
 
   useEffect(() => {
-    setIsClient(true);
+    setMounted(true);
   }, []);
 
   const questionsQuery = useMemoFirebase(
@@ -914,6 +914,9 @@ export default function ManagementPage() {
 
   const isButtonDisabled = !user || isUserLoading;
 
+  // HYDRATION GUARD
+  if (!mounted) return null;
+
   return (
     <div className="flex flex-col gap-8">
       <header className="flex items-center justify-between">
@@ -984,16 +987,12 @@ export default function ManagementPage() {
               </div>
               <div className="flex justify-end">
                 <Dialog>
-                  {isClient ? (
-                    <DialogTrigger asChild>
-                      <Button size="icon" disabled={isButtonDisabled}>
-                        {isUserLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardPaste />}
-                        <span className="sr-only">Importar Questões</span>
-                      </Button>
-                    </DialogTrigger>
-                  ) : (
-                    <Button size="icon" disabled={true}><ClipboardPaste /><span className="sr-only">Importar Questões</span></Button>
-                  )}
+                  <DialogTrigger asChild>
+                    <Button size="icon" disabled={isButtonDisabled}>
+                      {isUserLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardPaste />}
+                      <span className="sr-only">Importar Questões</span>
+                    </Button>
+                  </DialogTrigger>
                   <DialogContent className="sm:max-w-4xl">
                     <DialogHeader>
                       <DialogTitle>Importar Questões por Texto</DialogTitle>
@@ -1059,16 +1058,12 @@ export default function ManagementPage() {
               </div>
               <div className="flex justify-start gap-2 h-max">
                 <Dialog>
-                  {isClient ? (
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="border-amber-500/50 text-amber-700 hover:bg-amber-500/10">
-                        <ClipboardPaste className="h-4 w-4 mr-2" />
-                        Ver Estrutura
-                      </Button>
-                    </DialogTrigger>
-                  ) : (
-                    <Button variant="outline" size="sm" disabled={true}><ClipboardPaste className="h-4 w-4 mr-2" />Ver Estrutura</Button>
-                  )}
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="border-amber-500/50 text-amber-700 hover:bg-amber-500/10">
+                      <ClipboardPaste className="h-4 w-4 mr-2" />
+                      Ver Estrutura
+                    </Button>
+                  </DialogTrigger>
                   <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto w-full">
                     <DialogHeader>
                       <DialogTitle>Modelo de Importação Método Academy</DialogTitle>
@@ -1116,11 +1111,7 @@ export default function ManagementPage() {
                 <p className="text-sm text-muted-foreground mt-1">Crie simulados para a comunidade.</p>
               </div>
               <div className="flex justify-end">
-                {isClient ? (
-                  <SimulatedExamDialog />
-                ) : (
-                  <Button size="icon" disabled><FileText /><span className="sr-only">Gerar Simulado</span></Button>
-                )}
+                <SimulatedExamDialog />
               </div>
             </div>
 
@@ -1157,16 +1148,12 @@ export default function ManagementPage() {
               </div>
               <div className="flex justify-end">
                 <Dialog>
-                  {isClient ? (
-                    <DialogTrigger asChild>
-                      <Button size="icon" disabled={isButtonDisabled}>
-                        {isUserLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Layers />}
-                        <span className="sr-only">Importar Flashcards</span>
-                      </Button>
-                    </DialogTrigger>
-                  ) : (
-                    <Button size="icon" disabled={true}><Layers /><span className="sr-only">Importar Flashcards</span></Button>
-                  )}
+                  <DialogTrigger asChild>
+                    <Button size="icon" disabled={isButtonDisabled}>
+                      {isUserLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Layers />}
+                      <span className="sr-only">Importar Flashcards</span>
+                    </Button>
+                  </DialogTrigger>
                   <DialogContent className="sm:max-w-4xl">
                     <DialogHeader>
                       <DialogTitle>Importar Flashcards por Texto</DialogTitle>
