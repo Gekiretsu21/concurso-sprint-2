@@ -316,7 +316,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
 
   if (processedQuestions.length === 0) {
     return (
-      <Card className="flex flex-col items-center justify-center h-64">
+      <Card className="flex flex-col items-center justify-center h-40 border-dashed">
         <CardContent className="text-center p-6">
           <p className="text-muted-foreground">
             Nenhuma questão encontrada para os critérios selecionados.
@@ -427,10 +427,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
                       const godModeStatus = q[godModeStatusKey] as string | undefined | null;
                       const godModeJus = q[godModeJusKey] as string | undefined | null;
 
-                      const isLegacyA = `god_mode_${alternativeKey}` as keyof Question;
-                      const legacyText = q[isLegacyA] as string | undefined | null;
-
-                      const finalGodModeText = godModeJus || legacyText;
+                      const finalGodModeText = godModeJus;
                       const isThisCorrect = alternativeKey.toLowerCase() === String(q.correctAnswer).toLowerCase();
                       const isSelectedAlternative = isAnswered && String(selected).toLowerCase() === alternativeKey.toLowerCase();
 
@@ -494,7 +491,9 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
                                     </span>
                                   ) : (
                                     <span className={cn("font-bold mb-1.5 block uppercase text-xs tracking-wider",
-                                      isSelectedAlternative ? "text-emerald-800" : "text-red-800") : "text-slate-600"
+                                      isSelectedAlternative 
+                                        ? (isThisCorrect ? "text-emerald-800" : "text-red-800")
+                                        : "text-slate-600"
                                     )}>
                                       Análise Tática - Alternativa {String.fromCharCode(65 + optIndex)}
                                     </span>
