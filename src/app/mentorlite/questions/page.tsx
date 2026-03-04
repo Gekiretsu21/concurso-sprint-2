@@ -417,26 +417,25 @@ export default function QuestionsPage() {
 
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-6 border-t pt-8">
               <div className="w-full sm:w-auto">
-                <Button 
+                <button 
                   onClick={() => setIsAcademyMode(!isAcademyMode)}
-                  variant={isAcademyMode ? "default" : "outline"}
                   className={cn(
-                    "w-full sm:min-w-[220px] transition-all duration-500 font-black tracking-tight uppercase text-xs h-12 rounded-xl border-2",
+                    "w-full sm:min-w-[220px] transition-all duration-500 font-black tracking-tight uppercase text-[10px] h-10 rounded-lg flex items-center justify-center gap-2",
                     isAcademyMode 
-                      ? "bg-gradient-to-r from-amber-500 via-purple-600 to-amber-500 bg-[length:200%_auto] animate-gradient-shift text-white border-0 shadow-[0_0_25px_rgba(234,179,8,0.5)] scale-105" 
-                      : "hover:border-amber-500/50 hover:bg-amber-500/5 text-slate-600 border-slate-200"
+                      ? "bg-gradient-to-r from-blue-600 via-green-500 to-orange-500 bg-[length:200%_auto] animate-gradient-shift text-white shadow-lg shadow-blue-500/20" 
+                      : "bg-white border-2 border-slate-200 text-slate-600 hover:border-blue-500/50 hover:bg-blue-50/50"
                   )}
                 >
                   {isAcademyMode ? (
-                    <span className="flex items-center gap-2">
-                      <Zap className="h-4 w-4 fill-current animate-bounce" />
+                    <>
+                      <Zap className="h-3 w-3 fill-current animate-bounce" />
                       Método Academy Ativo
-                    </span>
+                    </>
                   ) : "Ativar Método Academy"}
-                </Button>
+                </button>
               </div>
 
-              <Button onClick={handleFilterSubmit} className="w-full sm:w-auto h-12 px-10 bg-slate-950 hover:bg-slate-900 text-white font-bold shadow-lg rounded-xl">
+              <Button onClick={handleFilterSubmit} className="w-full sm:w-auto h-10 px-10 bg-slate-950 hover:bg-slate-900 text-white font-bold shadow-md rounded-lg text-xs uppercase tracking-widest">
                 Buscar Questões
               </Button>
             </div>
@@ -448,9 +447,9 @@ export default function QuestionsPage() {
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
           {isAcademyMode && (
             <div className="flex items-center gap-3 px-4">
-              <div className="h-1 flex-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent opacity-20" />
-              <span className="text-[10px] font-black text-amber-600 uppercase tracking-[0.3em] italic">Zona de Inteligência Tática</span>
-              <div className="h-1 flex-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent opacity-20" />
+              <div className="h-1 flex-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-20" />
+              <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] italic">Zona de Inteligência Tática</span>
+              <div className="h-1 flex-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-20" />
             </div>
           )}
           <QuestionList
