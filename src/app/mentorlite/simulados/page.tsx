@@ -42,14 +42,14 @@ export default function SimuladosPage() {
 
   const communityExamsQuery = useMemoFirebase(
     () =>
-      firestore
+      (firestore && user)
         ? query(
             collection(firestore, 'communitySimulados'),
             where('accessTier', 'in', ['standard', null]),
             orderBy('createdAt', 'desc')
           )
         : null,
-    [firestore]
+    [firestore, user]
   );
   
   const resultsQuery = useMemoFirebase(

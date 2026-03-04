@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo } from 'react';
@@ -22,16 +23,16 @@ interface ExclusiveFlashcard {
 }
 
 function ExclusiveSimuladosList() {
-  const { firestore } = useFirebase();
+  const { firestore, user } = useFirebase();
   const simuladosQuery = useMemoFirebase(
     () =>
-      firestore
+      (firestore && user)
         ? query(
             collection(firestore, 'communitySimulados'),
             where('accessTier', '==', 'plus')
           )
         : null,
-    [firestore]
+    [firestore, user]
   );
   const { data: simulados, isLoading } = useCollection<ExclusiveSimulado>(simuladosQuery);
 
@@ -69,12 +70,12 @@ function ExclusiveSimuladosList() {
 }
 
 function ExclusiveFlashcardsList() {
-    const { firestore } = useFirebase();
+    const { firestore, user } = useFirebase();
     const flashcardsQuery = useMemoFirebase(() => 
-        firestore 
+        (firestore && user) 
             ? query(collection(firestore, 'flashcards'), where('accessTier', '==', 'plus'))
             : null
-    , [firestore]);
+    , [firestore, user]);
 
     const { data: flashcards, isLoading } = useCollection<{subject: string}>(flashcardsQuery);
     

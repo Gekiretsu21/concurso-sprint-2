@@ -57,13 +57,13 @@ export default function CommunitySimuladosPage() {
 
   const communityExamsQuery = useMemoFirebase(
     () =>
-      firestore
+      (firestore && user)
         ? query(
             collection(firestore, 'communitySimulados'),
             orderBy('createdAt', 'desc')
           )
         : null,
-    [firestore]
+    [firestore, user]
   );
   
   const resultsQuery = useMemoFirebase(
