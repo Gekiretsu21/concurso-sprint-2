@@ -343,9 +343,6 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
 
             const isAttemptCorrect = String(selected).toLowerCase() === String(q.correctAnswer).toLowerCase();
 
-            const userHasCorrectlyAnswered = isAnswered && isAttemptCorrect;
-            const userHasIncorrectlyAnswered = isAnswered && !isAttemptCorrect;
-
             return (
               <Card key={q.id} className={cn("relative overflow-hidden", isHidden && 'opacity-50 bg-secondary')}>
                 {q.lastAttemptStatus && (
@@ -410,12 +407,10 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
                           return 'hover:bg-secondary/80 bg-white border-border';
                         }
 
-                        // Resposta Correta: Sempre Verde quando respondido
                         if (currentKeyNormalized === correctNormalized) {
                           return 'bg-emerald-50 border-emerald-400 text-emerald-900 font-medium';
                         }
 
-                        // Resposta do Usuário errada: Vermelho
                         if (selectedNormalized === currentKeyNormalized) {
                           return 'bg-red-50 border-red-400 text-red-900 font-medium';
                         }
@@ -553,12 +548,12 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
                 </CardContent>
                 <CardFooter className="flex-col items-stretch gap-4 sm:flex-row sm:justify-between sm:items-center">
                   <div className="text-sm min-h-[1.25rem]">
-                    {userHasCorrectlyAnswered && (
+                    {isAnswered && isAttemptCorrect && (
                       <p className="text-emerald-600 font-bold flex items-center gap-2">
                         <span className="text-xl">✅</span> Parabéns! Resposta correta.
                       </p>
                     )}
-                    {userHasIncorrectlyAnswered && (
+                    {isAnswered && !isAttemptCorrect && (
                       <p className="text-destructive font-bold flex items-center gap-2">
                         <span className="text-xl">❌</span> Você errou. Gabarito: Letra {q.correctAnswer.toUpperCase()}
                       </p>

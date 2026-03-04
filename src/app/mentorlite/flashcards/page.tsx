@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -171,7 +172,6 @@ function FlashcardsContent() {
   const [studyMode, setStudyMode] = useState<'all' | 'review'>('all');
   const [activeFlashcards, setActiveFlashcards] = useState<Flashcard[]>([]);
 
-  // FETCH ALL FLASHCARDS: Removed orderBy to ensure docs without 'subject' field are also returned
   const allFlashcardsQuery = useMemoFirebase(() => (
     firestore ? collection(firestore, 'flashcards') : null
   ), [firestore]);
@@ -180,7 +180,6 @@ function FlashcardsContent() {
 
   const allFlashcards = useMemo(() => {
     if (!allFlashcardsRaw) return null;
-    // Sort client-side to be safe and include everyone
     return [...allFlashcardsRaw].sort((a, b) => (a.subject || '').localeCompare(b.subject || ''));
   }, [allFlashcardsRaw]);
 
@@ -267,7 +266,6 @@ function FlashcardsContent() {
         return;
       }
 
-      // Firestore 'in' queries are limited to 30 items
       const batches: string[][] = [];
       for (let i = 0; i < flashcardIdsToReview.length; i += 30) {
         batches.push(flashcardIdsToReview.slice(i, i + 30));

@@ -160,7 +160,6 @@ export function EditQuestionDialog({ question }: EditQuestionDialogProps) {
         <div className="flex-1 overflow-y-auto px-8 bg-slate-50/50" style={{ maxHeight: 'calc(95vh - 140px)' }}>
           <form id="edit-question-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-10 py-8 pb-32">
             
-            {/* Seção 1: Identificação Estratégica */}
             <div className="space-y-6">
               <div className="flex items-center gap-3 text-slate-900 font-black text-sm uppercase tracking-[0.2em] border-b pb-2 border-slate-200">
                 <Info className="h-4 w-4 text-accent" /> 01. Identificação Estratégica
@@ -193,7 +192,6 @@ export function EditQuestionDialog({ question }: EditQuestionDialogProps) {
               </div>
             </div>
 
-            {/* Seção 2: Conteúdo Base */}
             <div className="space-y-6">
               <div className="flex items-center gap-3 text-slate-900 font-black text-sm uppercase tracking-[0.2em] border-b pb-2 border-slate-200">
                 <BookOpen className="h-4 w-4 text-accent" /> 02. Enunciado e Alternativas
@@ -212,7 +210,6 @@ export function EditQuestionDialog({ question }: EditQuestionDialogProps) {
               </div>
             </div>
 
-            {/* Seção 3: Inteligência Método Academy */}
             <div className="space-y-8 p-8 rounded-[2.5rem] bg-white border-2 border-slate-100 shadow-xl shadow-slate-200/20">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 text-blue-700 font-black text-sm uppercase tracking-[0.2em]">
@@ -230,7 +227,6 @@ export function EditQuestionDialog({ question }: EditQuestionDialogProps) {
               </div>
               
               <div className="grid grid-cols-1 gap-8">
-                {/* Contextualização */}
                 <div className="space-y-4 p-6 rounded-2xl bg-blue-50/30 border border-blue-100">
                   <div className="space-y-4">
                     <div className="space-y-2">
@@ -244,7 +240,6 @@ export function EditQuestionDialog({ question }: EditQuestionDialogProps) {
                   </div>
                 </div>
 
-                {/* Análise das Alternativas */}
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-blue-600 tracking-wider">Título do Bloco de Análise</Label>
@@ -273,7 +268,6 @@ export function EditQuestionDialog({ question }: EditQuestionDialogProps) {
                   </div>
                 </div>
 
-                {/* Conceito-Chave e Síntese */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-4 p-6 rounded-2xl bg-indigo-50/30 border border-indigo-100">
                     <div className="space-y-2">
