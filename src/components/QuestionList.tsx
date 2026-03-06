@@ -98,6 +98,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
 
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [answeredQuestions, setAnsweredQuestions] = useState<Record<string, boolean>>({});
+  const [sessionAnsweredIds, setSessionAnsweredIds] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const questionsPerPage = 10;
 
@@ -176,11 +177,13 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
     if (!questions) return [];
 
     const questionsWithStatus = questions.map(q => {
+      const isAnsweredInSession = sessionAnsweredIds.has(q.id);
       return {
         ...q,
         lastAttemptStatus: userAttempts.has(q.id)
           ? (userAttempts.get(q.id)!.isCorrect ? 'correct' : 'incorrect') as AttemptStatus
           : null,
+        isAnsweredInSession,
       };
     }).filter(q => q.status !== 'hidden');
 
@@ -189,7 +192,8 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
     if (statusFilter === 'resolved') {
       filtered = filtered.filter(q => q.lastAttemptStatus !== null);
     } else if (statusFilter === 'unresolved') {
-      filtered = filtered.filter(q => q.lastAttemptStatus === null);
+      // Mantém a questão se ela for não resolvida no banco OU se foi respondida nesta sessão
+      filtered = filtered.filter(q => q.lastAttemptStatus === null || q.isAnsweredInSession);
     }
 
     if (methodFilter === 'academy') {
@@ -197,7 +201,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
     }
 
     return filtered;
-  }, [questions, userAttempts, statusFilter, methodFilter]);
+  }, [questions, userAttempts, statusFilter, methodFilter, sessionAnsweredIds]);
 
   const indexOfLastQuestion = currentPage * questionsPerPage;
   const indexOfFirstQuestion = indexOfLastQuestion - questionsPerPage;
@@ -208,6 +212,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
     setCurrentPage(1);
     setSelectedAnswers({});
     setAnsweredQuestions({});
+    setSessionAnsweredIds(new Set());
   }, [subject, topics, cargo, banca, ano, statusFilter, methodFilter, questions]);
 
   const paginate = (pageNumber: number) => {
@@ -234,6 +239,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
     const isCorrect = selectedOption.toLowerCase() === question.correctAnswer.toLowerCase();
 
     setAnsweredQuestions(prev => ({ ...prev, [question.id]: true }));
+    setSessionAnsweredIds(prev => new Set(prev).add(question.id));
     saveQuestionAttempt(firestore, user.uid, question.id, isCorrect, selectedOption, question.Materia);
   };
 

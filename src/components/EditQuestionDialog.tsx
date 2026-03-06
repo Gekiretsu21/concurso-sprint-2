@@ -295,7 +295,7 @@ export function EditQuestionDialog({ question }: EditQuestionDialogProps) {
           </form>
         </div>
 
-        <DialogFooter className="p-6 border-t bg-slate-100/50 shrink-0">
+        <div className="p-6 border-t bg-slate-100/50 shrink-0 flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
           <DialogClose asChild>
             <Button type="button" variant="outline" className="rounded-xl px-8">
               Cancelar
@@ -305,7 +305,7 @@ export function EditQuestionDialog({ question }: EditQuestionDialogProps) {
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Confirmar Alterações
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
