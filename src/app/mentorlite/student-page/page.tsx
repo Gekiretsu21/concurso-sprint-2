@@ -3,12 +3,44 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, FileText, PlayCircle, MessageSquare, BookOpen, Target, CheckCircle2, Users, Trophy, ChevronRight, Sparkles } from 'lucide-react';
+import { ExternalLink, FileText, PlayCircle, MessageSquare, BookOpen, Target, CheckCircle2, Users, Trophy, ChevronRight, Sparkles, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { GlowingEffect } from '@/components/ui/glowing-effect';
+import { useUser, useDoc, useFirebase, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function StudentPage() {
+  const { user, isUserLoading } = useUser();
+  const { firestore } = useFirebase();
+  const router = useRouter();
+
+  const userDocRef = useMemoFirebase(
+    () => (user && firestore) ? doc(firestore, `users/${user.uid}`) : null,
+    [user, firestore]
+  );
+  
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<any>(userDocRef);
+
+  useEffect(() => {
+    if (!isUserLoading && !isProfileLoading && userProfile) {
+      const plan = userProfile?.subscription?.plan;
+      if (plan !== 'plus' && plan !== 'mentoria_plus_plus' && plan !== 'academy') {
+        router.push('/mentorlite');
+      }
+    }
+  }, [userProfile, isUserLoading, isProfileLoading, router]);
+
+  if (isUserLoading || isProfileLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="h-8 w-8 animate-spin text-accent" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-8 max-w-5xl mx-auto pb-20">
       <header className="flex flex-col gap-2">
@@ -305,6 +337,7 @@ export default function StudentPage() {
         </div>
       </section>
 
+      {/* Seção Inferior: Rodapé */}
       <footer className="text-center py-12 border-t border-accent/10 mt-8">
         <p className="text-slate-400 italic text-lg">"A constância vence o talento." - Mentoria Academy</p>
       </footer>

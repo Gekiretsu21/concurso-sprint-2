@@ -57,15 +57,18 @@ import { doc } from 'firebase/firestore';
 
 const menuItems = [
   { href: '/mentorlite', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/mentorlite/student-page', icon: Compass, label: 'Página do Aluno' },
   { href: '/mentorlite/feed', icon: Newspaper, label: 'Feed de Notícias' },
   { href: '/mentorlite/questions', icon: ClipboardList, label: 'Questões' },
   { href: '/mentorlite/community-simulados', icon: Users, label: 'Simulados da Comunidade'},
   { href: '/mentorlite/previous-exams', icon: FileText, label: 'Provas Anteriores' },
   { href: '/mentorlite/flashcards', icon: Layers, label: 'Flashcards' },
-  // Oculto para publicação conforme solicitado
-  // { href: '/mentorlite/study-plan', icon: BrainCircuit, label: 'Plano de Estudo IA' },
 ];
+
+const studentPageItem = {
+  href: '/mentorlite/student-page',
+  icon: Compass,
+  label: 'Guia do Aluno',
+};
 
 const vipMenuItem = {
   href: '/mentorlite/arsenal-vip',
@@ -78,12 +81,6 @@ const adminMenuItem = {
   icon: Settings,
   label: 'Gerenciamento',
 };
-
-const executiveMenuItem = {
-  href: '/mentorlite/executive-dashboard',
-  icon: Briefcase,
-  label: 'Dashboard Executiva',
-}
 
 interface UserProfile {
     subscription?: { plan: string };
@@ -108,19 +105,8 @@ function MainSidebar() {
   }, []);
 
   const isAdmin = user?.email === 'amentoriaacademy@gmail.com';
-  // Ocultando Dashboard Executiva para a publicação
-  // const isExecutive = userProfile?.subscription?.plan === 'mentoria_plus_plus';
   
   const allMenuItems = [...menuItems];
-  
-  /* 
-  Ocultando dashboards executivos para a publicação
-  if (isAdmin || isExecutive) {
-      if (!allMenuItems.find(item => item.href === executiveMenuItem.href)) {
-        allMenuItems.push(executiveMenuItem);
-    }
-  }
-  */
 
   if (isAdmin) {
     if (!allMenuItems.find(item => item.href === adminMenuItem.href)) {
@@ -146,7 +132,62 @@ function MainSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
-          {allMenuItems.map(item => (
+          {/* Dashboard Item */}
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={pathname === '/mentorlite'} tooltip={{ children: 'Dashboard' }}>
+              <Link href="/mentorlite">
+                <LayoutDashboard />
+                <span className={cn('transition-opacity duration-200', state === 'collapsed' ? 'opacity-0' : 'opacity-100')}>
+                  Dashboard
+                </span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+
+          {/* Página do Aluno (VIP Lock) */}
+          <SidebarMenuItem>
+            <PremiumFeature
+              fallback={
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <SidebarMenuButton
+                              isActive={pathname === studentPageItem.href}
+                              tooltip={{ children: 'Exclusivo para MentorIA+' }}
+                              className="text-amber-500/70 hover:text-amber-500"
+                              disabled
+                            >
+                              <Lock />
+                              <span className={cn('transition-opacity duration-200', state === 'collapsed' ? 'opacity-0' : 'opacity-100')}>
+                                {studentPageItem.label}
+                              </span>
+                            </SidebarMenuButton>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" align="center">
+                          Conteúdo exclusivo VIP
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+              }
+            >
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === studentPageItem.href}
+                tooltip={{ children: studentPageItem.label }}
+                className="text-amber-500 hover:bg-amber-500/10 hover:text-amber-500"
+              >
+                <Link href={studentPageItem.href}>
+                  <studentPageItem.icon />
+                  <span className={cn('transition-opacity duration-200', state === 'collapsed' ? 'opacity-0' : 'opacity-100')}>
+                    {studentPageItem.label}
+                  </span>
+                </Link>
+              </SidebarMenuButton>
+            </PremiumFeature>
+          </SidebarMenuItem>
+
+          {/* Rest of menu items */}
+          {allMenuItems.filter(item => item.href !== '/mentorlite').map(item => (
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={{ children: item.label }}>
                   <Link href={item.href}>
@@ -163,6 +204,8 @@ function MainSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
           ))}
+
+          {/* Arsenal VIP Item */}
            <SidebarMenuItem>
             <PremiumFeature
               fallback={
