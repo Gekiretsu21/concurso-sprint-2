@@ -205,7 +205,8 @@ function MainSidebar() {
               </SidebarMenuItem>
           ))}
 
-          {/* Arsenal VIP Item */}
+          {/* Arsenal VIP Item - Hidden for now */}
+          {/* 
            <SidebarMenuItem>
             <PremiumFeature
               fallback={
@@ -246,6 +247,7 @@ function MainSidebar() {
               </SidebarMenuButton>
             </PremiumFeature>
           </SidebarMenuItem>
+          */}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
