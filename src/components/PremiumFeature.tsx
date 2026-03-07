@@ -6,7 +6,7 @@ import React, { ReactNode, useEffect, useState } from 'react';
 import { useFirebase } from '@/firebase/provider';
 
 interface Subscription {
-  plan: 'standard' | 'plus' | 'mentoria_plus_plus';
+  plan: 'standard' | 'plus' | 'mentoria_plus_plus' | 'academy';
   status: 'active' | 'inactive' | 'canceled';
 }
 
@@ -42,9 +42,11 @@ export function PremiumFeature({ children, fallback = null }: PremiumFeatureProp
     return null; 
   }
   
-  // MentorIA++ also counts as premium for all "Plus" features
+  // MentorIA++, Academy and Plus count as premium
   const isPremium = authUser && 
-    (userProfile?.subscription?.plan === 'plus' || userProfile?.subscription?.plan === 'mentoria_plus_plus') && 
+    (userProfile?.subscription?.plan === 'plus' || 
+     userProfile?.subscription?.plan === 'mentoria_plus_plus' || 
+     userProfile?.subscription?.plan === 'academy') && 
     userProfile?.subscription?.status === 'active';
 
   return isPremium ? <>{children}</> : <>{fallback}</>;

@@ -48,6 +48,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { signOut } from 'firebase/auth';
 import { useStudyTimeTracker } from '@/hooks/use-study-time-tracker';
 import { PremiumFeature } from './PremiumFeature';
@@ -93,6 +101,7 @@ function MainSidebar() {
   const { user } = useUser();
   const { firestore } = useFirebase();
   const [isMounted, setIsMounted] = useState(false);
+  const [isUpgradeDialogOpen, setIsUpgradeDialogOpen] = useState(false);
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -113,6 +122,16 @@ function MainSidebar() {
       allMenuItems.push(adminMenuItem);
     }
   }
+
+  const handleUpgradeClick = () => {
+    setIsUpgradeDialogOpen(true);
+  };
+
+  const handleWhatsAppRedirect = () => {
+    const message = encodeURIComponent("Olá! Sou aluno Standard e gostaria de solicitar meu acesso VIP à Guia do Aluno.");
+    window.open(`https://api.whatsapp.com/send/?phone=5531984585846&text=${message}`, '_blank');
+    setIsUpgradeDialogOpen(false);
+  };
 
 
   return (
@@ -153,9 +172,9 @@ function MainSidebar() {
                         <TooltipTrigger asChild>
                             <SidebarMenuButton
                               isActive={pathname === studentPageItem.href}
-                              tooltip={{ children: 'Exclusivo para MentorIA+' }}
+                              tooltip={{ children: 'Conteúdo VIP' }}
                               className="text-amber-500/70 hover:text-amber-500"
-                              disabled
+                              onClick={handleUpgradeClick}
                             >
                               <Lock />
                               <span className={cn('transition-opacity duration-200', state === 'collapsed' ? 'opacity-0' : 'opacity-100')}>
@@ -164,7 +183,7 @@ function MainSidebar() {
                             </SidebarMenuButton>
                         </TooltipTrigger>
                         <TooltipContent side="right" align="center">
-                          Conteúdo exclusivo VIP
+                          Disponível para Academy e Plus
                         </TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
@@ -174,7 +193,7 @@ function MainSidebar() {
                 asChild
                 isActive={pathname === studentPageItem.href}
                 tooltip={{ children: studentPageItem.label }}
-                className="text-amber-500 hover:bg-amber-500/10 hover:text-amber-500"
+                className="text-amber-500 hover:bg-amber-500/10 hover:text-amber-500 font-bold"
               >
                 <Link href={studentPageItem.href}>
                   <studentPageItem.icon />
@@ -252,6 +271,29 @@ function MainSidebar() {
       </SidebarContent>
       <SidebarFooter>
       </SidebarFooter>
+
+      {/* Upgrade Dialog */}
+      <Dialog open={isUpgradeDialogOpen} onOpenChange={setIsUpgradeDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Crown className="h-5 w-5 text-amber-500" />
+              Recurso Exclusivo
+            </DialogTitle>
+            <DialogDescription className="pt-2">
+              A <strong>Guia do Aluno</strong> é um recurso estratégico disponível apenas para alunos <strong>Academy</strong> e <strong>MentorIA+</strong>.
+              <br /><br />
+              Deseja solicitar seu acesso agora via WhatsApp?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setIsUpgradeDialogOpen(false)}>Agora não</Button>
+            <Button className="bg-amber-500 hover:bg-amber-600 text-black font-bold" onClick={handleWhatsAppRedirect}>
+              Solicitar Acesso VIP
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Sidebar>
   );
 }
