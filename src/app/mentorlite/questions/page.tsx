@@ -2,8 +2,8 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { useCollection, useFirebase, useMemoFirebase, useUser } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { useCollection, useFirebase, useMemoFirebase, useUser, useDoc } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
 import {
   Card,
   CardHeader,
@@ -39,6 +39,15 @@ export type StatusFilter = 'all' | 'resolved' | 'unresolved';
 
 export default function QuestionsPage() {
   const { firestore, user } = useFirebase();
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+
+  const { data: userProfile } = useDoc<any>(userDocRef);
+  const userPlan = userProfile?.subscription?.plan || 'standard';
+  const isPremium = userPlan === 'plus' || userPlan === 'academy';
 
   const [filterSubject, setFilterSubject] = useState('all');
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
@@ -478,12 +487,19 @@ export default function QuestionsPage() {
 
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-6 border-t pt-8">
               <div className="w-full sm:w-auto">
-                <button 
-                  onClick={() => setIsAcademyMode(!isAcademyMode)}
+                <button
+                  onClick={() => {
+                    if (!isPremium && !isAcademyMode) {
+                      const message = encodeURIComponent("Olá! Estou usando a plataforma MentorLite e tentei ativar o Método Academy no Banco de Questões. Gostaria de adquirir o acesso completo!");
+                      window.open(`https://api.whatsapp.com/send/?phone=5531984585846&text=${message}`, '_blank');
+                      return;
+                    }
+                    setIsAcademyMode(!isAcademyMode);
+                  }}
                   className={cn(
                     "w-full sm:min-w-[165px] transition-all duration-500 font-black tracking-tight uppercase text-[10px] h-10 rounded-lg flex items-center justify-center gap-2",
-                    isAcademyMode 
-                      ? "bg-gradient-to-r from-blue-600 via-green-500 to-orange-500 bg-[length:200%_auto] animate-gradient-shift text-white shadow-lg shadow-blue-500/20" 
+                    isAcademyMode
+                      ? "bg-gradient-to-r from-blue-600 via-green-500 to-orange-500 bg-[length:200%_auto] animate-gradient-shift text-white shadow-lg shadow-blue-500/20"
                       : "bg-white border-2 border-slate-200 text-slate-600 hover:border-blue-500/50 hover:bg-blue-50/50"
                   )}
                 >
