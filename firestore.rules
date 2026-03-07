@@ -57,6 +57,12 @@ service cloud.firestore {
       allow update: if false;
     }
 
+    match /questoes/{questionId}/reports/{reportId} {
+      allow read, list: if isAdmin();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow delete, update: if false;
+    }
+
     match /flashcards/{flashcardId} {
       allow read, list: if isSignedIn();
       allow write: if isAdmin();

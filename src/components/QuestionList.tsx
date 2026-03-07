@@ -101,6 +101,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
   const [sessionAnsweredIds, setSessionAnsweredIds] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const questionsPerPage = 10;
+  const [revealedGodMode, setRevealedGodMode] = useState<Record<string, boolean>>({});
 
   const [userAttempts, setUserAttempts] = useState<Map<string, QuestionAttempt>>(new Map());
   const isAdmin = user?.email === 'amentoriaacademy@gmail.com';
@@ -171,7 +172,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
   const userPlan = userProfile?.subscription?.plan || 'standard';
   const isPremium = userPlan === 'plus' || userPlan === 'academy';
   const isAcademyActive = methodFilter === 'academy';
-  const hasGodModeAccess = (isPremium || isAdmin);
+  const hasGodModeAccess = isPremium; // Restrito exclusivamente ao plano do usuário
 
   const processedQuestions = useMemo(() => {
     if (!questions) return [];
@@ -243,6 +244,15 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
     saveQuestionAttempt(firestore, user.uid, question.id, isCorrect, selectedOption, question.Materia);
   };
 
+  const handleUnlockTacticalVision = (questionId: string) => {
+    if (!hasGodModeAccess) {
+      const message = encodeURIComponent("Olá! Estou usando a plataforma MentorLite e vi a Visão Tática em uma questão. Gostaria de adquirir o acesso completo (Método Academy / MentorIA+)!");
+      window.open(`https://api.whatsapp.com/send/?phone=5531984585846&text=${message}`, '_blank');
+      return;
+    }
+    setRevealedGodMode(prev => ({ ...prev, [questionId]: true }));
+  };
+
   const renderPagination = () => {
     if (totalPages <= 1) return null;
 
@@ -256,18 +266,18 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
 
     return (
       <div className="flex flex-wrap justify-center items-center gap-2 mt-12 pb-10">
-        <Button 
-          onClick={() => paginate(1)} 
-          disabled={currentPage === 1} 
+        <Button
+          onClick={() => paginate(1)}
+          disabled={currentPage === 1}
           variant="outline"
           size="sm"
           className="hidden sm:flex"
         >
           <ChevronsLeft className="h-4 w-4 mr-1" /> Primeira
         </Button>
-        <Button 
-          onClick={() => paginate(currentPage - 1)} 
-          disabled={currentPage === 1} 
+        <Button
+          onClick={() => paginate(currentPage - 1)}
+          disabled={currentPage === 1}
           variant="outline"
           size="icon"
         >
@@ -290,17 +300,17 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
 
         {endPage < totalPages && <span className="text-muted-foreground px-1">...</span>}
 
-        <Button 
-          onClick={() => paginate(currentPage + 1)} 
-          disabled={currentPage === totalPages} 
+        <Button
+          onClick={() => paginate(currentPage + 1)}
+          disabled={currentPage === totalPages}
           variant="outline"
           size="icon"
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
-        <Button 
-          onClick={() => paginate(totalPages)} 
-          disabled={currentPage === totalPages} 
+        <Button
+          onClick={() => paginate(totalPages)}
+          disabled={currentPage === totalPages}
           variant="outline"
           size="sm"
           className="hidden sm:flex"
@@ -348,6 +358,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
             const isHidden = q.status === 'hidden';
 
             const isAttemptCorrect = String(selected).toLowerCase() === String(q.correctAnswer).toLowerCase();
+            const isQuestionGodModeRevealed = isAnswered && q.is_god_mode && ((isAcademyActive && hasGodModeAccess) || revealedGodMode[q.id]);
 
             return (
               <Card key={q.id} className={cn("relative overflow-hidden", isHidden && 'opacity-50 bg-secondary')}>
@@ -381,7 +392,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {isAnswered && q.is_god_mode && isAcademyActive && hasGodModeAccess && q.god_mode_context_text && (
+                  {isQuestionGodModeRevealed && q.god_mode_context_text && (
                     <div className="mb-6 p-5 rounded-xl bg-amber-500/5 border-l-4 border-l-amber-500 border-y border-r border-amber-500/20 shadow-sm transition-all">
                       <h4 className="font-black text-amber-700 mb-3 text-lg flex items-center gap-2">
                         <span className="text-xl">⚖️</span> {q.god_mode_context_title || 'CONTEXTO E CONCEITOS PRINCIPAIS'}
@@ -390,7 +401,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
                     </div>
                   )}
 
-                  {isAnswered && q.is_god_mode && isAcademyActive && hasGodModeAccess && q.god_mode_analysis_title && (
+                  {isQuestionGodModeRevealed && q.god_mode_analysis_title && (
                     <div className="mb-4 mt-2">
                       <h4 className="font-bold text-slate-700 text-sm uppercase tracking-widest pl-1">{q.god_mode_analysis_title}</h4>
                     </div>
@@ -445,7 +456,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
                           >
                             <div className={cn(
                               "flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full border text-sm font-bold z-10 transition-colors",
-                              isAnswered 
+                              isAnswered
                                 ? alternativeKey.toLowerCase() === String(q.correctAnswer).toLowerCase()
                                   ? "bg-emerald-500 text-white border-emerald-500"
                                   : alternativeKey.toLowerCase() === String(selected).toLowerCase()
@@ -462,7 +473,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
                             </div>
                           </div>
 
-                          {isAnswered && q.is_god_mode && isAcademyActive && finalGodModeText && hasGodModeAccess && (
+                          {isQuestionGodModeRevealed && finalGodModeText && (
                             <div className={cn(
                               "text-sm p-4 rounded-lg relative overflow-hidden mt-1 mb-4",
                               isSelectedAlternative
@@ -493,7 +504,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
                                     </span>
                                   ) : (
                                     <span className={cn("font-bold mb-1.5 block uppercase text-xs tracking-wider",
-                                      isSelectedAlternative 
+                                      isSelectedAlternative
                                         ? (isThisCorrect ? "text-emerald-800" : "text-red-800")
                                         : "text-slate-600"
                                     )}>
@@ -509,7 +520,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
                       )
                     })}
 
-                    {isAnswered && q.is_god_mode && (!isAcademyActive || !hasGodModeAccess) && (
+                    {isAnswered && q.is_god_mode && !isQuestionGodModeRevealed && (
                       <div className="mt-6 p-6 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 border-2 border-amber-500/30 shadow-2xl relative overflow-hidden group">
                         <div className="absolute inset-0 bg-amber-500/5 group-hover:bg-amber-500/10 transition-colors" />
                         <div className="relative z-10 flex flex-col items-center text-center space-y-4">
@@ -522,14 +533,17 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
                               A banca tentou te enganar, mas nós temos o código. Ative o modo Academy para destravar a visão tática e cirúrgica desta questão.
                             </p>
                           </div>
-                          <Button className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-amber-950 font-black px-8">
+                          <Button
+                            className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-amber-950 font-black px-8"
+                            onClick={() => handleUnlockTacticalVision(q.id)}
+                          >
                             Desbloquear Visão Tática
                           </Button>
                         </div>
                       </div>
                     )}
 
-                    {isAnswered && q.is_god_mode && isAcademyActive && hasGodModeAccess && (
+                    {isQuestionGodModeRevealed && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                         {q.god_mode_concept_text && (
                           <div className="p-5 rounded-xl border border-indigo-500/30 bg-indigo-50/10 shadow-sm">
