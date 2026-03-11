@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -17,7 +16,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle, Sparkles, Crown, Search, Megaphone, ExternalLink, List, Database, Users, AlertTriangle, RefreshCw, BarChart2, UserMinus } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
-import { importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteAllFlashcards, deleteFlashcardsByIds, deleteQuestionsByIds, deleteDuplicateQuestions, deleteDuplicateFlashcards, updateUserPlan, seedUsers, deleteFakeUsers, resetUserProgress, resetAllUsersProgress } from '@/firebase/actions';
+import { importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteAllFlashcards, deleteFlashcardsByIds, deleteQuestionsByIds, deleteDuplicateQuestions, deleteDuplicateFlashcards, updateUserPlan, resetUserProgress, resetAllUsersProgress } from '@/firebase/actions';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
 import { SimulatedExamDialog } from '@/components/SimulatedExamDialog';
@@ -636,8 +635,6 @@ export default function ManagementPage() {
   const [isVipContent, setIsVipContent] = useState(false);
   const [examName, setExamName] = useState('');
   const [userSearchQuery, setUserSearchQuery] = useState('');
-  const [isSeeding, setIsSeeding] = useState(false);
-  const [isDeletingFakes, setIsDeletingFakes] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
   const [selectedUserForPerf, setSelectedUserForPerf] = useState<UserProfile | null>(null);
@@ -836,32 +833,6 @@ export default function ManagementPage() {
     }
   };
 
-  const handleRunSeed = async () => {
-    if (!firestore) return;
-    setIsSeeding(true);
-    try {
-      await seedUsers(firestore);
-      toast({ title: 'Ranking Alimentado', description: '101 usuários fictícios foram criados para o ranking.' });
-    } catch (e) {
-      toast({ variant: 'destructive', title: 'Erro no Seed', description: 'Falha ao criar usuários fictícios.' });
-    } finally {
-      setIsSeeding(false);
-    }
-  }
-
-  const handleDeleteFakes = async () => {
-    if (!firestore) return;
-    setIsDeletingFakes(true);
-    try {
-      await deleteFakeUsers(firestore);
-      toast({ title: 'Sucesso', description: 'Os usuários fictícios foram removidos.' });
-    } catch (e) {
-      toast({ variant: 'destructive', title: 'Erro', description: 'Falha ao remover usuários fictícios.' });
-    } finally {
-      setIsDeletingFakes(false);
-    }
-  }
-
   const handleResetSelf = async () => {
     if (!firestore || !user) return;
     setIsResetting(true);
@@ -931,22 +902,6 @@ export default function ManagementPage() {
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 border text-sm font-medium">
             <Users className="h-4 w-4 text-slate-500" />
             <span>Total de Alunos: {isLoadingUsers ? '...' : allUsers?.length || 0}</span>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleRunSeed} disabled={isSeeding}>
-              {isSeeding ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Database className="h-4 w-4 mr-2" />}
-              Popular Ranking (Dev)
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDeleteFakes}
-              disabled={isDeletingFakes}
-              className="text-destructive hover:bg-destructive/10 border-destructive/30"
-            >
-              {isDeletingFakes ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserMinus className="h-4 w-4 mr-2" />}
-              Remover Fakes
-            </Button>
           </div>
         </div>
       </header>
