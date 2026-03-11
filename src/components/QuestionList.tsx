@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { useCollection, useFirebase, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, query, where, QueryFieldFilterConstraint, and, doc } from 'firebase/firestore';
 import { saveQuestionAttempt } from '@/firebase/actions';
@@ -92,7 +91,7 @@ interface QuestionListProps {
   methodFilter?: MethodFilter;
 }
 
-export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter = 'all', methodFilter = 'all' }: QuestionListProps) {
+export const QuestionList = forwardRef<any, QuestionListProps>(({ subject, topics, cargo, banca, ano, statusFilter = 'all', methodFilter = 'all' }, ref) => {
   const { firestore } = useFirebase();
   const { user } = useUser();
 
@@ -170,9 +169,9 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
 
   const { data: userProfile } = useDoc<any>(userDocRef);
   const userPlan = userProfile?.subscription?.plan || 'standard';
-  const isPremium = userPlan === 'plus' || userPlan === 'academy';
+  const isPremium = userPlan === 'plus' || userPlan === 'academy' || userPlan === 'mentoria_plus_plus';
   const isAcademyActive = methodFilter === 'academy';
-  const hasGodModeAccess = isPremium; // Restrito exclusivamente ao plano do usuário
+  const hasGodModeAccess = isPremium;
 
   const processedQuestions = useMemo(() => {
     if (!questions) return [];
@@ -193,7 +192,6 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
     if (statusFilter === 'resolved') {
       filtered = filtered.filter(q => q.lastAttemptStatus !== null);
     } else if (statusFilter === 'unresolved') {
-      // Mantém a questão se ela for não resolvida no banco OU se foi respondida nesta sessão
       filtered = filtered.filter(q => q.lastAttemptStatus === null || q.isAnsweredInSession);
     }
 
@@ -208,6 +206,42 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
   const indexOfFirstQuestion = indexOfLastQuestion - questionsPerPage;
   const currentQuestions = processedQuestions.slice(indexOfFirstQuestion, indexOfLastQuestion);
   const totalPages = Math.ceil(processedQuestions.length / questionsPerPage);
+
+  useImperativeHandle(ref, () => ({
+    copyAnsweredQuestions: () => {
+      const answeredOnPage = currentQuestions.filter(q => answeredQuestions[q.id] || sessionAnsweredIds.has(q.id));
+      if (answeredOnPage.length === 0) return 0;
+
+      let text = `🚀 MENTORIA ACADEMY - RELATÓRIO SUPER STRIKE\n`;
+      text += `📅 DATA: ${new Date().toLocaleDateString('pt-BR')}\n`;
+      text += `--------------------------------------------------\n\n`;
+
+      answeredOnPage.forEach((q, idx) => {
+        const selected = selectedAnswers[q.id];
+        const isCorrect = String(selected).toLowerCase() === String(q.correctAnswer).toLowerCase();
+        
+        text += `Questão ${indexOfFirstQuestion + idx + 1}\n`;
+        text += `Matéria: ${q.Materia} | Assunto: ${q.Assunto}\n`;
+        text += `Enunciado:\n${q.Enunciado}\n\n`;
+        text += `Sua Resposta: [${selected?.toUpperCase() || '?'}]\n`;
+        text += `Gabarito: [${q.correctAnswer.toUpperCase()}]\n`;
+        text += `Resultado: ${isCorrect ? '✅ ACERTO' : '❌ ERRO'}\n`;
+        
+        const isAcademyRevealed = revealedGodMode[q.id] || (isAcademyActive && hasGodModeAccess);
+        if (q.is_god_mode && isAcademyRevealed) {
+           text += `\n[MÉTODO ACADEMY - VISÃO TÁTICA]\n`;
+           if (q.god_mode_context_text) text += `${q.god_mode_context_text}\n`;
+           if (q.god_mode_concept_text) text += `\nCONCEITO-CHAVE:\n${q.god_mode_concept_text}\n`;
+           if (q.god_mode_summary_text) text += `\nSÍNTESE DE REVISÃO:\n${q.god_mode_summary_text}\n`;
+        }
+        
+        text += `\n--------------------------------------------------\n\n`;
+      });
+
+      navigator.clipboard.writeText(text);
+      return answeredOnPage.length;
+    }
+  }));
 
   useEffect(() => {
     setCurrentPage(1);
@@ -246,7 +280,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
 
   const handleUnlockTacticalVision = (questionId: string) => {
     if (!hasGodModeAccess) {
-      const message = encodeURIComponent("Olá! Estou usando a plataforma MentorLite e vi a Visão Tática em uma questão. Gostaria de adquirir o acesso completo (Método Academy / MentorIA+)!");
+      const message = encodeURIComponent("Olá! Estou resolvendo questões no site e gostaria de desbloquear o potencial total do Método Academy para acelerar minha aprovação.");
       window.open(`https://api.whatsapp.com/send/?phone=5531984585846&text=${message}`, '_blank');
       return;
     }
@@ -353,7 +387,7 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
         </div>
         <TooltipProvider>
           {currentQuestions.map((q, index) => {
-            const isAnswered = answeredQuestions[q.id];
+            const isAnswered = answeredQuestions[q.id] || sessionAnsweredIds.has(q.id);
             const selected = selectedAnswers[q.id];
             const isHidden = q.status === 'hidden';
 
@@ -533,12 +567,23 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
                               A banca tentou te enganar, mas nós temos o código. Ative o modo Academy para destravar a visão tática e cirúrgica desta questão.
                             </p>
                           </div>
-                          <Button
-                            className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-amber-950 font-black px-8"
-                            onClick={() => handleUnlockTacticalVision(q.id)}
-                          >
-                            Desbloquear Visão Tática
-                          </Button>
+                          <div className="flex flex-col sm:flex-row gap-3">
+                            <Button
+                              className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-amber-950 font-black px-8"
+                              onClick={() => handleUnlockTacticalVision(q.id)}
+                            >
+                              Desbloquear Visão Tática
+                            </Button>
+                            {hasGodModeAccess && (
+                              <Button
+                                variant="outline"
+                                className="border-amber-500 text-amber-500 hover:bg-amber-500/10 font-bold"
+                                onClick={() => setRevealedGodMode(prev => ({ ...prev, [q.id]: true }))}
+                              >
+                                Ver Resolução Academy
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     )}
@@ -612,4 +657,6 @@ export function QuestionList({ subject, topics, cargo, banca, ano, statusFilter 
       {renderPagination()}
     </>
   );
-}
+});
+
+QuestionList.displayName = 'QuestionList';

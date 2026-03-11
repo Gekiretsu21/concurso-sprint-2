@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useCollection, useFirebase, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import {
@@ -28,26 +27,38 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Loader2, Sparkles, ClipboardList, Search, ChevronDown, Check, Zap } from 'lucide-react';
+import { Loader2, Sparkles, ClipboardList, Search, ChevronDown, Check, Zap, Copy } from 'lucide-react';
 import { GlowingEffect } from '@/components/ui/glowing-effect';
 import { Input } from '@/components/ui/input';
 import { QuestionList, type MethodFilter } from '@/components/QuestionList';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Crown } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export type StatusFilter = 'all' | 'resolved' | 'unresolved';
 
 export default function QuestionsPage() {
   const { firestore, user } = useFirebase();
+  const { toast } = useToast();
+  const questionListRef = useRef<any>(null);
 
   const userDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return doc(firestore, 'users', user.uid);
   }, [firestore, user]);
 
-  const { data: userProfile } = useDoc<any>(userDocRef);
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<any>(userDocRef);
   const userPlan = userProfile?.subscription?.plan || 'standard';
-  const isPremium = userPlan === 'plus' || userPlan === 'academy';
+  const isPremium = userPlan === 'plus' || userPlan === 'academy' || userPlan === 'mentoria_plus_plus';
 
   const [filterSubject, setFilterSubject] = useState('all');
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
@@ -57,6 +68,7 @@ export default function QuestionsPage() {
   const [filterStatus, setFilterStatus] = useState<StatusFilter>('all');
   const [isAcademyMode, setIsAcademyMode] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [isUpgradeDialogOpen, setIsUpgradeDialogOpen] = useState(false);
 
   const [activeFilters, setActiveFilters] = useState<{
     subject: string | string[];
@@ -212,6 +224,38 @@ export default function QuestionsPage() {
       status: filterStatus,
       method: isAcademyMode ? 'academy' : 'all'
     });
+  };
+
+  const handleAcademyToggle = () => {
+    if (!isPremium && !isAcademyMode) {
+      setIsUpgradeDialogOpen(true);
+      return;
+    }
+    setIsAcademyMode(!isAcademyMode);
+  };
+
+  const handleWhatsAppRedirect = () => {
+    const message = encodeURIComponent("Olá! Estou usando a plataforma MentorLite e tentei ativar o Método Academy no Banco de Questões. Gostaria de adquirir o acesso completo!");
+    window.open(`https://api.whatsapp.com/send/?phone=5531984585846&text=${message}`, '_blank');
+    setIsUpgradeDialogOpen(false);
+  };
+
+  const handleCopySuperStrike = () => {
+    if (questionListRef.current) {
+      const count = questionListRef.current.copyAnsweredQuestions();
+      if (count > 0) {
+        toast({
+          title: 'Relatório Copiado! 🚀',
+          description: `${count} questões foram formatadas para o seu Super Strike.`,
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Nada para copiar',
+          description: 'Você precisa responder pelo menos uma questão nesta página antes de copiar.',
+        });
+      }
+    }
   };
 
   const getTopicButtonLabel = () => {
@@ -486,16 +530,9 @@ export default function QuestionsPage() {
             </div>
 
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-6 border-t pt-8">
-              <div className="w-full sm:w-auto">
+              <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
                 <button
-                  onClick={() => {
-                    if (!isPremium && !isAcademyMode) {
-                      const message = encodeURIComponent("Olá! Estou usando a plataforma MentorLite e tentei ativar o Método Academy no Banco de Questões. Gostaria de adquirir o acesso completo!");
-                      window.open(`https://api.whatsapp.com/send/?phone=5531984585846&text=${message}`, '_blank');
-                      return;
-                    }
-                    setIsAcademyMode(!isAcademyMode);
-                  }}
+                  onClick={handleAcademyToggle}
                   className={cn(
                     "w-full sm:min-w-[165px] transition-all duration-500 font-black tracking-tight uppercase text-[10px] h-10 rounded-lg flex items-center justify-center gap-2",
                     isAcademyMode
@@ -510,6 +547,16 @@ export default function QuestionsPage() {
                     </>
                   ) : "Método Academy"}
                 </button>
+
+                <Button 
+                  variant="outline" 
+                  onClick={handleCopySuperStrike}
+                  disabled={!hasSearched}
+                  className="w-full sm:w-auto h-10 px-6 border-2 border-slate-200 text-slate-600 hover:bg-slate-50 font-bold shadow-sm rounded-lg text-xs uppercase tracking-widest flex items-center gap-2"
+                >
+                  <Copy className="h-4 w-4" />
+                  Copia para Super Strike
+                </Button>
               </div>
 
               <Button onClick={handleFilterSubmit} className="w-full sm:w-[165px] h-10 px-6 bg-slate-950 hover:bg-slate-900 text-white font-bold shadow-md rounded-lg text-xs uppercase tracking-widest">
@@ -530,6 +577,7 @@ export default function QuestionsPage() {
             </div>
           )}
           <QuestionList
+            ref={questionListRef}
             subject={activeFilters.subject}
             topics={activeFilters.topics}
             cargo={activeFilters.cargo}
@@ -546,6 +594,29 @@ export default function QuestionsPage() {
           </p>
         </Card>
       )}
+
+      {/* Upgrade Dialog */}
+      <Dialog open={isUpgradeDialogOpen} onOpenChange={setIsUpgradeDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Crown className="h-5 w-5 text-amber-500" />
+              Método Academy
+            </DialogTitle>
+            <DialogDescription className="pt-2">
+              A <strong>Visão Tática Academy</strong> é um recurso estratégico exclusivo para acelerar sua aprovação com inteligência de banca.
+              <br /><br />
+              Deseja solicitar o desbloqueio agora via WhatsApp?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setIsUpgradeDialogOpen(false)}>Agora não</Button>
+            <Button className="bg-amber-500 hover:bg-amber-600 text-black font-bold" onClick={handleWhatsAppRedirect}>
+              Solicitar Método Academy
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
