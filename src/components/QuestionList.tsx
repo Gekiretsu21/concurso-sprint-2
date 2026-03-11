@@ -230,9 +230,38 @@ export const QuestionList = forwardRef<any, QuestionListProps>(({ subject, topic
         const isAcademyRevealed = revealedGodMode[q.id] || (isAcademyActive && hasGodModeAccess);
         if (q.is_god_mode && isAcademyRevealed) {
            text += `\n[MÉTODO ACADEMY - VISÃO TÁTICA]\n`;
-           if (q.god_mode_context_text) text += `${q.god_mode_context_text}\n`;
-           if (q.god_mode_concept_text) text += `\nCONCEITO-CHAVE:\n${q.god_mode_concept_text}\n`;
-           if (q.god_mode_summary_text) text += `\nSÍNTESE DE REVISÃO:\n${q.god_mode_summary_text}\n`;
+           
+           // Contexto e Conceitos Principais
+           if (q.god_mode_context_text) {
+             text += `\n${q.god_mode_context_title || 'CONTEXTO E CONCEITOS PRINCIPAIS'}:\n`;
+             text += `${q.god_mode_context_text}\n`;
+           }
+
+           // Análise Detalhada das Alternativas
+           text += `\n${q.god_mode_analysis_title || 'ANÁLISE DETALHADA DAS ALTERNATIVAS'}:\n`;
+           (['a', 'b', 'c', 'd', 'e'] as const).forEach(alt => {
+             const statusKey = `god_mode_status_${alt}` as keyof Question;
+             const jusKey = `god_mode_justification_${alt}` as keyof Question;
+             const status = q[statusKey];
+             const jus = q[jusKey];
+             
+             if (status || jus) {
+               text += `Alternativa ${alt.toUpperCase()}: ${status || ''}\n`;
+               text += `Justificativa: ${jus || ''}\n\n`;
+             }
+           });
+
+           // Conceito-Chave
+           if (q.god_mode_concept_text) {
+             text += `\n${q.god_mode_concept_title || 'CONCEITO-CHAVE'}:\n`;
+             text += `${q.god_mode_concept_text}\n`;
+           }
+
+           // Síntese de Revisão
+           if (q.god_mode_summary_text) {
+             text += `\n${q.god_mode_summary_title || 'SÍNTESE DE REVISÃO'}:\n`;
+             text += `${q.god_mode_summary_text}\n`;
+           }
         }
         
         text += `\n--------------------------------------------------\n\n`;
