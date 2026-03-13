@@ -21,6 +21,53 @@ import {
 import { User } from 'firebase/auth';
 import { FeedPost } from '@/types';
 
+export async function addCrosswordGame(firestore: Firestore, gameData: any) {
+  const gamesCollection = collection(firestore, 'crosswords');
+  return addDoc(gamesCollection, {
+    ...gameData,
+    createdAt: serverTimestamp()
+  });
+}
+
+export async function updateCrosswordGame(firestore: Firestore, id: string, gameData: any) {
+  return updateDoc(doc(firestore, 'crosswords', id), {
+    ...gameData,
+    updatedAt: serverTimestamp()
+  });
+}
+
+export async function deleteCrosswordGames(firestore: Firestore, ids: string[]) {
+  const batch = writeBatch(firestore);
+  ids.forEach(id => {
+    const docRef = doc(firestore, 'crosswords', id);
+    batch.delete(docRef);
+  });
+  return batch.commit();
+}
+
+export async function handleCrosswordCompletion(firestore: Firestore, userId: string, gameId: string, subject: string) {
+  const progressRef = doc(firestore, `users/${userId}/crossword_progress/${gameId}`);
+  const userRef = doc(firestore, 'users', userId);
+
+  const batch = writeBatch(firestore);
+
+  batch.set(progressRef, {
+    userId,
+    gameId,
+    completedAt: serverTimestamp(),
+    subject: subject || 'Geral'
+  }, { merge: true });
+
+  batch.update(userRef, {
+    'stats.performance.crosswords.totalCompleted': increment(1),
+    [`stats.performance.crosswords.bySubject.${subject || 'Geral'}.completed`]: increment(1),
+    'stats.lastActivityAt': serverTimestamp(),
+  });
+
+  return batch.commit();
+}
+
+
 // --- STUDY PLAN ACTIONS ---
 
 export async function addStudyTask(

@@ -78,6 +78,12 @@ const studentPageItem = {
   label: 'Guia do Aluno',
 };
 
+const gameAcademyItem = {
+  href: '/mentorlite/games/crossword',
+  icon: BrainCircuit,
+  label: 'Game Academy',
+};
+
 const vipMenuItem = {
   href: '/mentorlite/arsenal-vip',
   icon: Crown,
@@ -199,6 +205,48 @@ function MainSidebar() {
                   <studentPageItem.icon />
                   <span className={cn('transition-opacity duration-200', state === 'collapsed' ? 'opacity-0' : 'opacity-100')}>
                     {studentPageItem.label}
+                  </span>
+                </Link>
+              </SidebarMenuButton>
+            </PremiumFeature>
+          </SidebarMenuItem>
+
+          {/* Game Academy (VIP Lock) */}
+          <SidebarMenuItem>
+            <PremiumFeature
+              fallback={
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <SidebarMenuButton
+                              isActive={pathname === gameAcademyItem.href}
+                              tooltip={{ children: 'Conteúdo VIP' }}
+                              className="text-amber-500/70 hover:text-amber-500"
+                              onClick={handleUpgradeClick}
+                            >
+                              <Lock />
+                              <span className={cn('transition-opacity duration-200', state === 'collapsed' ? 'opacity-0' : 'opacity-100')}>
+                                {gameAcademyItem.label}
+                              </span>
+                            </SidebarMenuButton>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" align="center">
+                          Disponível para Academy e Plus
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+              }
+            >
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === gameAcademyItem.href}
+                tooltip={{ children: gameAcademyItem.label }}
+                className="text-blue-500 hover:bg-blue-500/10 hover:text-blue-500 font-bold"
+              >
+                <Link href={gameAcademyItem.href}>
+                  <gameAcademyItem.icon />
+                  <span className={cn('transition-opacity duration-200', state === 'collapsed' ? 'opacity-0' : 'opacity-100')}>
+                    {gameAcademyItem.label}
                   </span>
                 </Link>
               </SidebarMenuButton>

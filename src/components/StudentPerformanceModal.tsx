@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { calculateLevel, calculatePercentage, getAchievement } from '@/lib/gamification';
 import { EvolutionBadge } from './EvolutionBadge';
-import { Crown, BookOpen, Target, CheckCircle2, LayoutGrid, PieChart, Layers, BrainCircuit } from 'lucide-react';
+import { Crown, BookOpen, Target, CheckCircle2, LayoutGrid, PieChart, Layers, BrainCircuit, Gamepad2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 
@@ -32,11 +32,11 @@ interface StudentPerformanceModalProps {
   user: UserProfile | null;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  initialView?: 'questions' | 'flashcards';
+  initialView?: 'questions' | 'flashcards' | 'games';
 }
 
 export function StudentPerformanceModal({ user, isOpen, onOpenChange, initialView = 'questions' }: StudentPerformanceModalProps) {
-  const [activeTab, setActiveTab] = useState<'questions' | 'flashcards'>(initialView);
+  const [activeTab, setActiveTab] = useState<'questions' | 'flashcards' | 'games'>(initialView);
 
   useEffect(() => {
     if (isOpen) {
@@ -60,6 +60,12 @@ export function StudentPerformanceModal({ user, isOpen, onOpenChange, initialVie
     bySubject: {}
   };
 
+  // Crossword Stats
+  const gameStats = user.stats?.performance?.crosswords || {
+    totalCompleted: 0,
+    bySubject: {}
+  };
+
   const levelInfo = calculateLevel(qStats.totalAnswered);
   const achievement = getAchievement(levelInfo.currentLevel);
 
@@ -68,6 +74,7 @@ export function StudentPerformanceModal({ user, isOpen, onOpenChange, initialVie
 
   const qSubjects = Object.entries(qStats.bySubject || {});
   const fSubjects = Object.entries(fStats.bySubject || {});
+  const gameSubjects = Object.entries(gameStats.bySubject || {});
 
   const planLabel = user.subscription?.plan === 'plus' ? 'MentorIA+' :
     user.subscription?.plan === 'academy' ? 'MentorIA Academy' : 'Standard';
@@ -119,6 +126,15 @@ export function StudentPerformanceModal({ user, isOpen, onOpenChange, initialVie
                   )}
                 >
                   <Layers className="h-3 w-3" /> Flashcards
+                </button>
+                <button
+                  onClick={() => setActiveTab('games')}
+                  className={cn(
+                    "px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2",
+                    activeTab === 'games' ? "bg-blue-600 text-white shadow-lg" : "text-slate-400 hover:text-white"
+                  )}
+                >
+                  <Gamepad2 className="h-3 w-3" /> Jogos
                 </button>
               </div>
             </div>
@@ -213,7 +229,7 @@ export function StudentPerformanceModal({ user, isOpen, onOpenChange, initialVie
                   )}
                 </div>
               </>
-            ) : (
+            ) : activeTab === 'flashcards' ? (
               <>
                 {/* Flashcards Dashboard */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 shrink-0 -mt-2">
@@ -298,10 +314,59 @@ export function StudentPerformanceModal({ user, isOpen, onOpenChange, initialVie
                   )}
                 </div>
               </>
-            )}
+            ) : activeTab === 'games' ? (
+              <>
+                {/* Games Dashboard */}
+                <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-white border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] shrink-0 -mt-2">
+                  <Gamepad2 className="h-8 w-8 text-blue-500 mb-2" />
+                  <span className="text-4xl font-black text-slate-900">{gameStats.totalCompleted}</span>
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Cruzadinhas Resolvidas</span>
+                </div>
+
+                <div className="flex-1 flex flex-col min-h-0 space-y-4">
+                  <div className="flex items-center gap-3 shrink-0 px-1">
+                    <div className="p-2 bg-blue-100 rounded-xl">
+                      <BrainCircuit className="h-5 w-5 text-blue-600 animate-pulse" />
+                    </div>
+                    <h3 className="font-black text-slate-950 uppercase tracking-tight text-lg">Evolução por Disciplina (Jogos)</h3>
+                  </div>
+
+                  {gameSubjects.length > 0 ? (
+                    <ScrollArea className="flex-1 w-full rounded-2xl">
+                      <div className="flex flex-col gap-4 pr-4">
+                        {gameSubjects.sort((a: any, b: any) => b[1].completed - a[1].completed).map(([subject, data]: [string, any]) => {
+
+                          return (
+                            <div key={subject} className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm transition-all hover:shadow-md hover:border-slate-300 group">
+                              <div className="flex items-center justify-between mb-4">
+                                <h3 className="font-bold text-slate-900 text-[15px] group-hover:text-blue-600 transition-colors uppercase tracking-tight">{subject}</h3>
+                                <div className="px-3 py-1 bg-slate-50 rounded-full border border-slate-100 flex items-center gap-2">
+                                  <Gamepad2 className="h-3 w-3 text-slate-400" />
+                                  <span className="text-xs font-black text-slate-700">{data.completed} Jogos</span>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </ScrollArea>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full py-12 text-center rounded-2xl bg-white border border-slate-100 shadow-sm">
+                      <div className="p-4 bg-slate-50 rounded-full mb-4">
+                        <Gamepad2 className="h-10 w-10 text-slate-300" />
+                      </div>
+                      <p className="text-slate-500 font-medium max-w-[250px] text-sm">
+                        Este aluno ainda não concluiu nenhum jogo.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : null}
           </div>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
+

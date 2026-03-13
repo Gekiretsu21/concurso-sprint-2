@@ -85,6 +85,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
+    match /crosswords/{crosswordId} {
+      allow read, list: if isSignedIn();
+      allow write: if isAdmin();
+    }
+    
     match /studyTemplates/{templateId} {
       allow read, list: if isSignedIn();
       allow write: if isAdmin();

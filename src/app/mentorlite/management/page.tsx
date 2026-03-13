@@ -14,9 +14,185 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle, Sparkles, Crown, Search, Megaphone, ExternalLink, List, Database, Users, AlertTriangle, RefreshCw, BarChart2, UserMinus } from 'lucide-react';
+import { 
+  ClipboardPaste, FileText, Layers, Loader2, Trash2, ArchiveX, HelpCircle, 
+  Sparkles, Crown, Search, Megaphone, ExternalLink, List, Database, Users, 
+  AlertTriangle, RefreshCw, BarChart2, UserMinus, Gamepad2, BrainCircuit, Trophy,
+  Copy, CheckCircle2
+} from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
-import { importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, deleteAllFlashcards, deleteFlashcardsByIds, deleteQuestionsByIds, deleteDuplicateQuestions, deleteDuplicateFlashcards, updateUserPlan, resetUserProgress, resetAllUsersProgress } from '@/firebase/actions';
+import { 
+  importQuestions, importFlashcards, deletePreviousExams, deleteCommunitySimulados, 
+  deleteAllFlashcards, deleteFlashcardsByIds, deleteQuestionsByIds, deleteDuplicateQuestions, 
+  deleteDuplicateFlashcards, updateUserPlan, resetUserProgress, resetAllUsersProgress, 
+  addCrosswordGame, deleteCrosswordGames 
+} from '@/firebase/actions';
+import { parseCrossword } from '../games/crossword/utils';
+
+// --- DIÁLOGOS DE MANUTENÇÃO ---
+
+function DeleteCrosswordsDialog({ firestore }: { firestore: any }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
+  const crosswordQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'crosswords')) : null, [firestore]);
+  const { data: games, isLoading } = useCollection<any>(crosswordQuery);
+  const { toast } = useToast();
+
+  const handleDelete = async () => {
+    if (!firestore || selected.length === 0) return;
+    try {
+      await deleteCrosswordGames(firestore, selected);
+      toast({ title: "Sucesso!", description: "Cruzadinhas excluídas." });
+      setSelected([]);
+      setIsOpen(false);
+    } catch (e) {
+      toast({ variant: "destructive", title: "Erro ao excluir." });
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button variant="destructive" size="icon" className="shadow-lg">
+          <Gamepad2 className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Gerenciar Cruzadinhas</DialogTitle>
+          <DialogDescription>Remova jogos criados permanentemente ou copie para editar.</DialogDescription>
+        </DialogHeader>
+        <ScrollArea className="h-64 mt-4">
+          {games?.map((g: any) => (
+            <div key={g.id} className="flex items-center justify-between p-2 border-b">
+              <div className="flex items-center gap-2">
+                <Checkbox checked={selected.includes(g.id)} onCheckedChange={(val) => setSelected(prev => val ? [...prev, g.id] : prev.filter(id => id !== g.id))} />
+                <div className="text-xs">
+                  <p className="font-bold">{g.title}</p>
+                  <p className="text-muted-foreground">{g.subject} - {g.topic}</p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (!g.words) return;
+                  const gameText = g.words.map((w: any) => `${g.subject} | ${g.topic} | ${g.role} | ${g.title} | ${g.dimensions.rows}x${g.dimensions.cols} | ${w.direction === 'across' ? 'H' : 'V'} | ${w.row},${w.col} | ${w.answer} | ${w.clue}`).join('\n');
+                  navigator.clipboard.writeText(gameText);
+                  toast({ title: 'Copiado!', description: 'Cole no Hub de Criação para editar e depois exclua este antigo.' });
+                }}
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+        </ScrollArea>
+        <DialogFooter className="mt-4">
+          <Button variant="outline" onClick={() => setIsOpen(false)}>Cancelar</Button>
+          <Button variant="destructive" onClick={handleDelete} disabled={selected.length === 0}>Excluir ({selected.length})</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// --- GERENCIADOR DE IMPORTAÇÃO ---
+function CrosswordManager({ firestore }: { firestore: any }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [text, setText] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const { toast } = useToast();
+
+  const samplePattern = "Direito Constitucional | Artigo 5º | Tribunal | Módulo 1 | 15x15 | H | 0,0 | BRASIL | Nosso país\nDireito Constitucional | Artigo 5º | Tribunal | Módulo 1 | 15x15 | V | 0,0 | BANDEIRA | Símbolo nacional\nDireito Constitucional | Artigo 5º | Tribunal | Módulo 1 | 15x15 | V | 0,2 | ANCORA | FREIA O NAVIO\nDireito Constitucional | Artigo 5º | Tribunal | Módulo 1 | 15x15 | H | 2,2 | NACAO | Povo de um pais";
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(samplePattern);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+    toast({ title: "Copiado!", description: "Modelo copiado para a área de transferência." });
+  };
+
+  const handleSave = async () => {
+    if (!firestore || !text.trim()) return;
+    setIsSaving(true);
+    try {
+      const gamesData = parseCrossword(text);
+      if (gamesData.length === 0) throw new Error("Nenhum jogo encontrado.");
+      
+      for (const gameData of gamesData) {
+        await addCrosswordGame(firestore, gameData);
+      }
+      
+      toast({ title: "Sucesso!", description: `${gamesData.length} jogo(s) de palavras cruzadas criado(s)!` });
+      setText('');
+      setIsOpen(false);
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Erro na Importação", description: e.message || "Verifique o formato padrão por linha." });
+    } finally { setIsSaving(false); }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Card className="hover:shadow-md transition-shadow relative overflow-hidden group">
+        <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+           <Gamepad2 size={40} className="text-amber-500" />
+        </div>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-bold flex items-center gap-2">
+            <Gamepad2 className="w-4 h-4 text-amber-500" /> Gerenciar Games
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Crie desafios rápidos com o Novo Fluxo Linear.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex justify-end">
+          <DialogTrigger asChild>
+            <Button size="icon" className="bg-amber-500 hover:bg-amber-600 text-black shadow-lg">
+               <BrainCircuit className="h-4 w-4" />
+            </Button>
+          </DialogTrigger>
+        </CardContent>
+      </Card>
+
+      <DialogContent className="max-w-4xl max-h-[90vh]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-xl">
+             <BrainCircuit className="text-amber-500" /> Hub de Criação de Cruzadinhas (Novo Fluxo)
+          </DialogTitle>
+          <div className="text-sm text-muted-foreground space-y-2 pt-2">
+             <p>Use o formato de 1 palavra por linha. As palavras serão agrupadas em um único jogo se tiverem o mesmo Título: <strong>Materia | Assunto | Cargo | Título | Dimensões | H/V | Coord | Resposta | Dica</strong></p>
+             <div className="flex items-center gap-2 p-3 bg-slate-100 rounded-lg border border-slate-200 mt-2">
+                <code className="text-[10px] flex-1 whitespace-pre-wrap">{samplePattern}</code>
+                <Button variant="ghost" size="icon" onClick={handleCopy} className="h-8 w-8 text-amber-600">
+                   {copied ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                </Button>
+             </div>
+          </div>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+           <Textarea 
+             className="min-h-[350px] font-mono text-sm bg-slate-50 border-slate-300 focus:border-amber-500"
+             placeholder="Cole aqui seu conteúdo linear separado por pipes..."
+             value={text}
+             onChange={(e) => setText(e.target.value)}
+           />
+        </div>
+        <DialogFooter>
+           <DialogClose asChild><Button variant="outline">Cancelar</Button></DialogClose>
+           <Button 
+             className="bg-amber-500 hover:bg-amber-600 text-black font-bold px-8"
+             onClick={handleSave}
+             disabled={isSaving || !text.trim()}
+           >
+             {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <BrainCircuit className="mr-2 h-4 w-4" />}
+             PUBLICAR JOGO
+           </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { useUser } from '@/firebase/auth/use-user';
 import { SimulatedExamDialog } from '@/components/SimulatedExamDialog';
@@ -639,7 +815,7 @@ export default function ManagementPage() {
 
   const [selectedUserForPerf, setSelectedUserForPerf] = useState<UserProfile | null>(null);
   const [isPerfModalOpen, setIsPerfModalOpen] = useState(false);
-  const [perfInitialView, setPerfInitialView] = useState<'questions' | 'flashcards'>('questions');
+  const [perfInitialView, setPerfInitialView] = useState<'questions' | 'flashcards' | 'games'>('questions');
 
 
   useEffect(() => {
@@ -797,7 +973,7 @@ export default function ManagementPage() {
       await importFlashcards(firestore, flashcardText, accessTier);
       toast({
         title: 'Importação Concluída',
-        description: 'Os flashcards foram importados com sucesso!',
+        description: 'Os flashcards foram importados!',
       });
       setFlashcardText('');
       setIsVipContent(false);
@@ -815,6 +991,7 @@ export default function ManagementPage() {
       setIsImportingFlashcards(false);
     }
   };
+
 
   const handlePlanChange = async (userId: string, newPlan: 'standard' | 'academy' | 'plus') => {
     if (!firestore) return;
@@ -1002,6 +1179,8 @@ export default function ManagementPage() {
                 </Dialog>
               </div>
             </div>
+
+            <CrosswordManager firestore={firestore} />
 
             <div className="flex flex-col p-4 rounded-lg border border-amber-500/30 bg-amber-500/5 min-h-[160px]">
               <div className="flex-grow">
@@ -1224,6 +1403,15 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
                 />
               </div>
             </div>
+            <div className="flex flex-col p-4 rounded-lg border min-h-[160px]">
+              <div className="flex-grow">
+                <h4 className="font-semibold">Gerenciar Cruzadinhas</h4>
+                <p className="text-sm text-muted-foreground mt-1">Revise, exclua ou edite as cruzadinhas importadas.</p>
+              </div>
+              <div className="flex justify-end">
+                <DeleteCrosswordsDialog firestore={firestore} />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -1385,11 +1573,24 @@ Língua Portuguesa | Crase | Analista Judiciário | Quando a crase é facultativ
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="text-slate-500 hover:text-accent hover:bg-accent/10"
+                              className="text-slate-500 hover:text-emerald-600 hover:bg-emerald-50"
                               title="Ver Desempenho"
                               onClick={() => handleViewPerformance(u)}
                             >
                               <BarChart2 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-slate-500 hover:text-blue-600 hover:bg-blue-50"
+                              title="Ver Cruzadinhas"
+                              onClick={() => {
+                                setSelectedUserForPerf(u);
+                                setPerfInitialView('games');
+                                setIsPerfModalOpen(true);
+                              }}
+                            >
+                              <Gamepad2 className="h-4 w-4" />
                             </Button>
                             <Select
                               value={plan}
